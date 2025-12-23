@@ -1466,24 +1466,63 @@
             appId: "1:1017089658126:web:95e79a3723a19003ea5b5f"
         };
 
+        // Lazy initialization flag
+        let firebaseInitialized = false;
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        function initFirebase() {
+            if (firebaseInitialized) return true;
+
+            if (typeof firebase === 'undefined') {
+                console.error('Firebase SDK not loaded');
+                return false;
+            }
+
+            try {
+                firebase.initializeApp(firebaseConfig);
+                firebaseInitialized = true;
+                console.log('✅ Firebase initialized');
+                return true;
+            } catch (e) {
+                // Already initialized
+                if (e.code === 'app/duplicate-app') {
+                    firebaseInitialized = true;
+                    return true;
+                }
+                console.error('Firebase init error:', e);
+                return false;
+            }
+        }
 
         async function loginWithGoogle() {
+            console.log('🔵 loginWithGoogle called');
+
             try {
-                // Check if Firebase is initialized
-                if (typeof firebase === 'undefined' || !firebase.auth) {
-                    showAuthError('Firebase is still loading. Please wait a moment and try again.');
-                    console.error('Firebase not loaded yet');
+                // Check if Firebase is available
+                if (typeof firebase === 'undefined') {
+                    alert('Firebase not loaded. Check browser console (F12).');
+                    console.error('Firebase SDK not available');
+                    showAuthError('Firebase not loaded. Please refresh the page.');
                     return;
                 }
 
+                // Initialize Firebase if needed
+                if (!initFirebase()) {
+                    showAuthError('Failed to initialize Firebase');
+                    return;
+                }
+
+                console.log('🔵 Creating Google provider...');
                 const provider = new firebase.auth.GoogleAuthProvider();
+
+                console.log('🔵 Opening popup...');
+                const auth = firebase.auth();
                 const result = await auth.signInWithPopup(provider);
+
+                console.log('🔵 Got result:', result.user.email);
 
                 // Get Firebase ID token
                 const idToken = await result.user.getIdToken();
+                console.log('🔵 Got idToken');
 
                 // Create session via backend
                 const res = await fetch('/api/auth/login', {
@@ -1491,30 +1530,34 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    credentials: 'include', // Important for session cookies
+                    credentials: 'include',
                     body: JSON.stringify({ idToken })
                 });
 
                 const data = await res.json();
+                console.log('🔵 Backend response:', data);
 
                 if (data.success) {
-                    // Redirect to dashboard
                     window.location.href = data.redirectUrl || '/dashboard.html';
-                    showToast('Welcome via Google!', 'success');
                 } else {
                     showAuthError(data.error || 'Google login failed');
                 }
             } catch (error) {
-                console.error("Google login failed", error);
+                console.error("🔴 Google login failed:", error);
+                alert('Error: ' + error.message);
+
                 if (error.code === 'auth/popup-blocked') {
-                    showAuthError('Popup blocked. Please allow popups for this site.');
+                    showAuthError('Popup blocked. Allow popups for this site.');
                 } else if (error.code === 'auth/popup-closed-by-user') {
                     showAuthError('Login cancelled.');
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    showAuthError('Domain not authorized in Firebase. Add loot-quest.fr to Firebase Console.');
                 } else {
-                    showAuthError('Google login failed. Try Discord instead.');
+                    showAuthError(error.message || 'Google login failed');
                 }
             }
         }
+
 
 
         async function loginWithDiscord() {
