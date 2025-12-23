@@ -1,0 +1,142 @@
+/**
+ * Authentication Module - Session Management & Middleware
+ * 
+ * Provides:
+ * - Redis-backed session store (connect-redis)
+ * - Firebase token verification
+ * - Session-based authentication middleware
+ * - User sync with SQLite database
+ * 
+ * @module auth
+ */
+
+const session = require('express-session');
+const RedisStore = require('connect-redis').default;
+const { getClient } = require('./redis');
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+const SESSION_SECRET = process.env.SESSION_SECRET || process.env.JWT_SECRET || 'lootquest_session_secret_change_in_production';
+const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
+const SESSION_NAME = 'lq_session';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REDIS SESSION STORE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Create Redis session store
+ * @returns {RedisStore} Redis session store instance
+ */
+function createSessionStore() {
+    const redisClient = getClient();
+
+    return new RedisStore({
+        client: redisClient,
+        prefix: 'lq:session:',
+        ttl: SESSION_MAX_AGE / 1000, // TTL in seconds
+    });
+}
+
+/**
+ * Session middleware configuration
+ * @param {boolean} isProduction - Whether running in production
+ * @returns {Function} Express session middleware
+ */
+function createSessionMiddleware(isProduction = false) {
+    const store = createSessionStore();
+
+    return session({
+        store,
+        name: SESSION_NAME,
+        secret: SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        rolling: true, // Reset maxAge on every request
+        cookie: {
+            secure: isProduction, // HTTPS only in production
+            httpOnly: true,       // Prevent XSS access
+            maxAge: SESSION_MAX_AGE,
+            sameSite: 'lax',      // CSRF protection
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTHENTICATION MIDDLEWARE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Middleware: Check if user is authenticated via session
+ * Attaches user data to req.user if authenticated
+ */
+function isAuthenticated(req, res, next) {
+    if (req.session && req.session.user) {
+        req.user = req.session.user;
+        return next();
+    }
+
+    return res.status(401).json({
+        success: false,
+        error: 'Not authenticated',
+        code: 'AUTH_REQUIRED'
+    });
+}
+
+/**
+ * Middleware: Optional authentication
+ * Attaches user if logged in, but doesn't block if not
+ */
+function optionalAuth(req, res, next) {
+    if (req.session && req.session.user) {
+        req.user = req.session.user;
+    }
+    next();
+}
+
+/**
+ * Create user session after successful authentication
+ * @param {Object} req - Express request
+ * @param {Object} userData - User data to store in session
+ */
+function createUserSession(req, userData) {
+    req.session.user = {
+        id: userData.id,
+        firebase_uid: userData.firebase_uid,
+        email: userData.email,
+        username: userData.username,
+        picture: userData.picture,
+        provider: userData.provider,
+        loginTime: Date.now()
+    };
+}
+
+/**
+ * Destroy user session (logout)
+ * @param {Object} req - Express request
+ * @returns {Promise<void>}
+ */
+function destroySession(req) {
+    return new Promise((resolve, reject) => {
+        req.session.destroy((err) => {
+            if (err) reject(err);
+            else resolve();
+        });
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXPORTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+module.exports = {
+    createSessionMiddleware,
+    createSessionStore,
+    isAuthenticated,
+    optionalAuth,
+    createUserSession,
+    destroySession,
+    SESSION_NAME
+};

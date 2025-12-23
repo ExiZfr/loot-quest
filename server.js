@@ -39,6 +39,7 @@ const axios = require('axios');
 // High-Performance Modules
 const redis = require('./src/redis');
 const { rateLimit, strictRateLimit, authRateLimit, withdrawRateLimit } = require('./src/rate-limiter');
+const { createSessionMiddleware, isAuthenticated, optionalAuth, createUserSession, destroySession } = require('./src/auth');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -319,7 +320,13 @@ app.use(helmet({
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
+
+// Redis Session Middleware (Production-Ready)
+const isProduction = process.env.NODE_ENV === 'production';
+app.use(createSessionMiddleware(isProduction));
+
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE: i18n Language Detection (GeoIP)
@@ -726,8 +733,202 @@ app.get('/api/auth/me', verifyAuth, (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+// SESSION-BASED AUTHENTICATION (Redis Backend)
+// ═══════════════════════════════════════════════════════════════════════════
+
+
+/**
+ * POST /api/auth/login
+ * 
+ * Session-based login with Firebase idToken verification.
+ * Creates a Redis-backed session for the authenticated user.
+ * 
+ * Flow:
+ * 1. Verify Firebase idToken
+ * 2. Sync user to SQLite (create or update)
+ * 3. Create Redis session
+ * 4. Return redirect URL
+ */
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { idToken } = req.body;
+
+        if (!idToken) {
+            return res.status(400).json({
+                success: false,
+                error: 'idToken is required'
+            });
+        }
+
+        if (!firebaseInitialized) {
+            return res.status(500).json({
+                success: false,
+                error: 'Firebase not configured on server'
+            });
+        }
+
+        // Step 1: Verify Firebase token
+        let decodedToken;
+        try {
+            decodedToken = await admin.auth().verifyIdToken(idToken);
+        } catch (error) {
+            console.error('Firebase token verification failed:', error.message);
+            return res.status(401).json({
+                success: false,
+                error: 'Invalid or expired Firebase token'
+            });
+        }
+
+        const { uid: firebaseUid, email, name, picture } = decodedToken;
+        const provider = decodedToken.firebase?.sign_in_provider || 'google.com';
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email is required from Firebase'
+            });
+        }
+
+        const emailLower = email.toLowerCase();
+        const displayName = name || email.split('@')[0];
+
+        // Step 2: Sync user to SQLite database
+        let user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
+
+        if (user) {
+            // Update existing user (profile might have changed)
+            db.run(`
+                UPDATE users 
+                SET firebase_uid = ?,
+                    display_name = COALESCE(?, display_name),
+                    avatar_url = COALESCE(?, avatar_url),
+                    provider = COALESCE(?, provider),
+                    last_login_at = datetime('now')
+                WHERE email = ?
+            `, [firebaseUid, displayName, picture, provider, emailLower]);
+
+            user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
+            console.log(`🔑 Session login (existing): ${emailLower}`);
+        } else {
+            // Create new user with signup bonus
+            const userId = uuidv4();
+            db.run(`
+                INSERT INTO users (id, email, display_name, avatar_url, provider, firebase_uid, balance, created_at, last_login_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+            `, [userId, emailLower, displayName, picture, provider, firebaseUid, SIGNUP_BONUS]);
+
+            // Add signup bonus transaction
+            if (SIGNUP_BONUS > 0) {
+                const txId = `bonus_${userId}_${Date.now()}`;
+                db.run(`
+                    INSERT INTO transactions (id, user_id, amount, type, source, description)
+                    VALUES (?, ?, ?, 'credit', 'signup_bonus', 'Welcome bonus!')
+                `, [txId, userId, SIGNUP_BONUS]);
+                db.run('UPDATE users SET total_earned = total_earned + ? WHERE id = ?', [SIGNUP_BONUS, userId]);
+            }
+
+            user = db.get('SELECT * FROM users WHERE id = ?', [userId]);
+            console.log(`✨ Session login (new user): ${emailLower} (+${SIGNUP_BONUS} pts)`);
+        }
+
+        // Step 3: Create Redis-backed session
+        createUserSession(req, {
+            id: user.id,
+            firebase_uid: firebaseUid,
+            email: user.email,
+            username: user.display_name,
+            picture: user.avatar_url,
+            provider: provider
+        });
+
+        console.log(`🔐 Session created for: ${emailLower}`);
+
+        // Step 4: Return success with redirect URL
+        res.json({
+            success: true,
+            redirectUrl: '/dashboard.html',
+            user: {
+                id: user.id,
+                email: user.email,
+                displayName: user.display_name,
+                avatarUrl: user.avatar_url,
+                balance: user.balance,
+                provider: provider
+            }
+        });
+
+    } catch (error) {
+        console.error('Session login error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Authentication failed'
+        });
+    }
+});
+
+/**
+ * POST /api/auth/logout
+ * 
+ * Destroy the Redis session and log out the user.
+ */
+app.post('/api/auth/logout', async (req, res) => {
+    try {
+        if (req.session) {
+            await destroySession(req);
+        }
+        res.clearCookie('lq_session');
+        res.json({ success: true, message: 'Logged out successfully' });
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({ success: false, error: 'Logout failed' });
+    }
+});
+
+/**
+ * GET /api/user/me
+ * 
+ * Get current authenticated user info from session.
+ * No token required - uses Redis session.
+ */
+app.get('/api/user/me', isAuthenticated, (req, res) => {
+    try {
+        const user = db.get('SELECT * FROM users WHERE id = ?', [req.user.id]);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                email: user.email,
+                displayName: user.display_name,
+                avatarUrl: user.avatar_url,
+                balance: user.balance,
+                totalEarned: user.total_earned,
+                totalWithdrawn: user.total_withdrawn,
+                provider: user.provider || 'email',
+                createdAt: user.created_at
+            }
+        });
+
+    } catch (error) {
+        console.error('Get user error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get user info'
+        });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
 // HYBRID AUTH: Firebase (Google) + Discord OAuth2
 // ═══════════════════════════════════════════════════════════════════════════
+
 
 /**
  * POST /api/auth/firebase
