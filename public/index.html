@@ -1458,12 +1458,12 @@
         // ════════════════ OAUTH (Firebase) ════════════════
 
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyCxxxxxxxxxxx",  // Replace with your Firebase API key
+            authDomain: "loot-quest-5fe77.firebaseapp.com",
+            projectId: "loot-quest-5fe77",
+            storageBucket: "loot-quest-5fe77.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",  // Replace with your sender ID
+            appId: "YOUR_APP_ID"  // Replace with your app ID
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -1474,33 +1474,34 @@
                 const provider = new firebase.auth.GoogleAuthProvider();
                 const result = await auth.signInWithPopup(provider);
 
-                // Get Firebase token
-                const firebaseToken = await result.user.getIdToken();
+                // Get Firebase ID token
+                const idToken = await result.user.getIdToken();
 
-                // Sync with our backend
-                const res = await fetch('/api/user/login', {
+                // Create session via backend
+                const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + firebaseToken
-                    }
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include', // Important for session cookies
+                    body: JSON.stringify({ idToken })
                 });
 
                 const data = await res.json();
 
                 if (data.success) {
-                    currentUser = data.user;
-                    authToken = firebaseToken;
-                    localStorage.setItem('lootquest_token', firebaseToken);
-                    closeAuthModal();
-                    showDashboard();
-                    showToast('Welcome, ' + currentUser.displayName + '!', 'success');
+                    // Redirect to dashboard
+                    window.location.href = data.redirectUrl || '/dashboard.html';
+                    showToast('Welcome via Google!', 'success');
+                } else {
+                    showAuthError(data.error || 'Google login failed');
                 }
             } catch (error) {
                 console.error("Google login failed", error);
-                showAuthError('Google login failed. Try email instead.');
+                showAuthError('Google login failed. Try Discord instead.');
             }
         }
+
 
         async function loginWithDiscord() {
             // Redirect to Discord OAuth2 flow
