@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment & Secrets
+.env
+*.pem
+*.json.key
+loot-quest-*-firebase-adminsdk-*.json
+
+# Database
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Deployment (local only)
+deploy-vps.js
+deploy-vps.py
+deploy-to-vps.bat
+
+# Build output
+dist/
+build/

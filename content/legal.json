@@ -1,0 +1,210 @@
+{
+    "terms-of-service": {
+        "title": "Terms of Service",
+        "lastUpdated": "2024-12-23",
+        "sections": [
+            {
+                "title": "1. Acceptance of Terms",
+                "paragraphs": [
+                    "By accessing and using LootQuest, you agree to be bound by these Terms of Service and all applicable laws and regulations.",
+                    "If you do not agree with any of these terms, you are prohibited from using or accessing this site."
+                ]
+            },
+            {
+                "title": "2. User Eligibility",
+                "paragraphs": [
+                    "You must be at least 13 years old to use LootQuest.",
+                    "Users between 13-18 must have parental consent.",
+                    "By registering, you confirm that all information provided is accurate and truthful."
+                ]
+            },
+            {
+                "title": "3. Account Security",
+                "paragraphs": [
+                    "You are responsible for maintaining the confidentiality of your account credentials.",
+                    "Never share your password or login information with anyone.",
+                    "Report any unauthorized access to your account immediately."
+                ]
+            },
+            {
+                "title": "4. Earning Points",
+                "paragraphs": [
+                    "Points are earned by completing offers through our partner networks.",
+                    "Attempting to earn points through fraudulent means will result in account termination.",
+                    "⚠️ WARNING: Using VPNs, bots, or automated tools is strictly prohibited and will result in permanent ban."
+                ]
+            },
+            {
+                "title": "5. Withdrawal Policy",
+                "paragraphs": [
+                    "First-time withdrawals require a 7-day account age minimum.",
+                    "Withdrawals are processed within 24-72 hours.",
+                    "All withdrawal requests are final and cannot be reversed.",
+                    "⚠️ WARNING: Fraudulent activity will result in forfeiture of all points and permanent account ban."
+                ]
+            },
+            {
+                "title": "6. Prohibited Activities",
+                "paragraphs": [
+                    "Creating multiple accounts is strictly prohibited.",
+                    "Using VPNs, proxies, or any IP masking technology is not allowed.",
+                    "Attempting to manipulate or exploit offers or the points system.",
+                    "Sharing accounts or transferring points between accounts.",
+                    "Any form of automated activity including bots, scripts, or macros."
+                ]
+            },
+            {
+                "title": "7. Termination",
+                "paragraphs": [
+                    "We reserve the right to terminate any account that violates these terms.",
+                    "Terminated accounts forfeit all accumulated points.",
+                    "Decisions regarding account termination are final."
+                ]
+            }
+        ]
+    },
+    "privacy-policy": {
+        "title": "Privacy Policy",
+        "lastUpdated": "2024-12-23",
+        "sections": [
+            {
+                "title": "1. Information We Collect",
+                "paragraphs": [
+                    "Email address and account credentials",
+                    "IP address and device information",
+                    "Activity data including offers completed and points earned",
+                    "Payment information for withdrawal processing"
+                ]
+            },
+            {
+                "title": "2. How We Use Your Information",
+                "paragraphs": [
+                    "To provide and maintain our service",
+                    "To process withdrawals and verify transactions",
+                    "To detect and prevent fraud",
+                    "To communicate important updates about your account"
+                ]
+            },
+            {
+                "title": "3. Data Sharing",
+                "paragraphs": [
+                    "We share necessary data with offer partners to verify offer completion.",
+                    "Payment processors receive information required to process withdrawals.",
+                    "We may disclose information if required by law or to protect our rights."
+                ]
+            },
+            {
+                "title": "4. Data Security",
+                "paragraphs": [
+                    "We implement industry-standard security measures to protect your data.",
+                    "All sensitive information is encrypted in transit and at rest.",
+                    "We regularly audit our security practices."
+                ]
+            },
+            {
+                "title": "5. Your Rights",
+                "paragraphs": [
+                    "You may request access to your personal data at any time.",
+                    "You may request deletion of your account and associated data.",
+                    "Contact support@lootquest.com for any privacy-related inquiries."
+                ]
+            }
+        ]
+    },
+    "cookie-policy": {
+        "title": "Cookie Policy",
+        "lastUpdated": "2024-12-23",
+        "sections": [
+            {
+                "title": "1. What Are Cookies",
+                "paragraphs": [
+                    "Cookies are small text files stored on your device when you visit our website.",
+                    "They help us provide a better user experience and understand how you use our service."
+                ]
+            },
+            {
+                "title": "2. Types of Cookies We Use",
+                "paragraphs": [
+                    "Essential Cookies: Required for the website to function properly (authentication, security).",
+                    "Analytics Cookies: Help us understand how visitors interact with our website.",
+                    "Third-Party Cookies: Set by our offer partners to track offer completions."
+                ]
+            },
+            {
+                "title": "3. Managing Cookies",
+                "paragraphs": [
+                    "You can control cookies through your browser settings.",
+                    "Disabling essential cookies may affect website functionality.",
+                    "Third-party cookies from offer partners are required to verify offer completions."
+                ]
+            },
+            {
+                "title": "4. Third-Party Services",
+                "paragraphs": [
+                    "We use services like Lootably which may set their own cookies.",
+                    "These services have their own privacy policies governing cookie usage.",
+                    "We recommend reviewing the privacy policies of our partner services."
+                ]
+            }
+        ]
+    },
+    "faq": {
+        "title": "Frequently Asked Questions",
+        "lastUpdated": "2024-12-23",
+        "sections": [
+            {
+                "title": "🎮 Getting Started",
+                "paragraphs": [
+                    "Q: How do I earn points on LootQuest?",
+                    "A: Complete offers from our partners, watch videos, take surveys, and participate in daily challenges. Each activity rewards you with points that can be exchanged for rewards.",
+                    "Q: Is LootQuest free to use?",
+                    "A: Yes! LootQuest is completely free. You earn points by completing offers and can redeem them for real rewards."
+                ]
+            },
+            {
+                "title": "💰 Points & Earnings",
+                "paragraphs": [
+                    "Q: How much are points worth?",
+                    "A: 1,000 points = $1.00 in reward value. So if a reward costs 5,000 points, it's equivalent to a $5 value.",
+                    "Q: Why didn't I receive my points?",
+                    "A: Points may take up to 24 hours to credit. Ensure you fully completed the offer requirements. Using VPNs or ad blockers can prevent points from being credited.",
+                    "Q: How long do offers take to credit?",
+                    "A: Most offers credit within 24-48 hours. Some may take up to 7 days depending on the partner network."
+                ]
+            },
+            {
+                "title": "🎁 Withdrawals & Rewards",
+                "paragraphs": [
+                    "Q: When can I make my first withdrawal?",
+                    "A: Your account must be at least 7 days old before your first withdrawal. This helps us prevent fraud.",
+                    "Q: How long do withdrawals take?",
+                    "A: Withdrawals are typically processed within 24-72 hours. Digital rewards (Robux, V-Bucks) may be instant.",
+                    "Q: What rewards are available?",
+                    "A: We offer Robux, V-Bucks, Steam Wallet, PlayStation Store, Amazon gift cards, and PayPal cash."
+                ]
+            },
+            {
+                "title": "🔒 Account & Security",
+                "paragraphs": [
+                    "Q: Can I have multiple accounts?",
+                    "A: No. Creating multiple accounts is strictly prohibited and will result in all accounts being banned.",
+                    "Q: Can I use a VPN?",
+                    "A: No. VPNs, proxies, and IP masking tools are not allowed. Using them will result in account termination.",
+                    "Q: What happens if my account is suspended?",
+                    "A: If you believe your account was wrongly suspended, contact our support team. All accumulated points are forfeited upon termination for fraud."
+                ]
+            },
+            {
+                "title": "❓ Technical Issues",
+                "paragraphs": [
+                    "Q: The offer wall isn't loading. What do I do?",
+                    "A: Try disabling your ad blocker, clearing your browser cache, or using a different browser.",
+                    "Q: I completed an offer but it's not showing as complete.",
+                    "A: Wait 24 hours for the offer to process. If it still doesn't credit, report it using our bug report form.",
+                    "Q: How do I contact support?",
+                    "A: Use the 'Contact Us' form in our footer, or join our Discord community for faster assistance."
+                ]
+            }
+        ]
+    }
+}

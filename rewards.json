@@ -1,0 +1,180 @@
+{
+    "rewards": [
+        {
+            "id": "robux_400",
+            "name": "400 Robux",
+            "description": "Roblox virtual currency - Starter pack",
+            "price": 5000,
+            "realValue": "$5.00",
+            "category": "gaming",
+            "image": "https://cdn-icons-png.flaticon.com/512/5969/5969234.png",
+            "stock": -1
+        },
+        {
+            "id": "robux_800",
+            "name": "800 Robux",
+            "description": "Roblox virtual currency - $10 Card value",
+            "price": 10000,
+            "realValue": "$10.00",
+            "category": "gaming",
+            "image": "https://cdn-icons-png.flaticon.com/512/5969/5969234.png",
+            "stock": -1
+        },
+        {
+            "id": "robux_1700",
+            "name": "1700 Robux",
+            "description": "Roblox virtual currency - Premium bundle",
+            "price": 20000,
+            "realValue": "$20.00",
+            "category": "gaming",
+            "image": "https://cdn-icons-png.flaticon.com/512/5969/5969234.png",
+            "stock": -1
+        },
+        {
+            "id": "vbucks_1000",
+            "name": "1000 V-Bucks",
+            "description": "Fortnite virtual currency - ~$9 value",
+            "price": 9000,
+            "realValue": "$9.00",
+            "category": "gaming",
+            "image": "https://cdn-icons-png.flaticon.com/512/8346/8346381.png",
+            "stock": -1
+        },
+        {
+            "id": "vbucks_2800",
+            "name": "2800 V-Bucks",
+            "description": "Fortnite virtual currency - Battle Pass ready",
+            "price": 22000,
+            "realValue": "$22.00",
+            "category": "gaming",
+            "image": "https://cdn-icons-png.flaticon.com/512/8346/8346381.png",
+            "stock": -1
+        },
+        {
+            "id": "vbucks_5000",
+            "name": "5000 V-Bucks",
+            "description": "Fortnite virtual currency - Max bundle",
+            "price": 35000,
+            "realValue": "$35.00",
+            "category": "gaming",
+            "image": "https://cdn-icons-png.flaticon.com/512/8346/8346381.png",
+            "stock": -1
+        },
+        {
+            "id": "amazon_5",
+            "name": "$5 Amazon Gift Card",
+            "description": "Shop millions of products on Amazon",
+            "price": 5000,
+            "realValue": "$5.00",
+            "category": "giftcards",
+            "image": "https://cdn-icons-png.flaticon.com/512/732/732228.png",
+            "stock": -1
+        },
+        {
+            "id": "amazon_10",
+            "name": "$10 Amazon Gift Card",
+            "description": "Shop millions of products on Amazon",
+            "price": 10000,
+            "realValue": "$10.00",
+            "category": "giftcards",
+            "image": "https://cdn-icons-png.flaticon.com/512/732/732228.png",
+            "stock": -1
+        },
+        {
+            "id": "amazon_20",
+            "name": "$20 Amazon Gift Card",
+            "description": "Shop millions of products on Amazon - Best value",
+            "price": 20000,
+            "realValue": "$20.00",
+            "category": "giftcards",
+            "image": "https://cdn-icons-png.flaticon.com/512/732/732228.png",
+            "stock": -1
+        },
+        {
+            "id": "paypal_5",
+            "name": "$5 PayPal Cash",
+            "description": "Direct PayPal transfer to your account",
+            "price": 5000,
+            "realValue": "$5.00",
+            "category": "cash",
+            "image": "https://cdn-icons-png.flaticon.com/512/174/174861.png",
+            "stock": -1
+        },
+        {
+            "id": "paypal_10",
+            "name": "$10 PayPal Cash",
+            "description": "Direct PayPal transfer to your account",
+            "price": 10000,
+            "realValue": "$10.00",
+            "category": "cash",
+            "image": "https://cdn-icons-png.flaticon.com/512/174/174861.png",
+            "stock": -1
+        },
+        {
+            "id": "paypal_20",
+            "name": "$20 PayPal Cash",
+            "description": "Direct PayPal transfer - Popular choice",
+            "price": 20000,
+            "realValue": "$20.00",
+            "category": "cash",
+            "image": "https://cdn-icons-png.flaticon.com/512/174/174861.png",
+            "stock": -1
+        },
+        {
+            "id": "steam_5",
+            "name": "$5 Steam Wallet",
+            "description": "Steam platform game purchases",
+            "price": 5000,
+            "realValue": "$5.00",
+            "category": "gaming",
+            "image": "https://cdn-icons-png.flaticon.com/512/3670/3670330.png",
+            "stock": -1
+        },
+        {
+            "id": "steam_10",
+            "name": "$10 Steam Wallet",
+            "description": "Steam platform game purchases",
+            "price": 10000,
+            "realValue": "$10.00",
+            "category": "gaming",
+            "image": "https://cdn-icons-png.flaticon.com/512/3670/3670330.png",
+            "stock": -1
+        },
+        {
+            "id": "steam_20",
+            "name": "$20 Steam Wallet",
+            "description": "Steam platform - Indie game lovers pack",
+            "price": 20000,
+            "realValue": "$20.00",
+            "category": "gaming",
+            "image": "https://cdn-icons-png.flaticon.com/512/3670/3670330.png",
+            "stock": -1
+        },
+        {
+            "id": "psn_10",
+            "name": "$10 PlayStation Store",
+            "description": "PlayStation Network credit",
+            "price": 10000,
+            "realValue": "$10.00",
+            "category": "gaming",
+            "image": "https://cdn-icons-png.flaticon.com/512/5969/5969084.png",
+            "stock": -1
+        },
+        {
+            "id": "psn_20",
+            "name": "$20 PlayStation Store",
+            "description": "PlayStation Network credit - Best value",
+            "price": 20000,
+            "realValue": "$20.00",
+            "category": "gaming",
+            "image": "https://cdn-icons-png.flaticon.com/512/5969/5969084.png",
+            "stock": -1
+        }
+    ],
+    "economy": {
+        "pointsPerDollar": 1000,
+        "userSplit": 0.60,
+        "platformSplit": 0.40,
+        "formula": "Points = USD * 1000 * 0.60"
+    }
+}

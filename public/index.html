@@ -1,53 +1,66 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en" class="scroll-smooth">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LootQuest - Farm. Gagne. Retire.</title>
+    <meta name="description"
+        content="LootQuest - The #1 Platform to earn free Robux & V-Bucks. Instant payouts. No BS.">
+    <title>LootQuest | Premium Gaming Rewards</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- GSAP & Plugins -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
 
-    <!-- Google Fonts: Orbitron (Gaming) & Inter (Lisibilité) -->
+    <!-- Google Fonts: Space Grotesk & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@500;700;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700;800&display=swap"
         rel="stylesheet">
 
-    <!-- Configuration Tailwind Custom -->
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- i18n Translation Scripts -->
+    <script src="/js/translations.js"></script>
+    <script src="/js/language-manager.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    colors: {
+                        loot: {
+                            black: '#050505',
+                            dark: '#0a0a0a',
+                            card: '#121212',
+                            neon: '#00f3ff',     // Cyan
+                            purple: '#bc13fe',   // Electric Purple
+                            gold: '#ffd700',     // Loot Gold
+                            text: '#e0e0e0',
+                            dim: '#6b7280'
+                        }
+                    },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        gaming: ['Orbitron', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
                     },
-                    colors: {
-                        'void': '#0B0C15',
-                        'void-light': '#151725',
-                        'neon-purple': '#A855F7',
-                        'neon-blue': '#06B6D4',
-                        'toxic-green': '#10B981',
-                        'alert-red': '#EF4444'
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #1f1f1f 1px, transparent 1px), linear-gradient(to bottom, #1f1f1f 1px, transparent 1px)",
+                        'hero-glow': "radial-gradient(circle at center, rgba(188, 19, 254, 0.15) 0%, transparent 70%)"
                     },
-                    animation: {
-                        'float': 'float 8s ease-in-out infinite', /* Ralenti de 6s à 8s pour plus de fluidité */
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'glow': 'glow 3s ease-in-out infinite alternate',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-15px)' }, /* Amplitude réduite pour plus de douceur */
-                        },
-                        glow: {
-                            'from': { boxShadow: '0 0 10px #A855F7, 0 0 20px #A855F7' },
-                            'to': { boxShadow: '0 0 20px #06B6D4, 0 0 30px #06B6D4' },
-                        }
+                    boxShadow: {
+                        'neon': '0 0 20px rgba(0, 243, 255, 0.3)',
+                        'purple': '0 0 20px rgba(188, 19, 254, 0.3)',
                     }
                 }
             }
@@ -56,459 +69,2210 @@
 
     <style>
         body {
-            background-color: #0B0C15;
-            color: white;
+            background-color: #050505;
+            color: #e0e0e0;
             overflow-x: hidden;
         }
 
-        /* Scrollbar custom */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #0B0C15;
+            background: #0a0a0a;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #374151;
-            border-radius: 4px;
+            background: #333;
+            border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #A855F7;
+            background: #bc13fe;
         }
 
-        /* Glassmorphism utility */
-        .glass-panel {
-            background: rgba(21, 23, 37, 0.7);
+        /* Glassmorphism */
+        .glass {
+            background: rgba(18, 18, 18, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .text-shadow-neon {
-            text-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+        .glass-card:hover {
+            border-color: rgba(0, 243, 255, 0.3);
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 10px 40px -10px rgba(0, 243, 255, 0.2);
         }
 
-        .smooth-transition {
-            transition-property: all;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            transition-duration: 300ms;
+        /* Text Gradients */
+        .text-gradient-primary {
+            background: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .text-gradient-gold {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Neon Button */
+        .btn-neon {
+            position: relative;
+            background: transparent;
+            color: #00f3ff;
+            border: 1px solid #00f3ff;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn-neon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-neon:hover::before {
+            left: 100%;
+        }
+
+        .btn-neon:hover {
+            background: rgba(0, 243, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
+        }
+
+        .btn-glow {
+            background: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
+            color: white;
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-glow::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
+            z-index: -1;
+            filter: blur(15px);
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+            border-radius: inherit;
+        }
+
+        .btn-glow:hover::after {
+            opacity: 0.8;
+            filter: blur(20px);
+        }
+
+        /* Animations */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(2deg);
+            }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .animate-float-delayed {
+            animation: float 8s ease-in-out infinite 1s;
+        }
+
+        .grid-bg {
+            background-size: 40px 40px;
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+        }
+
+        /* Marquee */
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 30s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .marquee-container:hover .marquee-content {
+            animation-play-state: paused;
+        }
+
+        /* Quest Line */
+        .quest-line-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
         }
     </style>
 </head>
 
-<body class="antialiased selection:bg-neon-purple selection:text-white">
+<body class="antialiased selection:bg-loot-purple selection:text-white">
 
-    <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toast-container" class="fixed top-24 right-4 z-50 flex flex-col gap-3 pointer-events-none">
-        <!-- Les toasts seront injectés ici par JS -->
+    <!-- Loading Overlay -->
+    <div id="loader" class="fixed inset-0 z-50 bg-loot-black flex items-center justify-center">
+        <div class="flex flex-col items-center">
+            <h1 class="font-display text-4xl md:text-6xl font-bold tracking-tighter mb-4">
+                LOOT<span class="text-gradient-primary">QUEST</span>
+            </h1>
+            <div class="w-48 h-1 bg-gray-800 rounded-full overflow-hidden">
+                <div id="loader-bar" class="w-0 h-full bg-gradient-to-r from-loot-neon to-loot-purple"></div>
+            </div>
+            <p class="mt-2 font-mono text-loot-neon text-sm animate-pulse">INITIALIZING...</p>
+        </div>
     </div>
 
-    <!-- NAVBAR (HUD Style) -->
-    <nav class="fixed w-full z-40 top-0 glass-panel border-b border-white/10 transition-all duration-500">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <!-- Logo -->
-                <div class="flex items-center gap-2 cursor-pointer hover:opacity-80 smooth-transition">
-                    <i class="fa-solid fa-gamepad text-3xl text-neon-purple animate-pulse-slow"></i>
-                    <span
-                        class="hidden sm:block font-gaming text-2xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-neon-purple to-neon-blue">
-                        LOOTQUEST
-                    </span>
-                </div>
+    <!-- Background Elements -->
+    <div class="fixed inset-0 z-[-1] bg-loot-black">
+        <div class="absolute inset-0 bg-grid-pattern grid-bg opacity-[0.07]"></div>
+        <div
+            class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] bg-hero-glow opacity-60 pointer-events-none">
+        </div>
+    </div>
 
-                <!-- User HUD (Simulation) -->
-                <div
-                    class="hidden md:flex items-center gap-6 bg-void-light px-4 py-2 rounded-full border border-white/5 shadow-lg">
-                    <div class="flex items-center gap-2" title="Niveau Joueur">
-                        <span class="text-xs text-gray-400 font-gaming">LVL 1</span>
-                        <div class="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
-                            <div class="h-full bg-neon-blue w-[0%] transition-all duration-1000" id="xp-bar"></div>
-                        </div>
-                    </div>
-                    <!-- Monnaie : Pixels -->
-                    <div class="flex items-center gap-2 text-yellow-400 font-bold" title="Solde Pixels">
-                        <i class="fa-solid fa-square text-xs rotate-45"></i> 0 Px
-                    </div>
-                </div>
+    <!-- Floating Coins (Parallax) -->
+    <div id="parallax-bg" class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none opacity-40">
+        <!-- Elements injected by JS -->
+    </div>
 
-                <!-- CTA Login -->
-                <button id="nav-login-btn"
-                    class="bg-gradient-to-r from-neon-purple to-indigo-600 hover:from-neon-blue hover:to-indigo-500 text-white font-gaming px-4 py-2 text-sm sm:px-6 sm:text-base rounded-lg transform hover:scale-105 smooth-transition shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)]">
-                    <span class="hidden sm:inline" data-i18n="nav.login">CONNEXION</span>
-                    <span class="sm:hidden"><i class="fa-solid fa-right-to-bracket"></i></span>
+    <!-- Navigation -->
+    <nav class="fixed w-full z-40 top-0 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="font-display text-2xl font-bold tracking-tighter flex items-center gap-2 group">
+                <i data-lucide="gamepad-2" class="text-loot-neon group-hover:rotate-12 transition-transform"></i>
+                <span>LOOT<span class="text-gradient-primary">QUEST</span></span>
+            </a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#how-it-works" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">How
+                    it Works</a>
+                <a href="#rewards"
+                    class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Rewards</a>
+                <a href="#stats" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Hall of
+                    Fame</a>
+            </div>
+
+            <!-- CTA -->
+            <div class="hidden md:flex items-center gap-4">
+                <!-- Language Switcher -->
+                <button id="lang-switcher" onclick="toggleLanguage()"
+                    class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-xl transition-all hover:scale-110"
+                    title="Switch Language">
+                    <span class="lang-flag">🇺🇸</span>
                 </button>
 
-                <!-- Language Toggle -->
-                <button id="lang-toggle" class="ml-4 text-2xl hover:scale-110 transition-transform"
-                    title="Switch Language">
-                    🇺🇸
+                <button onclick="loginWithGoogle()"
+                    class="text-sm font-medium text-gray-300 hover:text-white transition-colors" data-i18n="nav_login">
+                    Login
+                </button>
+                <button onclick="loginWithGoogle()"
+                    class="btn-neon px-6 py-2 rounded-lg font-display font-bold text-sm uppercase tracking-wide"
+                    data-i18n="hero_btn_start">
+                    Start Quest
                 </button>
             </div>
+
+            <!-- Mobile Menu Btn -->
+            <button class="md:hidden text-white">
+                <i data-lucide="menu"></i>
+            </button>
         </div>
     </nav>
 
-    <!-- HERO SECTION -->
-    <section class="relative pt-32 pb-20 overflow-hidden">
-        <!-- Background Elements -->
-        <div
-            class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-neon-purple/20 blur-[120px] rounded-full -z-10 animate-pulse-slow">
-        </div>
+    <!-- APP CONTAINER (SPA Logic Switch) -->
+    <div id="app">
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-12">
+        <!-- ==================== LANDING PAGE ==================== -->
+        <main id="landing-page" class="relative">
 
-            <!-- Text Content -->
-            <div class="lg:w-1/2 text-center lg:text-left z-10">
-                <div
-                    class="inline-block px-4 py-1 mb-6 rounded-full bg-neon-blue/10 border border-neon-blue/30 text-neon-blue font-gaming text-sm tracking-widest uppercase">
-                    <i class="fa-solid fa-circle text-[8px] mr-2 animate-pulse"></i> <span
-                        data-i18n="hero.season">Saison 1 Active</span>
-                </div>
-                <h1 class="font-gaming text-5xl lg:text-7xl font-black leading-tight mb-6 text-white text-shadow-neon">
-                    <span data-i18n="hero.title.1">JOUE.</span> <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-neon-purple to-neon-blue"
-                        data-i18n="hero.title.2">FARME.</span>
-                    <br> <span data-i18n="hero.title.3">RETIRE.</span>
-                </h1>
-                <p class="text-gray-400 text-lg mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed"
-                    data-i18n="hero.subtitle">
-                    Arrête de jouer gratuitement. Rejoins la guilde, regarde des pubs, invite tes amis et échange tes
-                    <span class="text-neon-purple font-bold">Pixels</span> contre des <span
-                        class="text-white font-bold">V-Bucks & Cartes Cadeaux</span>.
-                </p>
+            <!-- HERO SECTION -->
+            <section class="min-h-screen flex items-center justify-center pt-20 relative overflow-hidden">
+                <div class="max-w-5xl mx-auto px-6 text-center relative z-10">
 
-                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                    <button id="hero-join-btn"
-                        class="group relative px-8 py-4 bg-white text-black font-gaming font-bold text-lg rounded-xl overflow-hidden smooth-transition hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)]">
-                        <span class="relative z-10 flex items-center gap-3">
-                            <span data-i18n="hero.cta.join">COMMENCE À FARMER</span> <i
-                                class="fa-solid fa-play text-xs group-hover:translate-x-1 transition-transform"></i>
-                        </span>
-                        <div
-                            class="absolute inset-0 bg-gradient-to-r from-neon-blue to-neon-purple opacity-0 group-hover:opacity-20 transition-opacity duration-300">
+                    <!-- Badge -->
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-loot-card border border-loot-purple/30 mb-8 hero-element opacity-0">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="text-xs font-mono text-loot-neon" data-i18n="live_payouts">LIVE PAYOUTS
+                            ACTIVE</span>
+                    </div>
+
+                    <!-- Main Title -->
+                    <h1
+                        class="font-display text-5xl md:text-8xl font-bold leading-none tracking-tighter mb-6 hero-element opacity-0">
+                        <span data-i18n="hero_line1">Your Time.</span> <br />
+                        <span data-i18n="hero_line2">Your Skills.</span> <br />
+                        <span class="text-gradient-primary" data-i18n="hero_line3">Your Loot.</span>
+                    </h1>
+
+                    <!-- Subtitle -->
+                    <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 hero-element opacity-0 font-light"
+                        data-i18n="hero_desc">
+                        The #1 Platform to earn free Robux & V-Bucks. Complete quests. Level up. Get paid instantly. No
+                        BS.
+                    </p>
+
+                    <!-- CTAs -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 hero-element opacity-0">
+                        <button onclick="loginWithGoogle()"
+                            class="btn-glow px-8 py-4 rounded-xl font-display font-bold text-lg w-full sm:w-auto hover:scale-105 transition-transform"
+                            data-i18n="hero_btn_start">
+                            START EARNING NOW
+                        </button>
+                        <button onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})"
+                            class="px-8 py-4 rounded-xl font-display font-bold text-lg w-full sm:w-auto text-gray-400 hover:text-white border border-gray-800 hover:border-gray-600 transition-all"
+                            data-i18n="how_title">
+                            HOW IT WORKS
+                        </button>
+                    </div>
+
+                    <!-- Trust Indicators -->
+                    <div class="mt-12 flex items-center justify-center gap-8 text-gray-500 hero-element opacity-0">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="shield-check" class="w-5 h-5 text-loot-purple"></i>
+                            <span class="text-sm" data-i18n="hero_stat_rating">Verified Payouts</span>
                         </div>
-                    </button>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="zap" class="w-5 h-5 text-loot-neon"></i>
+                            <span class="text-sm" data-i18n="hero_stat_paid">Instant Delivery</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="globe" class="w-5 h-5 text-loot-gold"></i>
+                            <span class="text-sm">Global Access</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-                    <button
-                        class="px-8 py-4 bg-transparent border border-gray-600 text-white font-gaming font-bold text-lg rounded-xl hover:bg-white/5 hover:border-white smooth-transition"
-                        data-i18n="hero.cta.loot">
-                        VOIR LE BUTIN
-                    </button>
+            <!-- LIVE TICKER (Social Proof) -->
+            <div class="w-full bg-loot-card border-y border-white/5 py-3 relative z-20">
+                <div class="marquee-container">
+                    <div class="marquee-content" id="payout-ticker">
+                        <!-- JS injected items -->
+                    </div>
+                    <!-- Duplicate for infinite scroll -->
+                    <div class="marquee-content" id="payout-ticker-dup">
+                        <!-- JS injected items -->
+                    </div>
                 </div>
             </div>
 
-            <!-- Visual Content (Floating 3D effect Mockup) -->
-            <div class="lg:w-1/2 relative mt-10 lg:mt-0 animate-float">
-                <div
-                    class="relative z-10 glass-panel p-2 rounded-2xl transform rotate-[-3deg] hover:rotate-0 transition-transform duration-700 shadow-2xl shadow-neon-purple/20">
-                    <div class="bg-void-light rounded-xl p-6 border border-white/5">
-                        <!-- Mockup Card Header -->
-                        <div class="flex justify-between items-center mb-6">
-                            <span class="font-gaming text-neon-blue" data-i18n="mockup.inventory">INVENTAIRE</span>
-                            <i class="fa-solid fa-wallet text-gray-500"></i>
+            <!-- HOW IT WORKS (Gamified Timeline) -->
+            <section id="how-it-works" class="py-32 relative">
+                <div class="max-w-4xl mx-auto px-6">
+                    <div class="text-center mb-24">
+                        <h2 class="font-display text-4xl md:text-5xl font-bold mb-4" data-i18n="quest_log_title">Your
+                            Quest Log</h2>
+                        <p class="text-gray-400" data-i18n="quest_log_subtitle">Three simple steps to claim your bounty.
+                        </p>
+                    </div>
+
+                    <div class="relative">
+                        <!-- Progress Line -->
+                        <div
+                            class="absolute left-1/2 top-0 bottom-0 w-1 bg-gray-800 -translate-x-1/2 rounded-full hidden md:block">
+                            <div id="timeline-fill"
+                                class="w-full bg-gradient-to-b from-loot-neon to-loot-purple h-0 rounded-full"></div>
                         </div>
-                        <!-- Mockup Cards -->
-                        <div class="space-y-4">
-                            <div
-                                class="flex items-center gap-4 p-3 rounded-lg bg-gradient-to-r from-gray-800 to-transparent border border-white/5 group hover:border-neon-purple/50 transition-colors">
-                                <div
-                                    class="w-12 h-12 bg-purple-900/50 rounded-lg flex items-center justify-center text-neon-purple">
-                                    <i class="fa-brands fa-fort-awesome text-xl"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold">1,000 V-Bucks</h4>
-                                    <p class="text-xs text-toxic-green"><i class="fa-solid fa-check"></i> <span
-                                            data-i18n="mockup.ready">Prêt à retirer</span>
-                                    </p>
-                                </div>
+
+                        <!-- Step 1 -->
+                        <div
+                            class="timeline-step relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center mb-24">
+                            <div class="md:text-right order-2 md:order-1">
+                                <h3 class="font-display text-3xl font-bold text-loot-neon mb-2"
+                                    data-i18n="quest_step1_title">1. The Login</h3>
+                                <p class="text-gray-400" data-i18n="quest_step1_desc">Link your Google or Discord
+                                    account. One click entry. No
+                                    complex registration forms.</p>
                             </div>
                             <div
-                                class="flex items-center gap-4 p-3 rounded-lg bg-gradient-to-r from-gray-800 to-transparent border border-white/5 opacity-75">
-                                <div
-                                    class="w-12 h-12 bg-yellow-900/50 rounded-lg flex items-center justify-center text-yellow-500">
-                                    <i class="fa-solid fa-square text-xl rotate-45"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold">5,000 Pixels</h4>
-                                    <div class="w-32 h-1.5 bg-gray-700 rounded-full mt-2">
-                                        <div class="h-full bg-neon-blue w-[85%] relative overflow-hidden">
-                                            <div class="absolute inset-0 bg-white/30 animate-pulse"></div>
+                                class="absolute left-1/2 -translate-x-1/2 w-12 h-12 bg-loot-black border-2 border-loot-neon rounded-full z-10 flex items-center justify-center hidden md:flex shadow-neon">
+                                <i data-lucide="log-in" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div class="order-1 md:order-2">
+                                <div class="glass-card p-6 rounded-2xl rotate-1 hover:rotate-0 transition-transform">
+                                    <div class="text-xs font-mono text-gray-500 mb-2">// SYSTEM.ACCESS</div>
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                            <i data-lucide="gamepad-2" class="text-indigo-400"></i>
                                         </div>
+                                        <div class="font-bold">Player Connected</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <!-- Decorative Blobs behind -->
-                <div
-                    class="absolute -bottom-10 -right-10 w-32 h-32 bg-neon-blue rounded-full blur-[60px] -z-10 opacity-60">
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- HOW IT WORKS (Objectifs Explicites) -->
-    <section class="py-20 bg-void-light border-y border-white/5">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="font-gaming text-3xl md:text-4xl font-bold mb-16" data-i18n="how.title">COMMENT <span
-                    class="text-neon-purple">GAGNER
-                    DES PIXELS</span></h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Step 1: Pubs & Apps -->
-                <div
-                    class="group p-8 rounded-2xl bg-void hover:bg-gray-900 border border-white/5 hover:border-neon-purple/50 smooth-transition hover:-translate-y-2">
-                    <div
-                        class="w-16 h-16 mx-auto bg-neon-purple/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 smooth-transition">
-                        <i class="fa-solid fa-play text-2xl text-neon-purple"></i>
-                    </div>
-                    <h3 class="font-gaming text-xl font-bold mb-3" data-i18n="how.step1.title">1. Regarde & Installe
-                    </h3>
-                    <p class="text-gray-400 text-sm leading-relaxed" data-i18n="how.step1.desc">
-                        L'argent magique n'existe pas : ce sont les pubs qui paient. Regarde des vidéos courtes ou
-                        installe des jeux partenaires pour gagner tes premiers <strong>Pixels</strong>.
-                    </p>
-                </div>
-
-                <!-- Step 2: Social & Referral -->
-                <div
-                    class="group p-8 rounded-2xl bg-void hover:bg-gray-900 border border-white/5 hover:border-neon-blue/50 smooth-transition hover:-translate-y-2">
-                    <div
-                        class="w-16 h-16 mx-auto bg-neon-blue/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 smooth-transition">
-                        <i class="fa-solid fa-users text-2xl text-neon-blue"></i>
-                    </div>
-                    <h3 class="font-gaming text-xl font-bold mb-3" data-i18n="how.step2.title">2. Partage à ta Squad
-                    </h3>
-                    <p class="text-gray-400 text-sm leading-relaxed" data-i18n="how.step2.desc">
-                        Poste ton lien unique sur TikTok ou Discord. Tu gagnes des Pixels à <strong>chaque fois</strong>
-                        qu'un pote clique dessus. C'est le moyen le plus rapide de farm.
-                    </p>
-                </div>
-
-                <!-- Step 3: Reward -->
-                <div
-                    class="group p-8 rounded-2xl bg-void hover:bg-gray-900 border border-white/5 hover:border-toxic-green/50 smooth-transition hover:-translate-y-2">
-                    <div
-                        class="w-16 h-16 mx-auto bg-toxic-green/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 smooth-transition">
-                        <i class="fa-solid fa-wallet text-2xl text-toxic-green"></i>
-                    </div>
-                    <h3 class="font-gaming text-xl font-bold mb-3" data-i18n="how.step3.title">3. Encaisse le Loot</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed" data-i18n="how.step3.desc">
-                        Dès que tu as assez de Pixels, échange-les instantanément contre des cartes cadeaux officielles
-                        (Robux, V-Bucks, Paysafecard).
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- SECURITY / VAULT SECTION -->
-    <section class="py-20 relative overflow-hidden">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="glass-panel rounded-3xl p-8 md:p-12 border border-neon-blue/20 relative">
-                <!-- Badge de sécurité -->
-                <div
-                    class="absolute -top-6 left-1/2 -translate-x-1/2 bg-void-light border border-neon-blue px-6 py-2 rounded-full flex items-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                    <i class="fa-solid fa-shield-cat text-neon-blue"></i>
-                    <span class="font-gaming font-bold text-sm tracking-wider" data-i18n="vault.badge">SECURE
-                        VAULT™</span>
-                </div>
-
-                <div class="text-center mt-6">
-                    <h2 class="font-gaming text-2xl md:text-3xl font-bold mb-6" data-i18n="vault.title">Protocole de
-                        Retrait <span class="text-toxic-green">Anti-Bot</span></h2>
-
-                    <div class="grid md:grid-cols-2 gap-8 text-left mt-10">
-                        <!-- Feature 1 -->
+                        <!-- Step 2 -->
                         <div
-                            class="bg-void/50 p-6 rounded-xl border-l-4 border-yellow-500 hover:bg-void/80 transition-colors">
-                            <div class="flex items-center gap-3 mb-2">
-                                <i class="fa-solid fa-lock text-yellow-500"></i>
-                                <h4 class="font-bold font-gaming text-white" data-i18n="vault.feat1.title">Premier
-                                    Retrait : 7 Jours</h4>
+                            class="timeline-step relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center mb-24">
+                            <div class="order-2"> <!-- Image side -->
+                                <div class="glass-card p-6 rounded-2xl -rotate-1 hover:rotate-0 transition-transform">
+                                    <div class="text-xs font-mono text-gray-500 mb-2">// MISSION.LOG</div>
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span>Survey: Cyber Security</span>
+                                            <span class="text-loot-gold">+500 PTS</span>
+                                        </div>
+                                        <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                                            <div class="bg-loot-gold w-3/4 h-full"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <p class="text-sm text-gray-400 leading-relaxed" data-i18n="vault.feat1.desc">
-                                Vérification manuelle obligatoire pour le premier paiement. On s'assure juste que tu
-                                n'es pas un script russe.
-                            </p>
+                            <div
+                                class="absolute left-1/2 -translate-x-1/2 w-12 h-12 bg-loot-black border-2 border-loot-purple rounded-full z-10 flex items-center justify-center hidden md:flex shadow-purple">
+                                <i data-lucide="sword" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div class="order-1 md:order-3"> <!-- Text side -->
+                                <h3 class="font-display text-3xl font-bold text-loot-purple mb-2"
+                                    data-i18n="quest_step2_title">2. The Grind</h3>
+                                <p class="text-gray-400" data-i18n="quest_step2_desc">Complete quests, surveys, and app
+                                    downloads. Each mission
+                                    grants XP (Points).</p>
+                            </div>
                         </div>
 
-                        <!-- Feature 2 -->
+                        <!-- Step 3 -->
                         <div
-                            class="bg-void/50 p-6 rounded-xl border-l-4 border-toxic-green hover:bg-void/80 transition-colors">
-                            <div class="flex items-center gap-3 mb-2">
-                                <i class="fa-solid fa-rocket text-toxic-green"></i>
-                                <h4 class="font-bold font-gaming text-white" data-i18n="vault.feat2.title">Ensuite :
-                                    Speed Run</h4>
+                            class="timeline-step relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
+                            <div class="md:text-right order-2 md:order-1">
+                                <h3 class="font-display text-3xl font-bold text-loot-gold mb-2"
+                                    data-i18n="quest_step3_title">3. The Loot</h3>
+                                <p class="text-gray-400" data-i18n="quest_step3_desc">Cash out instantly. Robux,
+                                    V-Bucks, or PayPal. No waiting
+                                    games.</p>
                             </div>
-                            <p class="text-sm text-gray-400 leading-relaxed" data-i18n="vault.feat2.desc">
-                                Une fois vérifié "Humain", tous les retraits suivants sont validés en 24h-48h max.
-                            </p>
+                            <div
+                                class="absolute left-1/2 -translate-x-1/2 w-12 h-12 bg-loot-black border-2 border-loot-gold rounded-full z-10 flex items-center justify-center hidden md:flex shadow-lg shadow-yellow-500/20">
+                                <i data-lucide="gem" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div class="order-1 md:order-2">
+                                <div class="glass-card p-6 rounded-2xl rotate-2 hover:rotate-0 transition-transform">
+                                    <div class="text-xs font-mono text-gray-500 mb-2">// TRANSACTION.COMPLETE</div>
+                                    <div class="text-3xl font-bold text-white mb-1">1,000</div>
+                                    <div class="text-sm text-loot-neon">ROBUX DELIVERED</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- REWARDS PREVIEW -->
+            <section id="rewards" class="py-24 bg-gradient-to-b from-transparent to-loot-dark/50">
+                <div class="max-w-7xl mx-auto px-6">
+                    <h2 class="font-display text-4xl md:text-5xl font-bold mb-12 text-center">Featured <span
+                            class="text-gradient-primary">Loot</span></h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Card 1 -->
+                        <div class="glass-card p-1 rounded-3xl relative group">
+                            <div class="absolute top-4 right-4 z-10">
+                                <span class="flex h-3 w-3">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                </span>
+                            </div>
+                            <div
+                                class="bg-loot-card/50 rounded-[22px] p-8 h-full flex flex-col items-center text-center">
+                                <div
+                                    class="w-32 h-32 mb-6 transform group-hover:scale-110 transition-transform duration-500 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Robux_2019_Logo_gold.svg"
+                                        alt="Robux" class="w-full h-full object-contain">
+                                </div>
+                                <h3 class="font-display text-2xl font-bold mb-2">Roblox Robux</h3>
+                                <p class="text-gray-400 text-sm mb-6">The ultimate currency for Roblox.</p>
+                                <button onclick="loginWithGoogle()"
+                                    class="w-full btn-neon py-3 rounded-lg font-bold">CLAIM NOW</button>
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="glass-card p-1 rounded-3xl relative group border-loot-purple/50">
+                            <div
+                                class="absolute -inset-0.5 bg-gradient-to-r from-loot-neon to-loot-purple opacity-30 blur group-hover:opacity-60 transition duration-500 rounded-3xl">
+                            </div>
+                            <div class="absolute top-4 right-4 z-10">
+                                <span class="flex h-3 w-3">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                </span>
+                            </div>
+                            <div
+                                class="bg-loot-card rounded-[22px] p-8 h-full flex flex-col items-center text-center relative">
+                                <div
+                                    class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-loot-purple text-xs font-bold px-3 py-1 rounded-full border border-loot-black">
+                                    POPULAR</div>
+                                <div
+                                    class="w-32 h-32 mb-6 transform group-hover:scale-110 transition-transform duration-500 filter drop-shadow-[0_0_15px_rgba(188,19,254,0.3)]">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/31/Epic_Games_logo.svg"
+                                        alt="V-Bucks"
+                                        class="w-full h-full object-contain p-4 invert bg-black/20 rounded-full">
+                                </div>
+                                <h3 class="font-display text-2xl font-bold mb-2">Fortnite V-Bucks</h3>
+                                <p class="text-gray-400 text-sm mb-6">Skins, Battle Passes & Emotes.</p>
+                                <button onclick="loginWithGoogle()"
+                                    class="w-full btn-glow py-3 rounded-lg font-bold">CLAIM NOW</button>
+                            </div>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="glass-card p-1 rounded-3xl relative group">
+                            <div class="absolute top-4 right-4 z-10">
+                                <span class="flex h-3 w-3">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                </span>
+                            </div>
+                            <div
+                                class="bg-loot-card/50 rounded-[22px] p-8 h-full flex flex-col items-center text-center">
+                                <div
+                                    class="w-32 h-32 mb-6 transform group-hover:scale-110 transition-transform duration-500 filter drop-shadow-[0_0_15px_rgba(0,112,186,0.2)]">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg"
+                                        alt="PayPal" class="w-full h-full object-contain p-2">
+                                </div>
+                                <h3 class="font-display text-2xl font-bold mb-2">PayPal Cash</h3>
+                                <p class="text-gray-400 text-sm mb-6">Real money directly to your account.</p>
+                                <button onclick="loginWithGoogle()"
+                                    class="w-full btn-neon py-3 rounded-lg font-bold">CLAIM NOW</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
+            </section>
 
-    <!-- FOOTER -->
-    <footer class="bg-void-light border-t border-white/5 pt-12 pb-6">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <div class="flex justify-center items-center gap-2 mb-6">
-                <i class="fa-solid fa-ghost text-neon-purple text-xl"></i>
-                <span class="font-gaming font-bold text-xl">LootQuest</span>
-            </div>
-            <p class="text-gray-500 text-sm mb-8 max-w-md mx-auto" data-i18n="footer.disclaimer">
-                LootQuest n'est pas affilié à Roblox, Epic Games, ou Microsoft. Plateforme de récompenses publicitaires
-                pour gamers.
-            </p>
-            <div class="flex justify-center gap-6 text-sm text-gray-400 font-gaming mb-8">
-                <a href="legal.html?page=cgu" class="hover:text-neon-blue transition-colors"
-                    data-i18n="footer.cgu">CGU</a>
-                <a href="legal.html?page=privacy" class="hover:text-neon-blue transition-colors"
-                    data-i18n="footer.privacy">Confidentialité</a>
-                <a href="legal.html?page=support" class="hover:text-neon-blue transition-colors"
-                    data-i18n="footer.support">Support</a>
-            </div>
-            <p class="text-gray-700 text-xs">© 2024 LootQuest. GG WP.</p>
-        </div>
-    </footer>
-
-    <!-- LOGIN MODAL (Backend Ready Form) -->
-    <div id="login-modal"
-        class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300 opacity-0">
-        <div id="modal-content"
-            class="glass-panel w-full max-w-md p-8 rounded-2xl transform transition-all duration-300 scale-95 border border-neon-purple/30 shadow-[0_0_30px_rgba(168,85,247,0.2)] relative mx-4">
-
-            <!-- Close Button -->
-            <button id="close-modal-btn"
-                class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-                <i class="fa-solid fa-xmark text-2xl"></i>
-            </button>
-
-            <div class="text-center mb-8">
-                <h3 class="font-gaming text-2xl font-bold text-white mb-2" data-i18n="login.title">IDENTIFICATION</h3>
-                <p class="text-gray-400 text-sm" data-i18n="login.subtitle">Connecte-toi pour sauvegarder tes Pixels.
-                </p>
-            </div>
-
-            <div class="space-y-3 mb-6">
-                <!-- Discord Button : Animation bounce supprimée -->
-                <button data-provider="discord"
-                    class="w-full py-3 rounded-lg font-bold text-white flex items-center justify-center gap-3 smooth-transition hover:scale-[1.02] hover:shadow-lg"
-                    style="background-color: #5865F2;">
-                    <i class="fa-brands fa-discord text-xl"></i>
-                    <span data-i18n="login.discord">Continuer avec Discord</span>
-                </button>
-
-                <!-- Google Button -->
-                <button data-provider="google"
-                    class="w-full py-3 rounded-lg font-bold text-black bg-white flex items-center justify-center gap-3 smooth-transition hover:scale-[1.02] hover:shadow-lg">
-                    <i class="fa-brands fa-google text-xl text-red-500"></i>
-                    <span data-i18n="login.google">Continuer avec Google</span>
-                </button>
-            </div>
-
-            <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-600"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-[#151725] text-gray-400 font-gaming text-xs" data-i18n="login.classic">OU
-                        CLASSIQUE</span>
-                </div>
-            </div>
-
-            <!-- Formulaire Backend Ready -->
-            <form class="space-y-4" action="/api/login" method="POST"
-                onsubmit="event.preventDefault(); alert('Envoi du formulaire vers le backend simulé.');">
-                <div>
-                    <label class="block text-xs font-gaming text-neon-blue mb-1 ml-1"
-                        data-i18n="login.email_label">EMAIL DU JOUEUR</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-envelope absolute left-4 top-3.5 text-gray-500"></i>
-                        <!-- Ajout de name="email" pour le backend -->
-                        <input type="email" name="email" required placeholder="pseudo@exemple.com"
-                            class="w-full bg-black/50 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-colors placeholder-gray-600">
+            <!-- TRUST FOOTER -->
+            <footer class="relative z-10 mt-20 border-t border-white/5">
+                <!-- Server Status Bar -->
+                <div class="bg-loot-card/50 border-b border-white/5 py-3">
+                    <div class="max-w-7xl mx-auto px-6 flex items-center justify-between text-sm">
+                        <div id="server-status" class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            <span class="text-gray-400">All Systems Operational</span>
+                        </div>
+                        <div class="flex items-center gap-4 text-gray-500">
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-loot-neon"></i>
+                                SSL Secured
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="lock" class="w-4 h-4 text-loot-purple"></i>
+                                256-bit Encryption
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <button type="submit"
-                    class="w-full py-3 rounded-lg font-gaming font-bold text-white bg-gradient-to-r from-neon-purple to-neon-blue hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] smooth-transition flex items-center justify-center gap-2">
-                    <span data-i18n="login.submit">LANCER LA SESSION</span> <i class="fa-solid fa-bolt"></i>
-                </button>
-            </form>
 
-            <p class="mt-6 text-center text-[10px] text-gray-500" data-i18n="login.cookie">
-                En te connectant, tu acceptes que nous utilisions des cookies pour tracker tes quêtes.
-            </p>
+                <!-- Main Footer Content -->
+                <div class="glass py-16">
+                    <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-5 gap-12">
+
+                        <!-- Brand Column -->
+                        <div class="col-span-1 md:col-span-2">
+                            <a href="#"
+                                class="font-display text-2xl font-bold tracking-tighter flex items-center gap-2 mb-4">
+                                <i data-lucide="gamepad-2" class="text-loot-neon"></i>
+                                <span>LOOT<span class="text-gradient-primary">QUEST</span></span>
+                            </a>
+                            <p class="text-gray-400 text-sm mb-6 max-w-xs">
+                                The trusted platform for gamers to earn Robux, V-Bucks, and real rewards through simple
+                                tasks.
+                            </p>
+
+                            <!-- Social Links with Glow -->
+                            <div class="flex items-center gap-3">
+                                <a href="https://discord.gg/lootquest" target="_blank" rel="noopener"
+                                    class="w-10 h-10 rounded-xl bg-[#5865F2]/20 border border-[#5865F2]/30 flex items-center justify-center text-[#5865F2] hover:bg-[#5865F2] hover:text-white hover:shadow-[0_0_20px_rgba(88,101,242,0.5)] transition-all duration-300">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                                    </svg>
+                                </a>
+                                <a href="https://twitter.com/lootquest" target="_blank" rel="noopener"
+                                    class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-white hover:text-black hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                    </svg>
+                                </a>
+                                <a href="https://youtube.com/@lootquest" target="_blank" rel="noopener"
+                                    class="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] transition-all duration-300">
+                                    <i data-lucide="youtube" class="w-5 h-5"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Quick Links -->
+                        <div>
+                            <h4 class="font-display font-bold text-white mb-4" data-i18n="footer_platform">Platform</h4>
+                            <ul class="space-y-2 text-sm">
+                                <li><a href="#how-it-works" class="text-gray-400 hover:text-loot-neon transition-colors"
+                                        data-i18n="footer_how_works">How it Works</a>
+                                </li>
+                                <li><a href="#rewards" class="text-gray-400 hover:text-loot-neon transition-colors"
+                                        data-i18n="footer_rewards">Rewards</a></li>
+                                <li><a href="/blog" onclick="loadBlogPage(); return false;"
+                                        class="text-gray-400 hover:text-loot-neon transition-colors"
+                                        data-i18n="footer_blog">Blog</a></li>
+                                <li><a href="#" onclick="openLegalModal('faq'); return false;"
+                                        class="text-gray-400 hover:text-loot-neon transition-colors"
+                                        data-i18n="footer_faq">FAQ</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Support -->
+                        <div>
+                            <h4 class="font-display font-bold text-white mb-4" data-i18n="footer_support">Support</h4>
+                            <ul class="space-y-2 text-sm">
+                                <li><a href="#" onclick="openLegalModal('faq'); return false;"
+                                        class="text-gray-400 hover:text-loot-neon transition-colors"
+                                        data-i18n="footer_faq">FAQ</a></li>
+                                <li><a href="#" onclick="openContactModal(); return false;"
+                                        class="text-gray-400 hover:text-loot-neon transition-colors"
+                                        data-i18n="footer_contact">Contact Us</a></li>
+                                <li><a href="https://discord.gg/lootquest" target="_blank"
+                                        class="text-gray-400 hover:text-loot-neon transition-colors"
+                                        data-i18n="footer_discord">Discord
+                                        Community</a></li>
+                                <li><a href="#" onclick="openBugModal(); return false;"
+                                        class="text-gray-400 hover:text-loot-neon transition-colors"
+                                        data-i18n="footer_bug">Report a
+                                        Bug</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Legal -->
+                        <div>
+                            <h4 class="font-display font-bold text-white mb-4" data-i18n="footer_legal">Legal</h4>
+                            <ul class="space-y-2 text-sm">
+                                <li><a href="#" onclick="openLegalModal('terms-of-service'); return false;"
+                                        class="text-gray-400 hover:text-loot-neon transition-colors"
+                                        data-i18n="footer_terms">Terms of
+                                        Service</a></li>
+                                <li><a href="#" onclick="openLegalModal('privacy-policy'); return false;"
+                                        class="text-gray-400 hover:text-loot-neon transition-colors"
+                                        data-i18n="footer_privacy">Privacy Policy</a>
+                                </li>
+                                <li><a href="#" onclick="openLegalModal('cookie-policy'); return false;"
+                                        class="text-gray-400 hover:text-loot-neon transition-colors"
+                                        data-i18n="footer_cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Bar -->
+                <div class="bg-loot-black py-4 border-t border-white/5">
+                    <div
+                        class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+                        <p>&copy; <span id="copyright-year"></span> LootQuest. All rights reserved.</p>
+                        <div class="flex items-center gap-4">
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="globe" class="w-4 h-4"></i>
+                                English (US)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+
+        <!-- ==================== DASHBOARD (Hidden by default) ==================== -->
+        <main id="dashboard" class="hidden min-h-screen pt-24 px-6 max-w-7xl mx-auto">
+            <div class="text-center py-20">
+                <h2 class="text-3xl font-display font-bold mb-4">Welcome back, <span id="user-name-display"
+                        class="text-loot-neon">Gamer</span></h2>
+                <div class="glass-card p-8 rounded-2xl max-w-md mx-auto">
+                    <p class="text-gray-400 mb-2">Current Balance</p>
+                    <div class="text-5xl font-bold text-white mb-2" id="dash-balance">0</div>
+                    <div class="text-loot-gold font-mono text-sm">LOOT POINTS AVAILABLE</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 max-w-md mx-auto mt-8">
+                    <button class="glass-card p-6 rounded-xl hover:bg-loot-card/80 flex flex-col items-center gap-3">
+                        <i data-lucide="sword" class="w-8 h-8 text-loot-purple"></i>
+                        <span class="font-bold">Offers</span>
+                    </button>
+                    <button class="glass-card p-6 rounded-xl hover:bg-loot-card/80 flex flex-col items-center gap-3">
+                        <i data-lucide="gift" class="w-8 h-8 text-loot-neon"></i>
+                        <span class="font-bold">Redeem</span>
+                    </button>
+                </div>
+
+                <button onclick="logout()" class="mt-8 text-gray-500 hover:text-white text-sm">
+                    <i data-lucide="log-out" class="w-4 h-4 inline mr-1"></i> Logout
+                </button>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- ==================== AUTH MODAL ==================== -->
+    <div id="auth-modal" class="fixed inset-0 z-50 hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeAuthModal()"></div>
+
+        <!-- Modal Content -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-4">
+            <div class="glass-card rounded-3xl p-8 border border-white/10">
+                <!-- Close Button -->
+                <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+
+                <!-- Logo -->
+                <div class="text-center mb-6">
+                    <h2 class="font-display text-2xl font-bold">
+                        LOOT<span class="text-gradient-primary">QUEST</span>
+                    </h2>
+                    <p class="text-gray-500 text-sm mt-1">Join the quest. Earn rewards.</p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex bg-loot-card rounded-xl p-1 mb-6">
+                    <button id="tab-login" onclick="switchAuthTab('login')"
+                        class="flex-1 py-2 rounded-lg text-sm font-bold transition-all bg-loot-purple text-white">
+                        Login
+                    </button>
+                    <button id="tab-register" onclick="switchAuthTab('register')"
+                        class="flex-1 py-2 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-white">
+                        Register
+                    </button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="form-login" onsubmit="handleEmailLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Email</label>
+                        <input type="email" id="login-email" required
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
+                            placeholder="gamer@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Password</label>
+                        <input type="password" id="login-password" required
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
+                            placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full btn-glow py-3 rounded-xl font-bold text-lg">
+                        LOGIN
+                    </button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="form-register" onsubmit="handleEmailRegister(event)" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Display Name</label>
+                        <input type="text" id="register-name"
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
+                            placeholder="xX_ProGamer_Xx">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Email</label>
+                        <input type="email" id="register-email" required
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
+                            placeholder="gamer@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Password (min 6 chars)</label>
+                        <input type="password" id="register-password" required minlength="6"
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
+                            placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full btn-glow py-3 rounded-xl font-bold text-lg">
+                        CREATE ACCOUNT
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="flex items-center gap-4 my-6">
+                    <div class="flex-1 h-px bg-white/10"></div>
+                    <span class="text-gray-500 text-sm">or continue with</span>
+                    <div class="flex-1 h-px bg-white/10"></div>
+                </div>
+
+                <!-- OAuth Buttons -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="loginWithGoogle()"
+                        class="flex items-center justify-center gap-2 bg-white text-black py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05"
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                            <path fill="#EA4335"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        Google
+                    </button>
+                    <button onclick="loginWithDiscord()"
+                        class="flex items-center justify-center gap-2 bg-[#5865F2] text-white py-3 rounded-xl font-bold hover:bg-[#4752C4] transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                        </svg>
+                        Discord
+                    </button>
+                </div>
+
+                <!-- Error Message -->
+                <div id="auth-error"
+                    class="hidden mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 text-sm text-center">
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- JAVASCRIPT FOR SOCIAL PROOF & INTERACTIONS -->
-    <!-- JAVASCRIPT FOR SOCIAL PROOF & INTERACTIONS -->
-    <script src="js/config.js"></script>
-    <script src="js/i18n.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
-    <script>
-        // --- SIMULATION XP BARRE ---
-        setTimeout(() => {
-            const xpBar = document.getElementById('xp-bar');
-            if (xpBar) xpBar.style.width = '35%';
-        }, 1000);
+    <!-- ==================== BUG REPORT MODAL ==================== -->
+    <div id="bug-report-modal" class="fixed inset-0 z-50 hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeBugReportModal()"></div>
 
-        // --- CONFIGURATION DES DONNÉES FAKE ---
-        const users = ['DarkSlayer', 'NoobMaster69', 'KikouDu93', 'EzWin_420', 'ProGamerZ', 'LaraCraft', 'SkyWalkerFR', 'Ttv_Ninja'];
-        const actions = [
-            { item: '1000 V-Bucks', icon: 'fa-fort-awesome', color: 'text-purple-400' },
-            { item: 'Carte Roblox 10€', icon: 'fa-cube', color: 'text-red-400' },
-            { item: '250 Pixels', icon: 'fa-square', color: 'text-yellow-400' },
-            { item: 'Skin Mystère', icon: 'fa-mask', color: 'text-neon-blue' }
+        <!-- Modal Content -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-4">
+            <div class="glass-card rounded-3xl p-8 border border-white/10">
+                <!-- Close Button -->
+                <button onclick="closeBugReportModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+
+                <!-- Header -->
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+                        <i data-lucide="bug" class="w-6 h-6 text-red-500"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-display text-xl font-bold">Report a Bug</h2>
+                        <p class="text-gray-500 text-sm">Help us improve LootQuest</p>
+                    </div>
+                </div>
+
+                <!-- Form -->
+                <form id="bug-report-form" onsubmit="submitBugReport(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Category</label>
+                        <select id="report-category" required
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-loot-neon transition-colors">
+                            <option value="">Select a category</option>
+                            <option value="ui">UI / Display Issue</option>
+                            <option value="offers">Offers not crediting</option>
+                            <option value="withdrawal">Withdrawal problem</option>
+                            <option value="login">Login / Account issue</option>
+                            <option value="performance">Performance / Loading</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Title</label>
+                        <input type="text" id="report-title" required minlength="5" maxlength="200"
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
+                            placeholder="Brief description of the issue">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Description</label>
+                        <textarea id="report-description" required minlength="20" maxlength="5000" rows="4"
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors resize-none"
+                            placeholder="Explain what happened, what you expected, and steps to reproduce..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Your Email (optional)</label>
+                        <input type="email" id="report-email"
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
+                            placeholder="For follow-up (if not logged in)">
+                    </div>
+
+                    <button type="submit"
+                        class="w-full btn-glow py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                        Submit Report
+                    </button>
+                </form>
+
+                <!-- Success Message -->
+                <div id="report-success" class="hidden text-center py-8">
+                    <div class="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="check-circle" class="w-8 h-8 text-green-500"></i>
+                    </div>
+                    <h3 class="font-display text-xl font-bold mb-2">Thank You!</h3>
+                    <p class="text-gray-400 mb-6">Your bug report has been submitted. We'll look into it.</p>
+                    <button onclick="closeBugReportModal()" class="text-loot-neon hover:underline">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ADMIN PANEL (Hidden page) ==================== -->
+    <div id="admin-panel" class="fixed inset-0 z-50 hidden bg-loot-black overflow-auto">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center gap-4">
+                    <button onclick="closeAdminPanel()" class="text-gray-400 hover:text-white">
+                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                    </button>
+                    <h1 class="font-display text-3xl font-bold">Admin <span class="text-gradient-primary">Panel</span>
+                    </h1>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-gray-400">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-loot-neon"></i>
+                    Authenticated
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div id="admin-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <!-- Stats injected by JS -->
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-2 mb-6">
+                <button onclick="loadAdminReports('all')"
+                    class="admin-tab active px-4 py-2 rounded-lg bg-loot-purple text-white font-medium">
+                    All Reports
+                </button>
+                <button onclick="loadAdminReports('new')"
+                    class="admin-tab px-4 py-2 rounded-lg bg-loot-card text-gray-400 font-medium hover:text-white">
+                    New
+                </button>
+                <button onclick="loadAdminReports('in_progress')"
+                    class="admin-tab px-4 py-2 rounded-lg bg-loot-card text-gray-400 font-medium hover:text-white">
+                    In Progress
+                </button>
+                <button onclick="loadAdminReports('resolved')"
+                    class="admin-tab px-4 py-2 rounded-lg bg-loot-card text-gray-400 font-medium hover:text-white">
+                    Resolved
+                </button>
+            </div>
+
+            <!-- Reports Table -->
+            <div class="glass-card rounded-2xl overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-loot-card/50 border-b border-white/10">
+                        <tr>
+                            <th class="text-left px-6 py-4 text-sm font-medium text-gray-400">ID</th>
+                            <th class="text-left px-6 py-4 text-sm font-medium text-gray-400">Category</th>
+                            <th class="text-left px-6 py-4 text-sm font-medium text-gray-400">Title</th>
+                            <th class="text-left px-6 py-4 text-sm font-medium text-gray-400">User</th>
+                            <th class="text-left px-6 py-4 text-sm font-medium text-gray-400">Status</th>
+                            <th class="text-left px-6 py-4 text-sm font-medium text-gray-400">Date</th>
+                            <th class="text-left px-6 py-4 text-sm font-medium text-gray-400">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-reports-table">
+                        <!-- Reports injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== UNIVERSAL DYNAMIC MODAL ==================== -->
+    <div id="dynamic-modal" class="fixed inset-0 z-[100] hidden">
+        <!-- Backdrop with blur -->
+        <div id="modal-backdrop"
+            class="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300 opacity-0"></div>
+
+        <!-- Modal Container -->
+        <div class="absolute inset-0 flex items-center justify-center p-4 overflow-auto">
+            <div id="modal-content"
+                class="relative w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0">
+                <!-- Glassmorphism Card -->
+                <div
+                    class="glass-card rounded-3xl border border-white/20 shadow-2xl shadow-loot-purple/20 overflow-hidden">
+                    <!-- Header -->
+                    <div id="modal-header"
+                        class="flex items-center justify-between px-8 py-5 border-b border-white/10 bg-gradient-to-r from-loot-purple/10 to-transparent">
+                        <div class="flex items-center gap-3">
+                            <div id="modal-icon"
+                                class="w-10 h-10 rounded-xl bg-loot-purple/20 flex items-center justify-center">
+                                <i data-lucide="info" class="w-5 h-5 text-loot-neon"></i>
+                            </div>
+                            <h2 id="modal-title" class="font-display text-xl font-bold text-white">Modal Title</h2>
+                        </div>
+                        <button onclick="closeModal()"
+                            class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Body (scrollable with custom scrollbar) -->
+                    <div id="modal-body" class="px-8 py-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                        <!-- Content injected dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Custom Scrollbar for Modals */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #A855F7, #00D9FF);
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #9333EA, #00B8D9);
+        }
+
+        /* Modal Animation Classes */
+        #dynamic-modal.active #modal-backdrop {
+            opacity: 1;
+        }
+
+        #dynamic-modal.active #modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        /* Legal Content Styling */
+        .legal-content h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .legal-content p {
+            color: #9CA3AF;
+            margin-bottom: 1rem;
+            line-height: 1.7;
+        }
+
+        .legal-content ul {
+            list-style: disc;
+            padding-left: 1.5rem;
+            color: #9CA3AF;
+            margin-bottom: 1rem;
+        }
+
+        .legal-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .legal-content strong {
+            color: #fff;
+        }
+
+        .legal-content .warning-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .legal-content .warning-box p {
+            color: #FCA5A5;
+            margin: 0;
+        }
+    </style>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // ════════════════ STATE ════════════════
+        let currentUser = null;
+        let authToken = localStorage.getItem('lootquest_token');
+
+        // ════════════════ GSAP ANIMATIONS ════════════════
+
+        window.addEventListener('load', async () => {
+            const tl = gsap.timeline();
+
+            tl.to("#loader-bar", { width: "100%", duration: 1.5, ease: "power2.inOut" })
+                .to("#loader", { opacity: 0, duration: 0.5, onComplete: () => document.getElementById('loader').style.display = 'none' })
+                .to(".hero-element", {
+                    y: 0,
+                    opacity: 1,
+                    duration: 0.8,
+                    stagger: 0.2,
+                    ease: "back.out(1.7)"
+                });
+
+            initParallax();
+
+            // Check for existing session
+            if (authToken) {
+                await checkAuthSession();
+            }
+        });
+
+        function initParallax() {
+            const container = document.getElementById('parallax-bg');
+            const colors = ['#00f3ff', '#bc13fe', '#ffd700'];
+
+            for (let i = 0; i < 15; i++) {
+                const el = document.createElement('div');
+                const size = Math.random() * 50 + 10;
+
+                el.style.width = `${size}px`;
+                el.style.height = `${size}px`;
+                el.style.position = 'absolute';
+                el.style.left = `${Math.random() * 100}%`;
+                el.style.top = `${Math.random() * 100}%`;
+                el.style.opacity = Math.random() * 0.1 + 0.02;
+                el.style.background = colors[Math.floor(Math.random() * colors.length)];
+                el.style.borderRadius = Math.random() > 0.5 ? '50%' : '10%';
+
+                container.appendChild(el);
+
+                gsap.to(el, {
+                    y: Math.random() * 200 - 100,
+                    x: Math.random() * 200 - 100,
+                    rotation: Math.random() * 360,
+                    duration: Math.random() * 10 + 10,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+            }
+        }
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.to("#timeline-fill", {
+            height: "100%",
+            scrollTrigger: {
+                trigger: "#how-it-works",
+                start: "top center",
+                end: "bottom center",
+                scrub: true
+            }
+        });
+
+        gsap.utils.toArray('.timeline-step').forEach((step, i) => {
+            gsap.from(step, {
+                opacity: 0,
+                y: 50,
+                duration: 0.8,
+                scrollTrigger: {
+                    trigger: step,
+                    start: "top 80%",
+                    toggleActions: "play none none reverse"
+                }
+            });
+        });
+
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('glass', 'bg-black/50');
+            } else {
+                nav.classList.remove('glass', 'bg-black/50');
+            }
+        });
+
+        // ════════════════ PAYOUT TICKER ════════════════
+
+        const recentWins = [
+            { user: "xX_Slayer_Xx", amount: "1,000 Robux" },
+            { user: "FortniteGod", amount: "2,800 V-Bucks" },
+            { user: "SarahP", amount: "$10 PayPal" },
+            { user: "NoobMaster69", amount: "400 Robux" },
+            { user: "ProGamer", amount: "$50 Steam" },
+            { user: "LootKing", amount: "13,500 V-Bucks" },
+            { user: "MinecraftSteve", amount: "$20 Amazon" },
         ];
 
-        // --- FONCTION TOAST AVEC ANIMATION PLUS DOUCE ---
-        function createToast() {
+        const tickerHtml = recentWins.map(win => `
+            <div class="inline-flex items-center gap-3 mx-8 py-1">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="font-bold text-gray-300">${win.user}</span>
+                <span class="text-gray-500 text-sm">withdrew</span>
+                <span class="font-bold text-loot-neon">${win.amount}</span>
+            </div>
+        `).join('');
+
+        document.getElementById('payout-ticker').innerHTML = tickerHtml;
+        document.getElementById('payout-ticker-dup').innerHTML = tickerHtml;
+
+        // ════════════════ AUTH MODAL ════════════════
+
+        function openAuthModal() {
+            document.getElementById('auth-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+            hideAuthError();
+        }
+
+        function switchAuthTab(tab) {
+            const loginTab = document.getElementById('tab-login');
+            const registerTab = document.getElementById('tab-register');
+            const loginForm = document.getElementById('form-login');
+            const registerForm = document.getElementById('form-register');
+
+            if (tab === 'login') {
+                loginTab.classList.add('bg-loot-purple', 'text-white');
+                loginTab.classList.remove('text-gray-400');
+                registerTab.classList.remove('bg-loot-purple', 'text-white');
+                registerTab.classList.add('text-gray-400');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            } else {
+                registerTab.classList.add('bg-loot-purple', 'text-white');
+                registerTab.classList.remove('text-gray-400');
+                loginTab.classList.remove('bg-loot-purple', 'text-white');
+                loginTab.classList.add('text-gray-400');
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            }
+            hideAuthError();
+        }
+
+        function showAuthError(message) {
+            const errorEl = document.getElementById('auth-error');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        function hideAuthError() {
+            document.getElementById('auth-error').classList.add('hidden');
+        }
+
+        // ════════════════ EMAIL/PASSWORD AUTH ════════════════
+
+        async function handleEmailLogin(e) {
+            e.preventDefault();
+            hideAuthError();
+
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (!data.success) {
+                    showAuthError(data.error || 'Login failed');
+                    return;
+                }
+
+                // Save token and user
+                authToken = data.token;
+                localStorage.setItem('lootquest_token', authToken);
+                currentUser = data.user;
+
+                closeAuthModal();
+                showDashboard();
+                showToast('Welcome back, ' + currentUser.displayName + '!', 'success');
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showAuthError('Connection error. Please try again.');
+            }
+        }
+
+        async function handleEmailRegister(e) {
+            e.preventDefault();
+            hideAuthError();
+
+            const displayName = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, displayName })
+                });
+
+                const data = await res.json();
+
+                if (!data.success) {
+                    showAuthError(data.error || 'Registration failed');
+                    return;
+                }
+
+                // Save token and user
+                authToken = data.token;
+                localStorage.setItem('lootquest_token', authToken);
+                currentUser = data.user;
+
+                closeAuthModal();
+                showDashboard();
+                showToast('Account created! +' + data.user.signupBonus + ' bonus points!', 'success');
+
+            } catch (error) {
+                console.error('Register error:', error);
+                showAuthError('Connection error. Please try again.');
+            }
+        }
+
+        async function checkAuthSession() {
+            try {
+                const res = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    currentUser = data.user;
+                    showDashboard();
+                } else {
+                    // Token invalid, clear it
+                    localStorage.removeItem('lootquest_token');
+                    authToken = null;
+                }
+            } catch (error) {
+                console.error('Session check failed:', error);
+            }
+        }
+
+        // ════════════════ OAUTH CALLBACK HANDLER ════════════════
+
+        async function handleOAuthCallback() {
+            // Check for token in URL (from Discord OAuth callback)
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            const provider = urlParams.get('provider');
+            const error = urlParams.get('error');
+
+            // Handle OAuth errors
+            if (error) {
+                const errorMessages = {
+                    'discord_denied': 'Discord login was cancelled',
+                    'no_code': 'Authorization code missing',
+                    'token_exchange_failed': 'Failed to authenticate with Discord',
+                    'user_fetch_failed': 'Failed to get Discord profile',
+                    'email_required': 'Discord email is required. Enable it in your Discord privacy settings.',
+                    'auth_failed': 'Authentication failed. Please try again.'
+                };
+                showToast(errorMessages[error] || 'Login failed', 'error');
+                // Clean URL
+                window.history.replaceState({}, document.title, '/');
+                return;
+            }
+
+            // Handle successful OAuth login
+            if (token) {
+                authToken = token;
+                localStorage.setItem('lootquest_token', token);
+
+                // Clean URL (remove token from address bar)
+                window.history.replaceState({}, document.title, '/');
+
+                // Fetch user info
+                try {
+                    const res = await fetch('/api/auth/me', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        currentUser = data.user;
+                        showDashboard();
+                        showToast(`Welcome${provider === 'discord' ? ' via Discord' : ''}, ${currentUser.displayName}!`, 'success');
+                    } else {
+                        localStorage.removeItem('lootquest_token');
+                        showToast('Session expired. Please login again.', 'error');
+                    }
+                } catch (error) {
+                    console.error('OAuth session check failed:', error);
+                    showToast('Connection error', 'error');
+                }
+            }
+        }
+
+        // Run on page load
+        handleOAuthCallback();
+
+        // ════════════════ OAUTH (Firebase) ════════════════
+
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        async function loginWithGoogle() {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await auth.signInWithPopup(provider);
+
+                // Get Firebase token
+                const firebaseToken = await result.user.getIdToken();
+
+                // Sync with our backend
+                const res = await fetch('/api/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + firebaseToken
+                    }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    currentUser = data.user;
+                    authToken = firebaseToken;
+                    localStorage.setItem('lootquest_token', firebaseToken);
+                    closeAuthModal();
+                    showDashboard();
+                    showToast('Welcome, ' + currentUser.displayName + '!', 'success');
+                }
+            } catch (error) {
+                console.error("Google login failed", error);
+                showAuthError('Google login failed. Try email instead.');
+            }
+        }
+
+        async function loginWithDiscord() {
+            // Redirect to Discord OAuth2 flow
+            window.location.href = '/api/auth/discord';
+        }
+
+        // ════════════════ DASHBOARD ════════════════
+
+        function showDashboard() {
+            gsap.to("#landing-page", {
+                opacity: 0,
+                duration: 0.5,
+                onComplete: () => {
+                    document.getElementById('landing-page').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    document.getElementById('user-name-display').innerText = currentUser?.displayName || 'Gamer';
+                    document.getElementById('dash-balance').innerText = currentUser?.balance || 0;
+                    gsap.from("#dashboard", { opacity: 0, duration: 0.5 });
+                    lucide.createIcons();
+                }
+            });
+        }
+
+        function logout() {
+            auth.signOut();
+            localStorage.removeItem('lootquest_token');
+            authToken = null;
+            currentUser = null;
+
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('landing-page').classList.remove('hidden');
+            document.getElementById('landing-page').style.opacity = 1;
+
+            showToast('Logged out successfully', 'info');
+        }
+
+        // ════════════════ TOAST NOTIFICATIONS ════════════════
+
+        function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
-            if (!container) return;
-
-            const randomUser = users[Math.floor(Math.random() * users.length)];
-            const randomAction = actions[Math.floor(Math.random() * actions.length)];
-
             const toast = document.createElement('div');
-            toast.className = 'glass-panel px-4 py-3 rounded-lg border-l-4 border-neon-purple shadow-lg flex items-center gap-3 min-w-[250px] transform transition-all duration-700 translate-x-full opacity-0 pointer-events-auto';
 
-            toast.innerHTML = `
-                <div class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center">
-                    <i class="fa-solid ${randomAction.icon} ${randomAction.color} text-sm ${randomAction.icon === 'fa-square' ? 'rotate-45' : ''}"></i>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-400 font-gaming" data-i18n="toast.won">Vient de gagner</p>
-                    <p class="text-sm font-bold text-white">${randomAction.item} <span class="text-gray-500 text-[10px]">- ${randomUser}</span></p>
-                </div>
-            `;
+            const bgColor = type === 'success' ? 'bg-green-500/20 border-green-500/50' :
+                type === 'error' ? 'bg-red-500/20 border-red-500/50' :
+                    'bg-loot-neon/20 border-loot-neon/50';
+
+            toast.className = `${bgColor} border backdrop-blur-sm px-4 py-3 rounded-xl text-white text-sm`;
+            toast.textContent = message;
 
             container.appendChild(toast);
 
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-x-full', 'opacity-0');
-            });
+            gsap.from(toast, { opacity: 0, x: 50, duration: 0.3 });
 
             setTimeout(() => {
-                toast.classList.add('translate-x-full', 'opacity-0');
-                setTimeout(() => {
-                    toast.remove();
-                }, 700);
-            }, 5000);
+                gsap.to(toast, { opacity: 0, x: 50, duration: 0.3, onComplete: () => toast.remove() });
+            }, 3000);
         }
 
-        setTimeout(createToast, 2000);
-        setInterval(() => {
-            createToast();
-        }, Math.floor(Math.random() * 4000) + 6000); // Intervalle légèrement plus lent
+        // ════════════════ GLOBAL CLICK HANDLERS ════════════════
+
+        // Replace all "loginWithGoogle" onclick handlers to open modal instead
+        document.querySelectorAll('[onclick="loginWithGoogle()"]').forEach(btn => {
+            btn.onclick = openAuthModal;
+        });
+
+        // ════════════════ DYNAMIC COPYRIGHT YEAR ════════════════
+        document.getElementById('copyright-year').textContent = new Date().getFullYear();
+
+        // ════════════════ SERVER STATUS ════════════════
+        async function fetchServerStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                const statusEl = document.getElementById('server-status');
+                if (data.status === 'operational') {
+                    statusEl.innerHTML = `
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="text-gray-400">All Systems Operational</span>
+                    `;
+                } else {
+                    statusEl.innerHTML = `
+                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                        <span class="text-gray-400">Partial Outage</span>
+                    `;
+                }
+            } catch (e) {
+                console.error('Failed to fetch status');
+            }
+        }
+        fetchServerStatus();
+
+        // ════════════════ LEGAL PAGES ════════════════
+        let legalPageContainer = null;
+
+        async function loadLegalPage(pageSlug) {
+            try {
+                const res = await fetch(`/api/legal/${pageSlug}`);
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast('Page not found', 'error');
+                    return;
+                }
+
+                const page = data.page;
+
+                // Create page view
+                const html = `
+                    <div id="legal-page-view" class="fixed inset-0 z-50 bg-loot-black overflow-auto">
+                        <div class="max-w-4xl mx-auto px-6 py-20">
+                            <button onclick="closeLegalPage()" class="mb-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                                Back to Home
+                            </button>
+                            <h1 class="font-display text-4xl font-bold mb-4">${page.title}</h1>
+                            <p class="text-gray-500 text-sm mb-8">Last updated: ${page.lastUpdated}</p>
+                            <div class="space-y-8">
+                                ${page.sections.map(s => `
+                                    <section>
+                                        <h2 class="font-display text-xl font-bold text-loot-neon mb-3">${s.title}</h2>
+                                        <p class="text-gray-300 whitespace-pre-line leading-relaxed">${s.content}</p>
+                                    </section>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', html);
+                legalPageContainer = document.getElementById('legal-page-view');
+                document.body.style.overflow = 'hidden';
+                lucide.createIcons();
+
+            } catch (e) {
+                console.error('Failed to load legal page:', e);
+                showToast('Failed to load page', 'error');
+            }
+        }
+
+        function closeLegalPage() {
+            if (legalPageContainer) {
+                legalPageContainer.remove();
+                legalPageContainer = null;
+                document.body.style.overflow = '';
+            }
+        }
+
+        // ════════════════ BLOG ════════════════
+        let blogPageContainer = null;
+
+        async function loadBlogPage() {
+            try {
+                const res = await fetch('/api/blog');
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast('Failed to load blog', 'error');
+                    return;
+                }
+
+                const { articles, categories } = data;
+
+                const html = `
+                    <div id="blog-page-view" class="fixed inset-0 z-50 bg-loot-black overflow-auto">
+                        <div class="max-w-7xl mx-auto px-6 py-20">
+                            <button onclick="closeBlogPage()" class="mb-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                                Back to Home
+                            </button>
+                            <h1 class="font-display text-4xl font-bold mb-2">LootQuest <span class="text-gradient-primary">Blog</span></h1>
+                            <p class="text-gray-400 mb-8">Tips, tutorials, and updates from the LootQuest team.</p>
+                            
+                            <!-- Categories -->
+                            <div class="flex gap-2 mb-8 flex-wrap">
+                                ${categories.map(c => `
+                                    <button class="px-4 py-2 rounded-full bg-loot-card border border-white/10 text-sm font-medium hover:border-loot-neon transition-colors">
+                                        ${c.name}
+                                    </button>
+                                `).join('')}
+                            </div>
+                            
+                            <!-- Articles Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                ${articles.map(a => `
+                                    <article onclick="loadBlogArticle('${a.slug}')" class="glass-card rounded-2xl overflow-hidden cursor-pointer group">
+                                        <div class="h-40 overflow-hidden">
+                                            <img src="${a.image}" alt="${a.title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                        </div>
+                                        <div class="p-5">
+                                            <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                                                <span class="px-2 py-0.5 bg-loot-purple/20 text-loot-purple rounded-full">${a.category}</span>
+                                                <span>${a.readTime}</span>
+                                            </div>
+                                            <h3 class="font-display font-bold text-lg mb-2 group-hover:text-loot-neon transition-colors">${a.title}</h3>
+                                            <p class="text-gray-400 text-sm line-clamp-2">${a.excerpt}</p>
+                                        </div>
+                                    </article>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', html);
+                blogPageContainer = document.getElementById('blog-page-view');
+                document.body.style.overflow = 'hidden';
+                lucide.createIcons();
+
+            } catch (e) {
+                console.error('Failed to load blog:', e);
+                showToast('Failed to load blog', 'error');
+            }
+        }
+
+        async function loadBlogArticle(slug) {
+            try {
+                const res = await fetch(`/api/blog/${slug}`);
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast('Article not found', 'error');
+                    return;
+                }
+
+                const { article, related } = data;
+
+                // Replace blog view with article view
+                closeBlogPage();
+
+                const html = `
+                    <div id="blog-page-view" class="fixed inset-0 z-50 bg-loot-black overflow-auto">
+                        <div class="max-w-3xl mx-auto px-6 py-20">
+                            <button onclick="loadBlogPage()" class="mb-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                                Back to Blog
+                            </button>
+                            
+                            <!-- Breadcrumb -->
+                            <nav class="text-sm text-gray-500 mb-4">
+                                <a href="#" onclick="closeBlogPage(); return false;" class="hover:text-loot-neon">Home</a> / 
+                                <a href="#" onclick="loadBlogPage(); return false;" class="hover:text-loot-neon">Blog</a> / 
+                                <span class="text-gray-400">${article.category}</span>
+                            </nav>
+                            
+                            <h1 class="font-display text-3xl md:text-4xl font-bold mb-4">${article.title}</h1>
+                            
+                            <div class="flex items-center gap-4 text-sm text-gray-500 mb-8">
+                                <span>${article.author}</span>
+                                <span>•</span>
+                                <span>${article.date}</span>
+                                <span>•</span>
+                                <span>${article.readTime} read</span>
+                            </div>
+                            
+                            <img src="${article.image}" alt="${article.title}" class="w-full h-64 object-cover rounded-2xl mb-8">
+                            
+                            <!-- Article Content -->
+                            <div class="prose prose-invert max-w-none">
+                                ${article.content.map(block => {
+                    if (block.type === 'heading') return `<h2 class="font-display text-xl font-bold text-loot-neon mt-8 mb-4">${block.text}</h2>`;
+                    if (block.type === 'paragraph') return `<p class="text-gray-300 mb-4 leading-relaxed">${block.text}</p>`;
+                    if (block.type === 'warning') return `<div class="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 my-4"><strong>⚠️ Warning:</strong> ${block.text}</div>`;
+                    return '';
+                }).join('')}
+                            </div>
+                            
+                            <!-- Tags -->
+                            <div class="flex flex-wrap gap-2 mt-8">
+                                ${article.tags.map(t => `<span class="px-3 py-1 bg-loot-card rounded-full text-sm text-gray-400">#${t}</span>`).join('')}
+                            </div>
+                            
+                            <!-- Related Articles -->
+                            ${related.length > 0 ? `
+                                <div class="mt-12 pt-8 border-t border-white/10">
+                                    <h3 class="font-display text-xl font-bold mb-4">Related Articles</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        ${related.map(r => `
+                                            <a onclick="loadBlogArticle('${r.slug}')" class="glass-card p-4 rounded-xl cursor-pointer hover:border-loot-neon/30 transition-colors flex items-center gap-3">
+                                                <img src="${r.image}" class="w-16 h-16 rounded-lg object-cover">
+                                                <span class="text-sm font-medium">${r.title}</span>
+                                            </a>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', html);
+                blogPageContainer = document.getElementById('blog-page-view');
+                document.body.style.overflow = 'hidden';
+                lucide.createIcons();
+
+            } catch (e) {
+                console.error('Failed to load article:', e);
+                showToast('Failed to load article', 'error');
+            }
+        }
+
+        function closeBlogPage() {
+            if (blogPageContainer) {
+                blogPageContainer.remove();
+                blogPageContainer = null;
+                document.body.style.overflow = '';
+            }
+        }
+
+        // ════════════════ BUG REPORT MODAL ════════════════
+
+        function openBugReportModal() {
+            document.getElementById('bug-report-modal').classList.remove('hidden');
+            document.getElementById('bug-report-form').classList.remove('hidden');
+            document.getElementById('report-success').classList.add('hidden');
+            document.getElementById('bug-report-form').reset();
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        function closeBugReportModal() {
+            document.getElementById('bug-report-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        async function submitBugReport(e) {
+            e.preventDefault();
+
+            const category = document.getElementById('report-category').value;
+            const title = document.getElementById('report-title').value;
+            const description = document.getElementById('report-description').value;
+            const email = document.getElementById('report-email').value;
+
+            try {
+                const res = await fetch('/api/report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                    },
+                    body: JSON.stringify({
+                        category,
+                        title,
+                        description,
+                        email,
+                        browserInfo: navigator.userAgent,
+                        pageUrl: window.location.href
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('bug-report-form').classList.add('hidden');
+                    document.getElementById('report-success').classList.remove('hidden');
+                    lucide.createIcons();
+                } else {
+                    showToast(data.error || 'Failed to submit report', 'error');
+                }
+            } catch (error) {
+                console.error('Bug report error:', error);
+                showToast('Failed to submit report', 'error');
+            }
+        }
+
+        // ════════════════ ADMIN PANEL ════════════════
+
+        let adminKey = localStorage.getItem('lootquest_admin_key') || '';
+
+        function openAdminPanel() {
+            if (!adminKey) {
+                adminKey = prompt('Enter Admin Key:');
+                if (adminKey) {
+                    localStorage.setItem('lootquest_admin_key', adminKey);
+                } else {
+                    return;
+                }
+            }
+
+            document.getElementById('admin-panel').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            loadAdminStats();
+            loadAdminReports('all');
+            lucide.createIcons();
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('admin-panel').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        async function loadAdminStats() {
+            try {
+                const res = await fetch('/api/admin/stats', {
+                    headers: { 'X-Admin-Key': adminKey }
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast('Admin access denied', 'error');
+                    localStorage.removeItem('lootquest_admin_key');
+                    adminKey = '';
+                    closeAdminPanel();
+                    return;
+                }
+
+                const { stats } = data;
+                document.getElementById('admin-stats').innerHTML = `
+                    <div class="glass-card p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-loot-neon">${stats.users.total}</div>
+                        <div class="text-sm text-gray-400">Total Users</div>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-loot-purple">${stats.withdrawals.pending}</div>
+                        <div class="text-sm text-gray-400">Pending Withdrawals</div>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-red-500">${stats.bugReports.new}</div>
+                        <div class="text-sm text-gray-400">New Bug Reports</div>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-green-500">${stats.bugReports.total}</div>
+                        <div class="text-sm text-gray-400">Total Reports</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load admin stats:', error);
+            }
+        }
+
+        async function loadAdminReports(status) {
+            // Update tab styles
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.classList.remove('bg-loot-purple', 'text-white', 'active');
+                tab.classList.add('bg-loot-card', 'text-gray-400');
+            });
+            event.target.classList.add('bg-loot-purple', 'text-white', 'active');
+            event.target.classList.remove('bg-loot-card', 'text-gray-400');
+
+            try {
+                const res = await fetch(`/api/admin/reports?status=${status}`, {
+                    headers: { 'X-Admin-Key': adminKey }
+                });
+                const data = await res.json();
+
+                if (!data.success) return;
+
+                const statusBadge = (s) => {
+                    const colors = {
+                        new: 'bg-blue-500/20 text-blue-400',
+                        in_progress: 'bg-yellow-500/20 text-yellow-400',
+                        resolved: 'bg-green-500/20 text-green-400',
+                        wont_fix: 'bg-gray-500/20 text-gray-400'
+                    };
+                    return `<span class="px-2 py-1 rounded-full text-xs ${colors[s] || colors.new}">${s.replace('_', ' ')}</span>`;
+                };
+
+                document.getElementById('admin-reports-table').innerHTML = data.reports.length === 0
+                    ? '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No reports found</td></tr>'
+                    : data.reports.map(r => `
+                        <tr class="border-b border-white/5 hover:bg-white/5">
+                            <td class="px-6 py-4 text-sm">#${r.id}</td>
+                            <td class="px-6 py-4 text-sm">${r.category}</td>
+                            <td class="px-6 py-4 text-sm max-w-xs truncate">${r.title}</td>
+                            <td class="px-6 py-4 text-sm text-gray-400">${r.user_email || 'Anonymous'}</td>
+                            <td class="px-6 py-4">${statusBadge(r.status)}</td>
+                            <td class="px-6 py-4 text-sm text-gray-400">${new Date(r.created_at).toLocaleDateString()}</td>
+                            <td class="px-6 py-4">
+                                <select onchange="updateReportStatus(${r.id}, this.value)" class="bg-loot-card border border-white/10 rounded px-2 py-1 text-sm">
+                                    <option value="new" ${r.status === 'new' ? 'selected' : ''}>New</option>
+                                    <option value="in_progress" ${r.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                                    <option value="resolved" ${r.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+                                    <option value="wont_fix" ${r.status === 'wont_fix' ? 'selected' : ''}>Won't Fix</option>
+                                </select>
+                            </td>
+                        </tr>
+                    `).join('');
+            } catch (error) {
+                console.error('Failed to load reports:', error);
+            }
+        }
+
+        async function updateReportStatus(id, status) {
+            try {
+                const res = await fetch(`/api/admin/reports/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Key': adminKey
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Report #${id} updated to ${status}`, 'success');
+                    loadAdminStats();
+                }
+            } catch (error) {
+                console.error('Failed to update report:', error);
+                showToast('Failed to update report', 'error');
+            }
+        }
+
+        // Secret admin access: press Ctrl+Shift+A
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                e.preventDefault();
+                openAdminPanel();
+            }
+        });
+
+        // ════════════════ DYNAMIC MODAL ENGINE ════════════════
+
+        const modalEl = document.getElementById('dynamic-modal');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const modalTitle = document.getElementById('modal-title');
+        const modalIcon = document.getElementById('modal-icon');
+        const modalBody = document.getElementById('modal-body');
+
+        // Open Modal with animation
+        function openModal(title, content, icon = 'info', iconColor = 'text-loot-neon') {
+            modalTitle.textContent = title;
+            modalBody.innerHTML = content;
+            modalIcon.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 ${iconColor}"></i>`;
+
+            modalEl.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            // Trigger animation
+            requestAnimationFrame(() => {
+                modalEl.classList.add('active');
+            });
+
+            lucide.createIcons();
+        }
+
+        // Close Modal with animation
+        function closeModal() {
+            modalEl.classList.remove('active');
+
+            setTimeout(() => {
+                modalEl.classList.add('hidden');
+                document.body.style.overflow = '';
+                modalBody.innerHTML = '';
+            }, 300);
+        }
+
+        // Close on backdrop click
+        modalBackdrop.addEventListener('click', closeModal);
+
+        // Close on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modalEl.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+        // ════════════════ LEGAL MODALS ════════════════
+
+        async function openLegalModal(type) {
+            const titles = {
+                'terms-of-service': 'Terms of Service',
+                'privacy-policy': 'Privacy Policy',
+                'cookie-policy': 'Cookie Policy',
+                'faq': 'Frequently Asked Questions'
+            };
+            const icons = {
+                'terms-of-service': 'file-text',
+                'privacy-policy': 'shield',
+                'cookie-policy': 'cookie',
+                'faq': 'help-circle'
+            };
+
+            // Show loading
+            openModal(titles[type] || 'Legal', '<div class="flex items-center justify-center py-12"><div class="animate-spin w-8 h-8 border-2 border-loot-neon border-t-transparent rounded-full"></div></div>', icons[type] || 'file-text');
+
+            try {
+                const res = await fetch(`/api/legal/${type}`);
+                const data = await res.json();
+
+                if (data.success && data.content) {
+                    let html = `<div class="legal-content">`;
+                    html += `<p class="text-sm text-gray-500 mb-4">Last updated: ${data.content.lastUpdated || 'N/A'}</p>`;
+
+                    data.content.sections.forEach(section => {
+                        html += `<h3>${section.title}</h3>`;
+                        section.paragraphs.forEach(p => {
+                            if (p.startsWith('⚠️') || p.startsWith('WARNING')) {
+                                html += `<div class="warning-box"><p>${p}</p></div>`;
+                            } else {
+                                html += `<p>${p}</p>`;
+                            }
+                        });
+                    });
+
+                    html += `</div>`;
+                    modalBody.innerHTML = html;
+                } else {
+                    modalBody.innerHTML = '<p class="text-red-400">Failed to load content.</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load legal content:', error);
+                modalBody.innerHTML = '<p class="text-red-400">Failed to load content.</p>';
+            }
+        }
+
+        // ════════════════ BUG REPORT MODAL ════════════════
+
+        function openBugModal() {
+            const content = `
+                <form id="bug-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Subject *</label>
+                        <input type="text" id="bug-subject" required minlength="5" maxlength="200"
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
+                            placeholder="Brief description of the issue">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Description *</label>
+                        <textarea id="bug-content" required minlength="20" maxlength="5000" rows="5"
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors resize-none"
+                            placeholder="Describe the bug in detail. Include steps to reproduce, expected behavior, and what actually happened..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Your Email (optional)</label>
+                        <input type="email" id="bug-email"
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
+                            placeholder="For follow-up questions">
+                    </div>
+                    
+                    <button type="submit" class="w-full btn-glow py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                        Send Bug Report
+                    </button>
+                </form>
+            `;
+
+            openModal('Report a Bug', content, 'bug', 'text-red-400');
+
+            document.getElementById('bug-form').addEventListener('submit', submitBugForm);
+        }
+
+        async function submitBugForm(e) {
+            e.preventDefault();
+
+            const subject = document.getElementById('bug-subject').value;
+            const content = document.getElementById('bug-content').value;
+            const email = document.getElementById('bug-email').value;
+
+            try {
+                const res = await fetch('/api/support/bug', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                    },
+                    body: JSON.stringify({
+                        subject,
+                        content,
+                        email,
+                        browserInfo: navigator.userAgent,
+                        pageUrl: window.location.href
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    modalBody.innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="check-circle" class="w-8 h-8 text-green-500"></i>
+                            </div>
+                            <h3 class="font-display text-xl font-bold mb-2">Thank You!</h3>
+                            <p class="text-gray-400 mb-2">${data.message}</p>
+                            <p class="text-sm text-gray-500">Ticket #${data.ticketId}</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                } else {
+                    showToast(data.error || 'Failed to submit', 'error');
+                }
+            } catch (error) {
+                console.error('Bug report error:', error);
+                showToast('Failed to submit bug report', 'error');
+            }
+        }
+
+        // ════════════════ CONTACT MODAL ════════════════
+
+        function openContactModal() {
+            const content = `
+                <form id="contact-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Your Email *</label>
+                        <input type="email" id="contact-email" required
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
+                            placeholder="your@email.com">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Subject *</label>
+                        <input type="text" id="contact-subject" required minlength="3" maxlength="200"
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
+                            placeholder="How can we help?">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Message *</label>
+                        <textarea id="contact-content" required minlength="10" maxlength="5000" rows="5"
+                            class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors resize-none"
+                            placeholder="Write your message here..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="w-full btn-glow py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2">
+                        <i data-lucide="mail" class="w-5 h-5"></i>
+                        Send Message
+                    </button>
+                </form>
+            `;
+
+            openModal('Contact Us', content, 'mail', 'text-loot-neon');
+
+            document.getElementById('contact-form').addEventListener('submit', submitContactForm);
+        }
+
+        async function submitContactForm(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('contact-email').value;
+            const subject = document.getElementById('contact-subject').value;
+            const content = document.getElementById('contact-content').value;
+
+            try {
+                const res = await fetch('/api/support/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                    },
+                    body: JSON.stringify({ email, subject, content })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    modalBody.innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="w-16 h-16 rounded-full bg-loot-neon/20 flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="check-circle" class="w-8 h-8 text-loot-neon"></i>
+                            </div>
+                            <h3 class="font-display text-xl font-bold mb-2">Message Sent!</h3>
+                            <p class="text-gray-400 mb-2">${data.message}</p>
+                            <p class="text-sm text-gray-500">Ticket #${data.ticketId}</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                } else {
+                    showToast(data.error || 'Failed to send', 'error');
+                }
+            } catch (error) {
+                console.error('Contact form error:', error);
+                showToast('Failed to send message', 'error');
+            }
+        }
+
     </script>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 </body>
 
 </html>
