@@ -1137,17 +1137,27 @@ app.get('/api/auth/discord/callback', async (req, res) => {
             console.log(`✨ New user created via Discord: ${emailLower}`);
         }
 
-        // Generate session JWT
-        const token = generateToken(user);
+        // Create Redis session for the user
+        createUserSession(req, {
+            id: user.id,
+            firebase_uid: null,
+            email: user.email,
+            username: user.display_name,
+            picture: user.avatar_url,
+            provider: 'discord'
+        });
 
-        // Redirect to frontend with token
-        res.redirect(`/?token=${token}&provider=discord`);
+        console.log(`🔐 Discord session created for: ${emailLower}`);
+
+        // Redirect directly to dashboard
+        res.redirect('/dashboard.html');
 
     } catch (error) {
         console.error('Discord callback error:', error);
         res.redirect('/?error=auth_failed');
     }
 });
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // API ROUTES
