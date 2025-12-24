@@ -136,6 +136,53 @@
             }
         }
     </style>
+
+    <!-- Firebase SDK (Compat v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyD9zEcBcCgQqANbN38EpbA9xy_3MITTCPM",
+            authDomain: "loot-quest-5fe77.firebaseapp.com",
+            projectId: "loot-quest-5fe77",
+            storageBucket: "loot-quest-5fe77.firebasestorage.app",
+            messagingSenderId: "1017089658126",
+            appId: "1:1017089658126:web:95e79a3723a19003ea5b5f"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // ════════════════ AUTH PROTECTION ════════════════
+        // Redirect unauthenticated users to login page
+        firebase.auth().onAuthStateChanged((user) => {
+            console.log('🔍 Dashboard auth check:', user ? `User: ${user.email}` : 'No user');
+
+            if (!user) {
+                // No user signed in - redirect to login
+                console.log('⛔ No authenticated user, redirecting to login...');
+                window.location.href = '/';
+            } else {
+                // User is signed in
+                const emailVerified = user.emailVerified;
+                const provider = user.providerData[0]?.providerId;
+
+                console.log(`📧 Email verified: ${emailVerified}, Provider: ${provider}`);
+
+                // Check if email is verified (unless provider is Google/Discord)
+                if (!emailVerified && provider === 'password') {
+                    console.log('⚠️ Email not verified, redirecting to login...');
+                    // Email not verified - redirect back to login
+                    window.location.href = '/';
+                } else {
+                    console.log('✅ User authenticated and verified, loading dashboard');
+                    // User is authenticated and verified - allow access to dashboard
+                }
+            }
+        });
+    </script>
 </head>
 
 <body

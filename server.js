@@ -608,6 +608,7 @@ app.post('/api/auth/register', async (req, res) => {
         res.status(201).json({
             success: true,
             token,
+            redirectUrl: '/dashboard.html',
             user: {
                 id: newUser.id,
                 email: newUser.email,
@@ -629,13 +630,134 @@ app.post('/api/auth/register', async (req, res) => {
 /**
  * POST /api/auth/login
  * 
- * Login with email and password.
- * Returns JWT token on success.
+ * Unified login endpoint:
+ * - If idToken is provided: Firebase/Google authentication
+ * - If email/password is provided: Email/password authentication
+ * Returns JWT token and redirectUrl on success.
  */
 app.post('/api/auth/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { idToken, email, password } = req.body;
 
+        // ═══════════════════════════════════════════════════════════════
+        // FIREBASE/GOOGLE LOGIN (idToken provided)
+        // ═══════════════════════════════════════════════════════════════
+        if (idToken) {
+            if (!firebaseInitialized) {
+                return res.status(500).json({
+                    success: false,
+                    error: 'Firebase not configured on server'
+                });
+            }
+
+            // Verify Firebase token
+            let decodedToken;
+            try {
+                decodedToken = await admin.auth().verifyIdToken(idToken);
+            } catch (error) {
+                console.error('Firebase token verification failed:', error.message);
+                return res.status(401).json({
+                    success: false,
+                    error: 'Invalid or expired Firebase token'
+                });
+            }
+
+            const { uid: firebaseUid, email: fbEmail, name, picture } = decodedToken;
+            const provider = decodedToken.firebase?.sign_in_provider || 'google.com';
+            const emailVerified = decodedToken.email_verified || false;
+
+            // ════════════════════════════════════════════════════════════
+            // EMAIL VERIFICATION GATE
+            // Block email/password users who haven't verified their email
+            // Google/Discord users are auto-verified by their providers
+            // ════════════════════════════════════════════════════════════
+            if (provider === 'password' && !emailVerified) {
+                console.log(`⚠️ Email not verified for: ${fbEmail}`);
+                return res.status(403).json({
+                    success: false,
+                    error: 'EMAIL_NOT_VERIFIED',
+                    message: 'Please verify your email address before logging in. Check your inbox for the verification link.'
+                });
+            }
+
+            if (!fbEmail) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Email is required from Firebase'
+                });
+            }
+
+            const emailLower = fbEmail.toLowerCase();
+            const displayName = name || fbEmail.split('@')[0];
+
+            // Sync user to SQLite database
+            let user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
+
+            if (user) {
+                // Update existing user
+                db.run(`
+                    UPDATE users 
+                    SET firebase_uid = ?,
+                        display_name = COALESCE(?, display_name),
+                        avatar_url = COALESCE(?, avatar_url),
+                        provider = COALESCE(?, provider),
+                        last_login_at = datetime('now')
+                    WHERE email = ?
+                `, [firebaseUid, displayName, picture, provider, emailLower]);
+
+                user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
+                console.log(`🔑 Firebase login (existing): ${emailLower}`);
+            } else {
+                // Create new user with signup bonus
+                const userId = uuidv4();
+                db.run(`
+                    INSERT INTO users (id, email, display_name, avatar_url, provider, firebase_uid, balance, created_at, last_login_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+                `, [userId, emailLower, displayName, picture, provider, firebaseUid, SIGNUP_BONUS]);
+
+                // Add signup bonus transaction
+                if (SIGNUP_BONUS > 0) {
+                    const txId = `bonus_${userId}_${Date.now()}`;
+                    db.run(`
+                        INSERT INTO transactions (id, user_id, amount, type, source, description)
+                        VALUES (?, ?, ?, 'credit', 'signup_bonus', 'Welcome bonus!')
+                    `, [txId, userId, SIGNUP_BONUS]);
+                    db.run('UPDATE users SET total_earned = total_earned + ? WHERE id = ?', [SIGNUP_BONUS, userId]);
+                }
+
+                user = db.get('SELECT * FROM users WHERE id = ?', [userId]);
+                console.log(`✨ Firebase login (new user): ${emailLower} (+${SIGNUP_BONUS} pts)`);
+            }
+
+            // Create Redis session
+            createUserSession(req, {
+                id: user.id,
+                firebase_uid: firebaseUid,
+                email: user.email,
+                username: user.display_name,
+                picture: user.avatar_url,
+                provider: provider
+            });
+
+            console.log(`🔐 Session created for: ${emailLower}`);
+
+            return res.json({
+                success: true,
+                redirectUrl: '/dashboard.html',
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    displayName: user.display_name,
+                    avatarUrl: user.avatar_url,
+                    balance: user.balance,
+                    provider: provider
+                }
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // EMAIL/PASSWORD LOGIN
+        // ═══════════════════════════════════════════════════════════════
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
@@ -681,6 +803,7 @@ app.post('/api/auth/login', async (req, res) => {
         res.json({
             success: true,
             token,
+            redirectUrl: '/dashboard.html',
             user: {
                 id: user.id,
                 email: user.email,
@@ -732,139 +855,6 @@ app.get('/api/auth/me', verifyAuth, (req, res) => {
     }
 });
 
-// ═══════════════════════════════════════════════════════════════════════════
-// SESSION-BASED AUTHENTICATION (Redis Backend)
-// ═══════════════════════════════════════════════════════════════════════════
-
-
-/**
- * POST /api/auth/login
- * 
- * Session-based login with Firebase idToken verification.
- * Creates a Redis-backed session for the authenticated user.
- * 
- * Flow:
- * 1. Verify Firebase idToken
- * 2. Sync user to SQLite (create or update)
- * 3. Create Redis session
- * 4. Return redirect URL
- */
-app.post('/api/auth/login', async (req, res) => {
-    try {
-        const { idToken } = req.body;
-
-        if (!idToken) {
-            return res.status(400).json({
-                success: false,
-                error: 'idToken is required'
-            });
-        }
-
-        if (!firebaseInitialized) {
-            return res.status(500).json({
-                success: false,
-                error: 'Firebase not configured on server'
-            });
-        }
-
-        // Step 1: Verify Firebase token
-        let decodedToken;
-        try {
-            decodedToken = await admin.auth().verifyIdToken(idToken);
-        } catch (error) {
-            console.error('Firebase token verification failed:', error.message);
-            return res.status(401).json({
-                success: false,
-                error: 'Invalid or expired Firebase token'
-            });
-        }
-
-        const { uid: firebaseUid, email, name, picture } = decodedToken;
-        const provider = decodedToken.firebase?.sign_in_provider || 'google.com';
-
-        if (!email) {
-            return res.status(400).json({
-                success: false,
-                error: 'Email is required from Firebase'
-            });
-        }
-
-        const emailLower = email.toLowerCase();
-        const displayName = name || email.split('@')[0];
-
-        // Step 2: Sync user to SQLite database
-        let user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
-
-        if (user) {
-            // Update existing user (profile might have changed)
-            db.run(`
-                UPDATE users 
-                SET firebase_uid = ?,
-                    display_name = COALESCE(?, display_name),
-                    avatar_url = COALESCE(?, avatar_url),
-                    provider = COALESCE(?, provider),
-                    last_login_at = datetime('now')
-                WHERE email = ?
-            `, [firebaseUid, displayName, picture, provider, emailLower]);
-
-            user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
-            console.log(`🔑 Session login (existing): ${emailLower}`);
-        } else {
-            // Create new user with signup bonus
-            const userId = uuidv4();
-            db.run(`
-                INSERT INTO users (id, email, display_name, avatar_url, provider, firebase_uid, balance, created_at, last_login_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-            `, [userId, emailLower, displayName, picture, provider, firebaseUid, SIGNUP_BONUS]);
-
-            // Add signup bonus transaction
-            if (SIGNUP_BONUS > 0) {
-                const txId = `bonus_${userId}_${Date.now()}`;
-                db.run(`
-                    INSERT INTO transactions (id, user_id, amount, type, source, description)
-                    VALUES (?, ?, ?, 'credit', 'signup_bonus', 'Welcome bonus!')
-                `, [txId, userId, SIGNUP_BONUS]);
-                db.run('UPDATE users SET total_earned = total_earned + ? WHERE id = ?', [SIGNUP_BONUS, userId]);
-            }
-
-            user = db.get('SELECT * FROM users WHERE id = ?', [userId]);
-            console.log(`✨ Session login (new user): ${emailLower} (+${SIGNUP_BONUS} pts)`);
-        }
-
-        // Step 3: Create Redis-backed session
-        createUserSession(req, {
-            id: user.id,
-            firebase_uid: firebaseUid,
-            email: user.email,
-            username: user.display_name,
-            picture: user.avatar_url,
-            provider: provider
-        });
-
-        console.log(`🔐 Session created for: ${emailLower}`);
-
-        // Step 4: Return success with redirect URL
-        res.json({
-            success: true,
-            redirectUrl: '/dashboard.html',
-            user: {
-                id: user.id,
-                email: user.email,
-                displayName: user.display_name,
-                avatarUrl: user.avatar_url,
-                balance: user.balance,
-                provider: provider
-            }
-        });
-
-    } catch (error) {
-        console.error('Session login error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Authentication failed'
-        });
-    }
-});
 
 /**
  * POST /api/auth/logout
@@ -969,24 +959,24 @@ app.post('/api/auth/firebase', async (req, res) => {
             db.run(`
                 UPDATE users 
                 SET firebase_uid = ?,
-                    display_name = COALESCE(?, display_name),
-                    avatar_url = COALESCE(?, avatar_url),
-                    last_login_at = datetime('now')
+            display_name = COALESCE(?, display_name),
+            avatar_url = COALESCE(?, avatar_url),
+            last_login_at = datetime('now')
                 WHERE email = ?
             `, [firebaseUid, name, picture, emailLower]);
 
             user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
-            console.log(`🔗 Linked Firebase to existing account: ${emailLower}`);
+            console.log(`🔗 Linked Firebase to existing account: ${emailLower} `);
         } else {
             // Create new user with Firebase info
             const userId = uuidv4();
             db.run(`
-                INSERT INTO users (id, email, display_name, avatar_url, provider, firebase_uid, balance, created_at, last_login_at)
-                VALUES (?, ?, ?, ?, 'firebase', ?, 0, datetime('now'), datetime('now'))
+                INSERT INTO users(id, email, display_name, avatar_url, provider, firebase_uid, balance, created_at, last_login_at)
+        VALUES(?, ?, ?, ?, 'firebase', ?, 0, datetime('now'), datetime('now'))
             `, [userId, emailLower, name || email.split('@')[0], picture, firebaseUid]);
 
             user = db.get('SELECT * FROM users WHERE id = ?', [userId]);
-            console.log(`✨ New user created via Firebase: ${emailLower}`);
+            console.log(`✨ New user created via Firebase: ${emailLower} `);
         }
 
         // Generate session JWT

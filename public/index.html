@@ -1310,31 +1310,112 @@
             const password = document.getElementById('login-password').value;
 
             try {
+                // Initialize Firebase if needed
+                if (!initFirebase()) {
+                    showAuthError('Firebase initialization failed');
+                    return;
+                }
+
+                // Sign in with Firebase Auth first
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // Get Firebase ID token
+                const idToken = await user.getIdToken();
+
+                // Send token to backend for session creation
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    credentials: 'include',
+                    body: JSON.stringify({ idToken })
                 });
 
                 const data = await res.json();
 
                 if (!data.success) {
+                    // Handle EMAIL_NOT_VERIFIED error
+                    if (data.error === 'EMAIL_NOT_VERIFIED') {
+                        showEmailNotVerifiedError(email, user);
+                        return;
+                    }
                     showAuthError(data.error || 'Login failed');
                     return;
                 }
 
-                // Save token and user
-                authToken = data.token;
-                localStorage.setItem('lootquest_token', authToken);
-                currentUser = data.user;
-
+                // Success - redirect to dashboard
                 closeAuthModal();
-                showDashboard();
-                showToast('Welcome back, ' + currentUser.displayName + '!', 'success');
+                window.location.href = data.redirectUrl || '/dashboard.html';
 
             } catch (error) {
                 console.error('Login error:', error);
-                showAuthError('Connection error. Please try again.');
+
+                // Handle Firebase-specific errors
+                if (error.code === 'auth/user-not-found') {
+                    showAuthError('No account found with this email.');
+                } else if (error.code === 'auth/wrong-password') {
+                    showAuthError('Incorrect password. Try again.');
+                } else if (error.code === 'auth/too-many-requests') {
+                    showAuthError('Too many failed attempts. Please try again later.');
+                } else if (error.code === 'auth/invalid-email') {
+                    showAuthError('Invalid email address format.');
+                } else {
+                    showAuthError(error.message || 'Login failed');
+                }
+            }
+        }
+
+        // Show special error for unverified email with resend option
+        function showEmailNotVerifiedError(email, firebaseUser) {
+            const errorEl = document.getElementById('auth-error');
+            errorEl.innerHTML = `
+                <div class="text-left">
+                    <p class="font-medium mb-2">⚠️ Email Not Verified</p>
+                    <p class="text-sm text-gray-400 mb-3">
+                        Please verify your email before logging in. Check your inbox for the verification link.
+                    </p>
+                    <button onclick="resendFromLogin()" id="resend-login-btn"
+                        class="w-full py-2 rounded-lg bg-loot-neon/20 text-loot-neon text-sm font-medium hover:bg-loot-neon/30 transition-colors">
+                        Resend Verification Email
+                    </button>
+                </div>
+            `;
+            errorEl.classList.remove('hidden');
+
+            // Store user reference for resend
+            window._unverifiedUser = firebaseUser;
+        }
+
+        async function resendFromLogin() {
+            const btn = document.getElementById('resend-login-btn');
+            if (!btn) return;
+
+            try {
+                btn.disabled = true;
+                btn.textContent = 'Sending...';
+
+                if (window._unverifiedUser) {
+                    await window._unverifiedUser.sendEmailVerification();
+                    btn.textContent = '✓ Email Sent!';
+                    btn.classList.remove('bg-loot-neon/20', 'text-loot-neon');
+                    btn.classList.add('bg-green-500/20', 'text-green-400');
+                    showToast('Verification email sent!', 'success');
+                } else {
+                    showToast('Please log in again to resend', 'error');
+                }
+
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = 'Resend Verification Email';
+                    btn.classList.remove('bg-green-500/20', 'text-green-400');
+                    btn.classList.add('bg-loot-neon/20', 'text-loot-neon');
+                }, 30000); // 30s cooldown
+
+            } catch (error) {
+                console.error('Resend error:', error);
+                btn.disabled = false;
+                btn.textContent = 'Resend Verification Email';
+                showToast('Failed to send. Try again.', 'error');
             }
         }
 
@@ -1347,31 +1428,131 @@
             const password = document.getElementById('register-password').value;
 
             try {
-                const res = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, displayName })
-                });
-
-                const data = await res.json();
-
-                if (!data.success) {
-                    showAuthError(data.error || 'Registration failed');
+                // Initialize Firebase if needed
+                if (!initFirebase()) {
+                    showAuthError('Firebase initialization failed');
                     return;
                 }
 
-                // Save token and user
-                authToken = data.token;
-                localStorage.setItem('lootquest_token', authToken);
-                currentUser = data.user;
+                // Create user with Firebase Auth
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
 
+                // Update display name
+                if (displayName) {
+                    await user.updateProfile({ displayName: displayName });
+                }
+
+                // Send email verification
+                await user.sendEmailVerification();
+                console.log(`📧 Verification email sent to: ${email}`);
+
+                // Show verification modal instead of redirecting
                 closeAuthModal();
-                showDashboard();
-                showToast('Account created! +' + data.user.signupBonus + ' bonus points!', 'success');
+                showEmailVerificationModal(email);
 
             } catch (error) {
-                console.error('Register error:', error);
-                showAuthError('Connection error. Please try again.');
+                console.error('Registration error:', error);
+
+                // Handle Firebase-specific errors
+                if (error.code === 'auth/email-already-in-use') {
+                    showAuthError('This email is already registered. Try logging in instead.');
+                } else if (error.code === 'auth/weak-password') {
+                    showAuthError('Password is too weak. Use at least 6 characters.');
+                } else if (error.code === 'auth/invalid-email') {
+                    showAuthError('Invalid email address format.');
+                } else {
+                    showAuthError(error.message || 'Registration failed');
+                }
+            }
+        }
+
+        // ════════════════ EMAIL VERIFICATION MODAL ════════════════
+
+        function showEmailVerificationModal(email) {
+            const existingModal = document.getElementById('email-verification-modal');
+            if (existingModal) existingModal.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'email-verification-modal';
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center';
+            modal.innerHTML = `
+                <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+                <div class="relative glass-card rounded-3xl p-8 max-w-md mx-4 border border-white/10 text-center">
+                    <div class="w-20 h-20 rounded-full bg-loot-neon/20 flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="mail-check" class="w-10 h-10 text-loot-neon"></i>
+                    </div>
+                    <h2 class="font-display text-2xl font-bold mb-2">Verify Your Email</h2>
+                    <p class="text-gray-400 mb-6">
+                        We've sent a verification link to:<br>
+                        <span class="text-white font-medium">${email}</span>
+                    </p>
+                    <p class="text-sm text-gray-500 mb-6">
+                        Click the link in the email to activate your account, then come back here to log in.
+                    </p>
+                    
+                    <div class="space-y-3">
+                        <button onclick="closeEmailVerificationModal()" class="w-full btn-glow py-3 rounded-xl font-bold">
+                            GOT IT, LET ME LOG IN
+                        </button>
+                        <button onclick="resendVerificationEmail('${email}')" 
+                            id="resend-btn"
+                            class="w-full py-3 rounded-xl font-medium text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 transition-all">
+                            Resend Verification Email
+                        </button>
+                    </div>
+                    
+                    <p class="text-xs text-gray-600 mt-4">
+                        Didn't receive it? Check your spam folder.
+                    </p>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        function closeEmailVerificationModal() {
+            const modal = document.getElementById('email-verification-modal');
+            if (modal) {
+                modal.remove();
+                document.body.style.overflow = '';
+                // Open login form
+                openAuthModal();
+                switchAuthTab('login');
+            }
+        }
+
+        async function resendVerificationEmail(email) {
+            const btn = document.getElementById('resend-btn');
+            if (!btn) return;
+
+            try {
+                btn.disabled = true;
+                btn.textContent = 'Sending...';
+
+                const user = firebase.auth().currentUser;
+                if (user) {
+                    await user.sendEmailVerification();
+                    btn.textContent = '✓ Email Sent!';
+                    btn.classList.add('text-green-400');
+                    showToast('Verification email sent!', 'success');
+                } else {
+                    // User not logged in, need to sign in first to resend
+                    showToast('Please try registering again', 'error');
+                }
+
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = 'Resend Verification Email';
+                    btn.classList.remove('text-green-400');
+                }, 30000); // 30s cooldown
+
+            } catch (error) {
+                console.error('Resend error:', error);
+                btn.disabled = false;
+                btn.textContent = 'Resend Verification Email';
+                showToast('Failed to send email. Try again later.', 'error');
             }
         }
 
@@ -1506,6 +1687,41 @@
                 });
                 return false;
             }
+        }
+
+        // ════════════════ AUTO-REDIRECT AUTHENTICATED USERS ════════════════
+
+        // Initialize Firebase early and set up auth state listener
+        if (typeof firebase !== 'undefined') {
+            initFirebase();
+
+            // Listen for authentication state changes
+            firebase.auth().onAuthStateChanged(async (user) => {
+                console.log('🔍 Auth state changed:', user ? `User: ${user.email}` : 'No user');
+
+                if (user) {
+                    // User is signed in
+                    const emailVerified = user.emailVerified;
+                    const provider = user.providerData[0]?.providerId;
+
+                    console.log(`📧 Email verified: ${emailVerified}, Provider: ${provider}`);
+
+                    // Only redirect if email is verified OR it's a trusted provider (Google/Discord)
+                    if (emailVerified || provider === 'google.com' || provider === 'discord.com') {
+                        console.log('✅ User is authenticated and verified, redirecting to dashboard...');
+                        // Add small delay to avoid flash of content
+                        setTimeout(() => {
+                            window.location.href = '/dashboard.html';
+                        }, 100);
+                    } else {
+                        console.log('⚠️ User exists but email not verified');
+                        // User is logged in but email not verified - stay on landing page
+                    }
+                } else {
+                    // User is signed out - stay on landing page
+                    console.log('ℹ️ No authenticated user, showing landing page');
+                }
+            });
         }
 
         async function loginWithGoogle() {

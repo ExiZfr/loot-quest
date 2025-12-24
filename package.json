@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "node-scp": "^0.0.25",
+    "node-ssh": "^13.2.1",
     "ssh2": "^1.17.0"
   }
 }
