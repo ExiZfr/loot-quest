@@ -34,6 +34,9 @@
     <script src="/js/translations.js"></script>
     <script src="/js/language-manager.js"></script>
 
+    <!-- LootAuth Module -->
+    <script src="/js/auth.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -800,7 +803,8 @@
                             class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
                             placeholder="••••••••">
                     </div>
-                    <button type="submit" class="w-full btn-glow py-3 rounded-xl font-bold text-lg">
+                    <button type="submit" id="login-submit-btn"
+                        class="w-full btn-glow py-3 rounded-xl font-bold text-lg">
                         LOGIN
                     </button>
                 </form>
@@ -808,24 +812,25 @@
                 <!-- Register Form -->
                 <form id="form-register" onsubmit="handleEmailRegister(event)" class="space-y-4 hidden">
                     <div>
-                        <label class="block text-sm text-gray-400 mb-1">Display Name</label>
-                        <input type="text" id="register-name"
+                        <label class="block text-sm text-gray-400 mb-1">Pseudo / Display Name *</label>
+                        <input type="text" id="register-name" required minlength="3" maxlength="20"
                             class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
                             placeholder="xX_ProGamer_Xx">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-400 mb-1">Email</label>
+                        <label class="block text-sm text-gray-400 mb-1">Email *</label>
                         <input type="email" id="register-email" required
                             class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
                             placeholder="gamer@example.com">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-400 mb-1">Password (min 6 chars)</label>
+                        <label class="block text-sm text-gray-400 mb-1">Password (min 6 chars) *</label>
                         <input type="password" id="register-password" required minlength="6"
                             class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-loot-neon transition-colors"
                             placeholder="••••••••">
                     </div>
-                    <button type="submit" class="w-full btn-glow py-3 rounded-xl font-bold text-lg">
+                    <button type="submit" id="register-submit-btn"
+                        class="w-full btn-glow py-3 rounded-xl font-bold text-lg">
                         CREATE ACCOUNT
                     </button>
                 </form>
@@ -839,7 +844,7 @@
 
                 <!-- OAuth Buttons -->
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="loginWithGoogle()"
+                    <button onclick="handleGoogleLogin()"
                         class="flex items-center justify-center gap-2 bg-white text-black py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors">
                         <svg class="w-5 h-5" viewBox="0 0 24 24">
                             <path fill="currentColor"
@@ -853,7 +858,7 @@
                         </svg>
                         Google
                     </button>
-                    <button onclick="loginWithDiscord()"
+                    <button onclick="handleDiscordLogin()"
                         class="flex items-center justify-center gap-2 bg-[#5865F2] text-white py-3 rounded-xl font-bold hover:bg-[#4752C4] transition-colors">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                             <path
@@ -2198,91 +2203,91 @@
             }
         }
 
-        // Wrapper for onclick buttons
+        // ════════════════════════════════════════════════════════════════════════════
+        // AUTH HANDLERS (Using LootAuth Module)
+        // ════════════════════════════════════════════════════════════════════════════
+
+        // Opens auth modal when user clicks login buttons on page
         async function loginWithGoogle() {
             openAuthModal();
         }
 
         async function loginWithDiscord() {
             // Redirect to Discord OAuth2 flow
-            window.location.href = '/api/auth/discord';
+            LootAuth.loginWithDiscord();
         }
 
-        // ════════ WRAPPERS FOR OLD STATIC MODAL ════════
-        // These handle the form submit events from the old auth modal (id="auth-modal")
-        // They prevent default form submission and call the new functions
+        // Google OAuth handler (from modal button)
+        async function handleGoogleLogin() {
+            closeAuthModal();
+            showToast('Connexion Google en cours...', 'info');
 
-        function handleEmailLogin(event) {
+            const result = await LootAuth.loginWithGoogle();
+
+            if (!result.success) {
+                showToast(result.error || 'Échec de la connexion Google', 'error');
+            }
+        }
+
+        // Discord OAuth handler (from modal button)
+        function handleDiscordLogin() {
+            closeAuthModal();
+            LootAuth.loginWithDiscord();
+        }
+
+        // Email Login handler
+        async function handleEmailLogin(event) {
             if (event) event.preventDefault();
 
-            // Get values from the form
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
+            const submitBtn = document.getElementById('login-submit-btn');
 
             if (!email || !password) {
                 showToast('Veuillez remplir tous les champs', 'error');
                 return;
             }
 
-            console.log('🔵 [DEBUG] Email login attempt for:', email);
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'CONNEXION...';
 
-            firebase.auth().signInWithEmailAndPassword(email, password)
-                .then(result => {
-                    const user = result.user;
+            console.log('🔵 [AUTH] Email login attempt for:', email);
 
-                    console.log('📧 [DEBUG] Login successful, checking email verification...');
-                    console.log('✔️ [DEBUG] Email verified:', user.emailVerified);
+            const result = await LootAuth.loginWithEmail(email, password);
 
-                    // EMAIL VERIFICATION GATE
-                    if (!user.emailVerified) {
-                        console.log('⚠️ [WARN] Email not verified, blocking access');
+            if (!result.success) {
+                // Handle verification error specially
+                if (result.errorCode === 'EMAIL_NOT_VERIFIED') {
+                    closeAuthModal();
+                    showEmailVerificationRequired(email);
+                } else {
+                    showToast(result.error || 'Échec de la connexion', 'error');
+                }
+            }
 
-                        // Sign out the user immediately
-                        return firebase.auth().signOut().then(() => {
-                            // Show verification required modal
-                            showEmailVerificationRequired(email);
-                        });
-                    }
-
-                    // Email verified - proceed with login
-                    console.log('✅ [SUCCESS] Email verified, proceeding with login');
-                    return processAuthResult(user);
-                })
-                .catch(error => {
-                    console.error('❌ [ERROR] Login error:', error);
-
-                    // Better error messages in French
-                    let errorMessage = error.message;
-                    if (error.code === 'auth/user-not-found') {
-                        errorMessage = 'Aucun compte trouvé avec cet email';
-                    } else if (error.code === 'auth/wrong-password') {
-                        errorMessage = 'Mot de passe incorrect';
-                    } else if (error.code === 'auth/invalid-email') {
-                        errorMessage = 'Email invalide';
-                    } else if (error.code === 'auth/user-disabled') {
-                        errorMessage = 'Ce compte a été désactivé';
-                    }
-
-                    showToast(errorMessage, 'error');
-                });
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'LOGIN';
         }
 
-        function handleEmailRegister(event) {
+        // Email Register handler
+        async function handleEmailRegister(event) {
             if (event) event.preventDefault();
 
+            const displayName = document.getElementById('register-name').value;
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
-            // Password confirmation might not exist in old modal
-            const confirmField = document.getElementById('register-confirm-password');
-            const confirm = confirmField ? confirmField.value : password;
+            const submitBtn = document.getElementById('register-submit-btn');
 
-            if (!email || !password) {
-                showToast('Veuillez remplir tous les champs', 'error');
+            // Validation
+            if (!displayName || displayName.length < 3) {
+                showToast('Le pseudo doit contenir au moins 3 caractères', 'error');
                 return;
             }
 
-            if (password !== confirm) {
-                showToast('Les mots de passe ne correspondent pas', 'error');
+            if (!email || !password) {
+                showToast('Veuillez remplir tous les champs', 'error');
                 return;
             }
 
@@ -2291,44 +2296,24 @@
                 return;
             }
 
-            console.log('🔵 [DEBUG] Email registration attempt for:', email);
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'CRÉATION...';
 
-            firebase.auth().createUserWithEmailAndPassword(email, password)
-                .then(result => {
-                    const user = result.user;
+            console.log('🔵 [AUTH] Email registration attempt for:', email);
 
-                    console.log('✅ [SUCCESS] User account created:', user.uid);
-                    console.log('📧 [DEBUG] Sending verification email to:', email);
+            const result = await LootAuth.registerWithEmail(email, password, displayName);
 
-                    // 2. Send email verification
-                    return user.sendEmailVerification().then(() => {
-                        console.log('✅ [SUCCESS] Verification email sent');
+            if (!result.success) {
+                showToast(result.error || 'Échec de l\'inscription', 'error');
+            }
+            // On success, LootAuth redirects to check-email.html
 
-                        // 3. Sign out the user immediately (EMAIL VERIFICATION GATE)
-                        return firebase.auth().signOut();
-                    }).then(() => {
-                        console.log('🔒 [DEBUG] User signed out - must verify email before login');
-
-                        // 4. Show verification modal (DO NOT call processAuthResult)
-                        showEmailVerificationModal(email);
-                    });
-                })
-                .catch(error => {
-                    console.error('❌ [ERROR] Registration error:', error);
-
-                    // Better error messages in French
-                    let errorMessage = error.message;
-                    if (error.code === 'auth/email-already-in-use') {
-                        errorMessage = 'Cet email est déjà utilisé';
-                    } else if (error.code === 'auth/invalid-email') {
-                        errorMessage = 'Email invalide';
-                    } else if (error.code === 'auth/weak-password') {
-                        errorMessage = 'Mot de passe trop faible';
-                    }
-
-                    showToast(errorMessage, 'error');
-                });
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'CREATE ACCOUNT';
         }
+
 
         // ════════════════ DASHBOARD ════════════════
 

@@ -321,6 +321,9 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
+// Trust Nginx proxy (needed for secure cookies behind reverse proxy)
+app.set('trust proxy', 1);
+
 // Redis Session Middleware (Production-Ready)
 const isProduction = process.env.NODE_ENV === 'production';
 app.use(createSessionMiddleware(isProduction));
@@ -528,281 +531,154 @@ async function verifyAuth(req, res, next) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// AUTH ROUTES (Email/Password)
+// AUTH ROUTES (Firebase-Only)
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * POST /api/auth/register
- * 
- * Register a new user with email and password.
- * Password is hashed with bcrypt before storage.
- */
-app.post('/api/auth/register', async (req, res) => {
-    try {
-        const { email, password, displayName } = req.body;
-
-        // Validation
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                error: 'Email and password are required'
-            });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({
-                success: false,
-                error: 'Password must be at least 6 characters'
-            });
-        }
-
-        // Email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid email format'
-            });
-        }
-
-        // Check if email already exists
-        const existingUser = db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
-        if (existingUser) {
-            return res.status(409).json({
-                success: false,
-                error: 'An account with this email already exists'
-            });
-        }
-
-        // Hash password
-        const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-
-        // Generate user ID
-        const userId = uuidv4();
-        const name = displayName || email.split('@')[0];
-
-        // Create user
-        db.run(`
-            INSERT INTO users (id, email, password_hash, display_name, provider, balance, last_login_at)
-            VALUES (?, ?, ?, ?, 'email', ?, datetime('now'))
-        `, [userId, email.toLowerCase(), passwordHash, name, SIGNUP_BONUS]);
-
-        // Add signup bonus transaction
-        if (SIGNUP_BONUS > 0) {
-            const txId = `bonus_${userId}_${Date.now()}`;
-            db.run(`
-                INSERT INTO transactions (id, user_id, amount, type, source, description)
-                VALUES (?, ?, ?, 'credit', 'signup_bonus', 'Welcome bonus!')
-            `, [txId, userId, SIGNUP_BONUS]);
-
-            db.run('UPDATE users SET total_earned = total_earned + ? WHERE id = ?', [SIGNUP_BONUS, userId]);
-        }
-
-        const newUser = db.get('SELECT * FROM users WHERE id = ?', [userId]);
-
-        // Generate JWT token
-        const token = generateToken(newUser);
-
-        console.log(`👤 New user registered (email): ${email}`);
-
-        res.status(201).json({
-            success: true,
-            token,
-            redirectUrl: '/dashboard.html',
-            user: {
-                id: newUser.id,
-                email: newUser.email,
-                displayName: newUser.display_name,
-                balance: newUser.balance,
-                totalEarned: newUser.total_earned,
-                provider: 'email',
-                isNewUser: true,
-                signupBonus: SIGNUP_BONUS
-            }
-        });
-
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ success: false, error: 'Registration failed' });
-    }
-});
+// NOTE: /api/auth/register is DEPRECATED
+// Registration is now 100% client-side via Firebase.
+// User is created in SQLite on first verified login.
 
 /**
  * POST /api/auth/login
  * 
- * Unified login endpoint:
- * - If idToken is provided: Firebase/Google authentication
- * - If email/password is provided: Email/password authentication
- * Returns JWT token and redirectUrl on success.
+ * Unified login endpoint - Firebase idToken only.
+ * Accepts:
+ *   - idToken: Firebase ID token (required)
+ *   - displayName: Display name from registration form (optional, for new users)
+ * 
+ * Creates backend session and syncs user to SQLite.
+ * Returns redirectUrl on success.
  */
 app.post('/api/auth/login', async (req, res) => {
     try {
-        const { idToken, email, password } = req.body;
+        const { idToken, displayName: requestDisplayName } = req.body;
 
         // ═══════════════════════════════════════════════════════════════
-        // FIREBASE/GOOGLE LOGIN (idToken provided)
+        // VALIDATE REQUEST
         // ═══════════════════════════════════════════════════════════════
-        if (idToken) {
-            if (!firebaseInitialized) {
-                return res.status(500).json({
-                    success: false,
-                    error: 'Firebase not configured on server'
-                });
-            }
-
-            // Verify Firebase token
-            let decodedToken;
-            try {
-                decodedToken = await admin.auth().verifyIdToken(idToken);
-            } catch (error) {
-                console.error('Firebase token verification failed:', error.message);
-                return res.status(401).json({
-                    success: false,
-                    error: 'Invalid or expired Firebase token'
-                });
-            }
-
-            const { uid: firebaseUid, email: fbEmail, name, picture } = decodedToken;
-            const provider = decodedToken.firebase?.sign_in_provider || 'google.com';
-            const emailVerified = decodedToken.email_verified || false;
-
-            // ════════════════════════════════════════════════════════════
-            // EMAIL VERIFICATION GATE
-            // Block email/password users who haven't verified their email
-            // Google/Discord users are auto-verified by their providers
-            // ════════════════════════════════════════════════════════════
-            if (provider === 'password' && !emailVerified) {
-                console.log(`⚠️ Email not verified for: ${fbEmail}`);
-                return res.status(403).json({
-                    success: false,
-                    error: 'EMAIL_NOT_VERIFIED',
-                    message: 'Please verify your email address before logging in. Check your inbox for the verification link.'
-                });
-            }
-
-            if (!fbEmail) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Email is required from Firebase'
-                });
-            }
-
-            const emailLower = fbEmail.toLowerCase();
-            const displayName = name || fbEmail.split('@')[0];
-
-            // Sync user to SQLite database
-            let user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
-
-            if (user) {
-                // Update existing user
-                db.run(`
-                    UPDATE users 
-                    SET firebase_uid = ?,
-                        display_name = COALESCE(?, display_name),
-                        avatar_url = COALESCE(?, avatar_url),
-                        provider = COALESCE(?, provider),
-                        last_login_at = datetime('now')
-                    WHERE email = ?
-                `, [firebaseUid, displayName, picture, provider, emailLower]);
-
-                user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
-                console.log(`🔑 Firebase login (existing): ${emailLower}`);
-            } else {
-                // Create new user with signup bonus
-                const userId = uuidv4();
-                db.run(`
-                    INSERT INTO users (id, email, display_name, avatar_url, provider, firebase_uid, balance, created_at, last_login_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-                `, [userId, emailLower, displayName, picture, provider, firebaseUid, SIGNUP_BONUS]);
-
-                // Add signup bonus transaction
-                if (SIGNUP_BONUS > 0) {
-                    const txId = `bonus_${userId}_${Date.now()}`;
-                    db.run(`
-                        INSERT INTO transactions (id, user_id, amount, type, source, description)
-                        VALUES (?, ?, ?, 'credit', 'signup_bonus', 'Welcome bonus!')
-                    `, [txId, userId, SIGNUP_BONUS]);
-                    db.run('UPDATE users SET total_earned = total_earned + ? WHERE id = ?', [SIGNUP_BONUS, userId]);
-                }
-
-                user = db.get('SELECT * FROM users WHERE id = ?', [userId]);
-                console.log(`✨ Firebase login (new user): ${emailLower} (+${SIGNUP_BONUS} pts)`);
-            }
-
-            // Create Redis session
-            createUserSession(req, {
-                id: user.id,
-                firebase_uid: firebaseUid,
-                email: user.email,
-                username: user.display_name,
-                picture: user.avatar_url,
-                provider: provider
-            });
-
-            console.log(`🔐 Session created for: ${emailLower}`);
-
-            return res.json({
-                success: true,
-                redirectUrl: '/dashboard.html',
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    displayName: user.display_name,
-                    avatarUrl: user.avatar_url,
-                    balance: user.balance,
-                    provider: provider
-                }
-            });
-        }
-
-        // ═══════════════════════════════════════════════════════════════
-        // EMAIL/PASSWORD LOGIN
-        // ═══════════════════════════════════════════════════════════════
-        if (!email || !password) {
+        if (!idToken) {
             return res.status(400).json({
                 success: false,
-                error: 'Email and password are required'
+                error: 'idToken is required'
             });
         }
 
-        // Find user
-        const user = db.get('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
+        if (!firebaseInitialized) {
+            return res.status(500).json({
+                success: false,
+                error: 'Firebase not configured on server'
+            });
+        }
 
-        if (!user) {
+        // ═══════════════════════════════════════════════════════════════
+        // VERIFY FIREBASE TOKEN
+        // ═══════════════════════════════════════════════════════════════
+        let decodedToken;
+        try {
+            decodedToken = await admin.auth().verifyIdToken(idToken);
+        } catch (error) {
+            console.error('Firebase token verification failed:', error.message);
             return res.status(401).json({
                 success: false,
-                error: 'Invalid email or password'
+                error: 'Invalid or expired Firebase token'
             });
         }
 
-        // Check if this is an OAuth-only account
-        if (!user.password_hash) {
-            return res.status(401).json({
+        const { uid: firebaseUid, email: fbEmail, name: tokenName, picture } = decodedToken;
+        const provider = decodedToken.firebase?.sign_in_provider || 'unknown';
+        const emailVerified = decodedToken.email_verified || false;
+
+        // ═══════════════════════════════════════════════════════════════
+        // STRICT EMAIL VERIFICATION GATE
+        // Block email/password users who haven't verified their email
+        // Google/Discord users are auto-verified by their providers
+        // ═══════════════════════════════════════════════════════════════
+        if (provider === 'password' && !emailVerified) {
+            console.log(`⚠️ Email not verified for: ${fbEmail}`);
+            return res.status(403).json({
                 success: false,
-                error: 'This account uses Google/Discord login'
+                error: 'EMAIL_NOT_VERIFIED',
+                message: 'Veuillez vérifier votre email avant de vous connecter.'
             });
         }
 
-        // Verify password
-        const isValidPassword = await bcrypt.compare(password, user.password_hash);
-        if (!isValidPassword) {
-            return res.status(401).json({
+        if (!fbEmail) {
+            return res.status(400).json({
                 success: false,
-                error: 'Invalid email or password'
+                error: 'Email is required from Firebase'
             });
         }
 
-        // Update last login
-        db.run("UPDATE users SET last_login_at = datetime('now') WHERE id = ?", [user.id]);
+        // ═══════════════════════════════════════════════════════════════
+        // DETERMINE DISPLAY NAME
+        // Priority: request body > token > email prefix
+        // ═══════════════════════════════════════════════════════════════
+        const emailLower = fbEmail.toLowerCase();
+        const displayName = requestDisplayName || tokenName || fbEmail.split('@')[0];
 
-        // Generate JWT token
-        const token = generateToken(user);
+        // ═══════════════════════════════════════════════════════════════
+        // SYNC USER TO SQLITE DATABASE
+        // ═══════════════════════════════════════════════════════════════
+        let user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
+        let isNewUser = false;
 
-        console.log(`🔓 User logged in (email): ${email}`);
+        if (user) {
+            // Update existing user
+            db.run(`
+                UPDATE users 
+                SET firebase_uid = ?,
+                    display_name = COALESCE(?, display_name),
+                    avatar_url = COALESCE(?, avatar_url),
+                    provider = COALESCE(?, provider),
+                    last_login_at = datetime('now')
+                WHERE email = ?
+            `, [firebaseUid, displayName, picture, provider, emailLower]);
 
-        res.json({
+            user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
+            console.log(`🔑 Login (existing): ${emailLower} via ${provider}`);
+        } else {
+            // Create new user with signup bonus
+            isNewUser = true;
+            const userId = uuidv4();
+
+            db.run(`
+                INSERT INTO users (id, email, display_name, avatar_url, provider, firebase_uid, balance, created_at, last_login_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+            `, [userId, emailLower, displayName, picture, provider, firebaseUid, SIGNUP_BONUS]);
+
+            // Add signup bonus transaction
+            if (SIGNUP_BONUS > 0) {
+                const txId = `bonus_${userId}_${Date.now()}`;
+                db.run(`
+                    INSERT INTO transactions (id, user_id, amount, type, source, description)
+                    VALUES (?, ?, ?, 'credit', 'signup_bonus', 'Welcome bonus!')
+                `, [txId, userId, SIGNUP_BONUS]);
+                db.run('UPDATE users SET total_earned = total_earned + ? WHERE id = ?', [SIGNUP_BONUS, userId]);
+            }
+
+            user = db.get('SELECT * FROM users WHERE id = ?', [userId]);
+            console.log(`✨ Login (new user): ${emailLower} via ${provider} (+${SIGNUP_BONUS} pts)`);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // CREATE REDIS SESSION
+        // ═══════════════════════════════════════════════════════════════
+        createUserSession(req, {
+            id: user.id,
+            firebase_uid: firebaseUid,
+            email: user.email,
+            username: user.display_name,
+            picture: user.avatar_url,
+            provider: provider
+        });
+
+        console.log(`🔐 Session created for: ${emailLower}`);
+
+        // ═══════════════════════════════════════════════════════════════
+        // SUCCESS RESPONSE
+        // ═══════════════════════════════════════════════════════════════
+        return res.json({
             success: true,
-            token,
             redirectUrl: '/dashboard.html',
             user: {
                 id: user.id,
@@ -810,9 +686,10 @@ app.post('/api/auth/login', async (req, res) => {
                 displayName: user.display_name,
                 avatarUrl: user.avatar_url,
                 balance: user.balance,
-                totalEarned: user.total_earned,
-                totalWithdrawn: user.total_withdrawn,
-                provider: 'email'
+                totalEarned: user.total_earned || 0,
+                provider: provider,
+                isNewUser: isNewUser,
+                signupBonus: isNewUser ? SIGNUP_BONUS : 0
             }
         });
 
