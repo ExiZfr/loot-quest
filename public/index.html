@@ -1867,41 +1867,41 @@
         function openEmailAuthModal(mode = 'login') {
             const content = `
                 <div class="flex gap-4 mb-6 border-b border-white/10">
-                    <button onclick="switchEmailTab('login')" id="tab-login" class="pb-2 text-lg font-bold border-b-2 ${mode === 'login' ? 'border-loot-neon text-white' : 'border-transparent text-gray-500'} transition-colors w-1/2">Login</button>
-                    <button onclick="switchEmailTab('register')" id="tab-register" class="pb-2 text-lg font-bold border-b-2 ${mode === 'register' ? 'border-loot-neon text-white' : 'border-transparent text-gray-500'} transition-colors w-1/2">Register</button>
+                    <button onclick="switchEmailTab('login')" id="dyn-tab-login" class="pb-2 text-lg font-bold border-b-2 ${mode === 'login' ? 'border-loot-neon text-white' : 'border-transparent text-gray-500'} transition-colors w-1/2">Login</button>
+                    <button onclick="switchEmailTab('register')" id="dyn-tab-register" class="pb-2 text-lg font-bold border-b-2 ${mode === 'register' ? 'border-loot-neon text-white' : 'border-transparent text-gray-500'} transition-colors w-1/2">Register</button>
                 </div>
 
                 <!-- LOGIN FORM -->
-                <form id="email-login-form" class="${mode === 'login' ? '' : 'hidden'} space-y-4" onsubmit="return false;">
+                <form id="dyn-email-login-form" class="${mode === 'login' ? '' : 'hidden'} space-y-4" onsubmit="return false;">
                     <div>
                         <label class="block text-sm text-gray-400 mb-2">Email</label>
-                        <input type="email" id="login-email" required class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white focus:border-loot-neon focus:outline-none placeholder-gray-600">
+                        <input type="email" id="dyn-login-email" required class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white focus:border-loot-neon focus:outline-none placeholder-gray-600">
                     </div>
                     <div>
                         <label class="block text-sm text-gray-400 mb-2">Password</label>
-                        <input type="password" id="login-password" required class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white focus:border-loot-neon focus:outline-none placeholder-gray-600">
+                        <input type="password" id="dyn-login-password" required class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white focus:border-loot-neon focus:outline-none placeholder-gray-600">
                     </div>
-                    <button onclick="handleEmailLogin()" id="login-submit-btn" class="w-full btn-glow py-3 rounded-xl font-bold text-lg bt-shine">Log In</button>
+                    <button onclick="handleEmailLogin()" id="dyn-login-submit-btn" class="w-full btn-glow py-3 rounded-xl font-bold text-lg bt-shine">Log In</button>
                     <div class="text-center">
                         <a href="#" onclick="alert('Please contact support to reset password'); return false;" class="text-sm text-gray-500 hover:text-white">Forgot Password?</a>
                     </div>
                 </form>
 
                 <!-- REGISTER FORM -->
-                <form id="email-register-form" class="${mode === 'register' ? '' : 'hidden'} space-y-4" onsubmit="return false;">
+                <form id="dyn-email-register-form" class="${mode === 'register' ? '' : 'hidden'} space-y-4" onsubmit="return false;">
                     <div>
                         <label class="block text-sm text-gray-400 mb-2">Pseudo / Display Name *</label>
-                        <input type="text" id="register-name" required minlength="3" maxlength="20" class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white focus:border-loot-neon focus:outline-none placeholder-gray-600" placeholder="xX_ProGamer_Xx">
+                        <input type="text" id="dyn-register-name" required minlength="3" maxlength="20" class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white focus:border-loot-neon focus:outline-none placeholder-gray-600" placeholder="xX_ProGamer_Xx">
                     </div>
                     <div>
                         <label class="block text-sm text-gray-400 mb-2">Email *</label>
-                        <input type="email" id="register-email" required class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white focus:border-loot-neon focus:outline-none placeholder-gray-600">
+                        <input type="email" id="dyn-register-email" required class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white focus:border-loot-neon focus:outline-none placeholder-gray-600">
                     </div>
                     <div>
                         <label class="block text-sm text-gray-400 mb-2">Password (min 6 chars) *</label>
-                        <input type="password" id="register-password" required minlength="6" class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white focus:border-loot-neon focus:outline-none placeholder-gray-600">
+                        <input type="password" id="dyn-register-password" required minlength="6" class="w-full bg-loot-card border border-white/10 rounded-xl px-4 py-3 text-white focus:border-loot-neon focus:outline-none placeholder-gray-600">
                     </div>
-                    <button onclick="handleEmailRegister()" id="register-submit-btn" class="w-full btn-neon py-3 rounded-xl font-bold text-lg">Create Account</button>
+                    <button onclick="handleEmailRegister()" id="dyn-register-submit-btn" class="w-full btn-neon py-3 rounded-xl font-bold text-lg">Create Account</button>
                 </form>
 
                  <div class="mt-6 pt-6 border-t border-white/10 text-center">
@@ -1914,28 +1914,41 @@
         }
 
         function switchEmailTab(tab) {
-            document.getElementById('email-login-form').classList.toggle('hidden', tab !== 'login');
-            document.getElementById('email-register-form').classList.toggle('hidden', tab !== 'register');
+            // Support both static and dynamic modal IDs
+            const loginForm = document.getElementById('dyn-email-login-form') || document.getElementById('email-login-form');
+            const registerForm = document.getElementById('dyn-email-register-form') || document.getElementById('email-register-form');
+            const btnLogin = document.getElementById('dyn-tab-login') || document.getElementById('tab-login');
+            const btnRegister = document.getElementById('dyn-tab-register') || document.getElementById('tab-register');
 
-            const btnLogin = document.getElementById('tab-login');
-            const btnRegister = document.getElementById('tab-register');
+            if (loginForm) loginForm.classList.toggle('hidden', tab !== 'login');
+            if (registerForm) registerForm.classList.toggle('hidden', tab !== 'register');
 
             if (tab === 'login') {
-                btnLogin.classList.add('border-loot-neon', 'text-white');
-                btnLogin.classList.remove('border-transparent', 'text-gray-500');
-                btnRegister.classList.remove('border-loot-neon', 'text-white');
-                btnRegister.classList.add('border-transparent', 'text-gray-500');
+                if (btnLogin) {
+                    btnLogin.classList.add('border-loot-neon', 'text-white');
+                    btnLogin.classList.remove('border-transparent', 'text-gray-500');
+                }
+                if (btnRegister) {
+                    btnRegister.classList.remove('border-loot-neon', 'text-white');
+                    btnRegister.classList.add('border-transparent', 'text-gray-500');
+                }
             } else {
-                btnRegister.classList.add('border-loot-neon', 'text-white');
-                btnRegister.classList.remove('border-transparent', 'text-gray-500');
-                btnLogin.classList.remove('border-loot-neon', 'text-white');
-                btnLogin.classList.add('border-transparent', 'text-gray-500');
+                if (btnRegister) {
+                    btnRegister.classList.add('border-loot-neon', 'text-white');
+                    btnRegister.classList.remove('border-transparent', 'text-gray-500');
+                }
+                if (btnLogin) {
+                    btnLogin.classList.remove('border-loot-neon', 'text-white');
+                    btnLogin.classList.add('border-transparent', 'text-gray-500');
+                }
             }
         }
 
         async function handleEmailLogin() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
+            // Support both dynamic (dyn-*) and static modal IDs
+            const email = (document.getElementById('dyn-login-email') || document.getElementById('login-email'))?.value || '';
+            const password = (document.getElementById('dyn-login-password') || document.getElementById('login-password'))?.value || '';
+            const submitBtn = document.getElementById('dyn-login-submit-btn') || document.getElementById('login-submit-btn');
 
             if (!email || !password) {
                 showToast('Veuillez remplir tous les champs', 'error');
@@ -1987,10 +2000,11 @@
         }
 
         async function handleEmailRegister() {
-            const displayName = document.getElementById('register-name')?.value || '';
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            const submitBtn = document.getElementById('register-submit-btn');
+            // Support both dynamic (dyn-*) and static modal IDs
+            const displayName = (document.getElementById('dyn-register-name') || document.getElementById('register-name'))?.value || '';
+            const email = (document.getElementById('dyn-register-email') || document.getElementById('register-email'))?.value || '';
+            const password = (document.getElementById('dyn-register-password') || document.getElementById('register-password'))?.value || '';
+            const submitBtn = document.getElementById('dyn-register-submit-btn') || document.getElementById('register-submit-btn');
 
             // Validation
             if (!displayName || displayName.length < 3) {
