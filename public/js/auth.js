@@ -58,12 +58,18 @@ const LootAuth = {
                 throw new Error('Email et mot de passe requis');
             }
 
-            if (password.length < 6) {
-                throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+            // Robust Display Name Logic
+            if (!displayName) {
+                displayName = email.split('@')[0];
             }
 
-            if (!displayName || displayName.length < 3) {
-                throw new Error('Le pseudo doit contenir au moins 3 caractères');
+            // Ensure min length 3
+            if (displayName.length < 3) {
+                displayName = displayName + Math.floor(Math.random() * 1000);
+            }
+
+            if (password.length < 6) {
+                throw new Error('Le mot de passe doit contenir au moins 6 caractères');
             }
 
             // 1. Create Firebase account
@@ -452,7 +458,13 @@ const LootAuth = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 // Listen for Firebase auth state changes
-if (typeof firebase !== 'undefined') {
+function initAuthListener() {
+    if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) {
+        // Firebase not ready yet, retry shortly
+        setTimeout(initAuthListener, 50);
+        return;
+    }
+
     firebase.auth().onAuthStateChanged((user) => {
         if (user) {
             console.log('🔥 [Firebase] Auth state: Signed in as', user.email);
@@ -465,6 +477,13 @@ if (typeof firebase !== 'undefined') {
             detail: { user }
         }));
     });
+}
+
+// Start listener when DOM is ready (giving time for main init script to run)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initAuthListener, 100));
+} else {
+    setTimeout(initAuthListener, 100);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

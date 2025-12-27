@@ -561,11 +561,21 @@
             if (user) authenticateUser(user);
             else {
                 try {
-                    const res = await fetch('/api/user/me');
+                    const res = await fetch('/api/user/me', {
+                        credentials: 'include' // Important for cookies
+                    });
                     const data = await res.json();
-                    if (data.success) authenticateUser(data.user);
-                    else window.location.href = '/';
-                } catch { window.location.href = '/'; }
+                    if (data.success) {
+                        authenticateUser(data.user);
+                    } else {
+                        console.warn('Session check failed:', data.error);
+                        // Redirect after small delay
+                        setTimeout(() => window.location.href = '/', 1000);
+                    }
+                } catch (e) {
+                    console.error('Session check error:', e);
+                    setTimeout(() => window.location.href = '/', 1000);
+                }
             }
         });
 
