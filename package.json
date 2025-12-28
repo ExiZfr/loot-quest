@@ -17,7 +17,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "archiver": "^7.0.1",
     "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^12.5.0",

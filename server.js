@@ -695,10 +695,13 @@ app.post('/api/auth/login', async (req, res) => {
         // ═══════════════════════════════════════════════════════════════
         // SYNC USER TO SQLITE DATABASE
         // ═══════════════════════════════════════════════════════════════
+        console.log('DEBUG 1: About to query user from DB');
         let user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
+        console.log('DEBUG 2: User query result:', user ? 'Found' : 'Not found');
         let isNewUser = false;
 
         if (user) {
+            console.log('DEBUG 3: Updating existing user');
             // Update existing user
             db.run(`
                 UPDATE users 
@@ -764,25 +767,35 @@ app.post('/api/auth/login', async (req, res) => {
         // ═══════════════════════════════════════════════════════════════
         // CREATE REDIS SESSION
         // ═══════════════════════════════════════════════════════════════
-        createUserSession(req, {
-            id: user.id,
-            firebase_uid: firebaseUid,
-            email: user.email,
-            username: user.display_name,
-            picture: user.avatar_url,
-            provider: provider
-        });
+        console.log('DEBUG 4: About to create session for user:', user.id);
+        console.log('DEBUG 4.1: Session data:', { id: user.id, email: user.email, username: user.display_name });
+        try {
+            createUserSession(req, {
+                id: user.id,
+                firebase_uid: firebaseUid,
+                email: user.email,
+                username: user.display_name,
+                picture: user.avatar_url,
+                provider: provider
+            });
+            console.log('DEBUG 5: createUserSession() completed successfully');
+        } catch (sessionError) {
+            console.error('❌ DEBUG: Session creation failed:', sessionError);
+            throw sessionError;
+        }
 
         console.log(`🔐 Session created for: ${emailLower}`);
 
         // ═══════════════════════════════════════════════════════════════
         // SUCCESS RESPONSE
         // ═══════════════════════════════════════════════════════════════
+        console.log('DEBUG 6: About to send success response');
 
         // New users without a referrer see the welcome modal
         const needsWelcome = isNewUser && !referredByUserId;
         const redirectUrl = needsWelcome ? '/dashboard.html?welcome=1' : '/dashboard.html';
 
+        console.log('DEBUG 7: Sending response with redirectUrl:', redirectUrl);
         return res.json({
             success: true,
             redirectUrl: redirectUrl,
@@ -801,7 +814,51 @@ app.post('/api/auth/login', async (req, res) => {
 
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ success: false, error: 'Login failed' });
+        console.error('Login error stack:', error.stack);
+        res.status(500).json({ success: false, error: 'Login failed', details: error.message });
+    }
+});
+
+/**
+ * POST /api/auth/lookup-email
+ * 
+ * Lookup user email by pseudo (display_name).
+ * Useful for login by pseudo instead of email.
+ */
+app.post('/api/auth/lookup-email', (req, res) => {
+    try {
+        const { pseudo } = req.body;
+
+        if (!pseudo || pseudo.length < 3) {
+            return res.status(400).json({
+                success: false,
+                error: 'Pseudo invalide'
+            });
+        }
+
+        // Search for user by display_name (case-insensitive)
+        const user = db.get(
+            'SELECT email FROM users WHERE LOWER(display_name) = LOWER(?)',
+            [pseudo.trim()]
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'Pseudo non trouvé'
+            });
+        }
+
+        console.log(`🔍 Pseudo lookup: "${pseudo}" → ${user.email}`);
+
+        res.json({
+            success: true,
+            email: user.email
+        });
+
+    } catch (error) {
+        console.error('Lookup error:', error);
+        res.status(500).json({ success: false, error: 'Lookup failed' });
     }
 });
 

@@ -1,0 +1,177 @@
+{
+    "terms-of-service": {
+        "lastUpdated": "2025-01-01",
+        "sections": [
+            {
+                "title": "1. Acceptance of Terms",
+                "paragraphs": [
+                    "By accessing and using LootQuest, you agree to be bound by these Terms of Service and all applicable laws and regulations.",
+                    "If you do not agree with any of these terms, you are prohibited from using or accessing this site."
+                ]
+            },
+            {
+                "title": "2. Use License",
+                "paragraphs": [
+                    "Permission is granted to temporarily access and use LootQuest for personal, non-commercial transitory viewing only.",
+                    "This license shall automatically terminate if you violate any of these restrictions."
+                ]
+            },
+            {
+                "title": "3. User Accounts",
+                "paragraphs": [
+                    "You are responsible for maintaining the confidentiality of your account credentials.",
+                    "You must be at least 13 years old to use this service.",
+                    "One account per user. Multiple accounts are strictly prohibited and may result in permanent ban."
+                ]
+            },
+            {
+                "title": "4. Earning Points",
+                "paragraphs": [
+                    "Points are earned by completing offers, surveys, and tasks from our partners.",
+                    "LootQuest reserves the right to adjust point values at any time.",
+                    "Fraudulent activity will result in immediate account termination and forfeiture of all points.",
+                    "⚠️ WARNING: VPN usage, bots, or multiple accounts will result in permanent ban without refund."
+                ]
+            },
+            {
+                "title": "5. Withdrawals",
+                "paragraphs": [
+                    "Users must wait 7 days after their first earning before making a withdrawal.",
+                    "Minimum withdrawal amounts vary by reward type.",
+                    "LootQuest reserves the right to review and verify withdrawals before processing."
+                ]
+            },
+            {
+                "title": "6. Disclaimer",
+                "paragraphs": [
+                    "LootQuest is not affiliated with Roblox Corporation, Epic Games, or any other game publisher.",
+                    "All trademarks are property of their respective owners."
+                ]
+            }
+        ]
+    },
+    "privacy-policy": {
+        "lastUpdated": "2025-01-01",
+        "sections": [
+            {
+                "title": "1. Information We Collect",
+                "paragraphs": [
+                    "We collect information you provide directly: email, display name, and account preferences.",
+                    "Automatically collected: IP address, browser type, device information, and usage data.",
+                    "From third parties: OAuth profile data from Google or Discord when you sign in."
+                ]
+            },
+            {
+                "title": "2. How We Use Your Information",
+                "paragraphs": [
+                    "To provide and maintain our service.",
+                    "To process your transactions and withdrawals.",
+                    "To detect and prevent fraud.",
+                    "To communicate with you about your account and updates."
+                ]
+            },
+            {
+                "title": "3. Data Protection",
+                "paragraphs": [
+                    "We use industry-standard encryption (SSL/TLS) to protect data in transit.",
+                    "Your password is hashed and never stored in plain text.",
+                    "We do not sell your personal information to third parties."
+                ]
+            },
+            {
+                "title": "4. Cookies",
+                "paragraphs": [
+                    "We use cookies for session management and to remember your preferences.",
+                    "You can disable cookies in your browser, but some features may not work properly."
+                ]
+            },
+            {
+                "title": "5. Your Rights",
+                "paragraphs": [
+                    "You may request access to, correction of, or deletion of your personal data.",
+                    "Contact us at support@loot-quest.fr for data requests."
+                ]
+            }
+        ]
+    },
+    "cookie-policy": {
+        "lastUpdated": "2025-01-01",
+        "sections": [
+            {
+                "title": "1. What Are Cookies",
+                "paragraphs": [
+                    "Cookies are small text files stored on your device when you visit our website.",
+                    "They help us provide a better user experience by remembering your preferences."
+                ]
+            },
+            {
+                "title": "2. Types of Cookies We Use",
+                "paragraphs": [
+                    "Essential Cookies: Required for the website to function (authentication, security).",
+                    "Preference Cookies: Remember your language and display preferences.",
+                    "Analytics Cookies: Help us understand how visitors use our site."
+                ]
+            },
+            {
+                "title": "3. Managing Cookies",
+                "paragraphs": [
+                    "Most browsers allow you to control cookies through their settings.",
+                    "Disabling cookies may affect your ability to use certain features of our site."
+                ]
+            }
+        ]
+    },
+    "faq": {
+        "lastUpdated": "2025-01-01",
+        "sections": [
+            {
+                "title": "How do I earn points?",
+                "paragraphs": [
+                    "Complete offers, surveys, and app downloads from our Offer Wall.",
+                    "Each task shows its point value before you start.",
+                    "Points are credited automatically once the offer provider confirms completion."
+                ]
+            },
+            {
+                "title": "How long until I receive my points?",
+                "paragraphs": [
+                    "Most offers credit within minutes to 24 hours.",
+                    "Some offers may take up to 7 days depending on the advertiser.",
+                    "If points are missing, contact support with your offer details."
+                ]
+            },
+            {
+                "title": "When can I withdraw?",
+                "paragraphs": [
+                    "New users must wait 7 days after their first earning to withdraw.",
+                    "This helps us prevent fraud and ensures a fair platform for everyone."
+                ]
+            },
+            {
+                "title": "What rewards are available?",
+                "paragraphs": [
+                    "Roblox Robux (instant delivery via game server)",
+                    "Fortnite V-Bucks (gift card codes)",
+                    "PayPal Cash (direct transfer)",
+                    "More rewards coming soon!"
+                ]
+            },
+            {
+                "title": "Is LootQuest safe and legit?",
+                "paragraphs": [
+                    "Yes! LootQuest is a legitimate GPT (Get-Paid-To) platform.",
+                    "We partner with trusted offer providers like Lootably.",
+                    "Your data is protected with industry-standard encryption."
+                ]
+            },
+            {
+                "title": "I have a problem. How do I get help?",
+                "paragraphs": [
+                    "Click Contact Us in the footer to submit a support ticket.",
+                    "Join our Discord community for faster responses.",
+                    "Include as much detail as possible about your issue."
+                ]
+            }
+        ]
+    }
+}

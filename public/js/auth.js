@@ -22,7 +22,7 @@ const LootAuth = {
     // ═══════════════════════════════════════════════════════════════════════════
 
     config: {
-        CHECK_EMAIL_URL: '/check-email.html',
+        CHECK_EMAIL_URL: '/verify.html',
         DASHBOARD_URL: '/dashboard.html',
         LOGIN_URL: '/',
         API_LOGIN: '/api/auth/login',
@@ -42,7 +42,7 @@ const LootAuth = {
      * 1. Create Firebase account
      * 2. Send verification email
      * 3. Sign out immediately (EMAIL VERIFICATION GATE)
-     * 4. Redirect to check-email.html
+     * 4. Redirect to verify.html
      * 
      * @param {string} email - User's email address
      * @param {string} password - Password (min 6 chars)
@@ -95,7 +95,7 @@ const LootAuth = {
 
             console.log('🔒 [LootAuth] User signed out - must verify email before login');
 
-            // 5. Redirect to check-email page
+            // 5. Redirect to verify page
             const redirectUrl = `${this.config.CHECK_EMAIL_URL}?email=${encodeURIComponent(email)}`;
             window.location.href = redirectUrl;
 
