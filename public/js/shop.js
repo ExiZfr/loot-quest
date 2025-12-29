@@ -160,11 +160,11 @@ function openBrandModal(brandId) {
             </button>
         </div>
 
-        <!-- Stock / Delivery Info -->
+        <!-- Delivery Info -->
         <div class="mt-4 text-center">
-            <p class="text-xs text-green-400 flex items-center justify-center gap-1">
-                <i data-lucide="check-circle" class="w-3 h-3"></i>
-                <span data-i18n="shop_instant_delivery">Instant Digital Delivery</span>
+            <p class="text-xs text-gray-400 flex items-center justify-center gap-1">
+                <i data-lucide="clock" class="w-3 h-3"></i>
+                <span>Délai : 24h (7 jours pour le 1er retrait)</span>
             </p>
         </div>
     `;
