@@ -591,12 +591,27 @@ function verifyJWT(req, res, next) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function verifyAuth(req, res, next) {
+    // ═══════════════════════════════════════════════════════════════
+    // PRIORITY 1: Check session authentication (Discord/OAuth users)
+    // ═══════════════════════════════════════════════════════════════
+    if (req.session && req.session.user && req.session.user.id) {
+        req.user = {
+            uid: req.session.user.id,
+            email: req.session.user.email,
+            provider: req.session.user.provider || 'session'
+        };
+        return next();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PRIORITY 2: Check Bearer token (Firebase/JWT users)
+    // ═══════════════════════════════════════════════════════════════
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({
             success: false,
-            error: 'Missing or invalid authorization header'
+            error: 'Not authenticated. Please log in.'
         });
     }
 
