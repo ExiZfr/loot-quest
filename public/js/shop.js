@@ -5,27 +5,37 @@ let shopBrands = [];
 let currentBrand = null;
 let selectedDenomination = null;
 
-// Initialize Shop
-document.addEventListener('DOMContentLoaded', () => {
+// Expose functions globally for dashboard.html
+window.initShop = fetchShopData;
+window.filterShop = filterShop;
+
+// Initialize Shop if DOM is already ready, otherwise wait
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fetchShopData);
+} else {
     fetchShopData();
-});
+}
 
 /**
  * Fetch rewards data from API
  */
 async function fetchShopData() {
+    console.log('🛍️ Shop: Fetching data...');
     try {
         const response = await fetch('/api/rewards');
         const data = await response.json();
 
-        if (data.success) {
+        console.log('🛍️ Shop: API Response', data);
+
+        if (data.success && Array.isArray(data.brands)) {
             shopBrands = data.brands;
+            console.log(`🛍️ Shop: Loaded ${shopBrands.length} brands`);
             renderShop('all'); // Default view
         } else {
-            console.error('Failed to load shop data');
+            console.error('🛍️ Shop: Failed to load shop data', data);
         }
     } catch (error) {
-        console.error('Shop fetch error:', error);
+        console.error('🛍️ Shop: Fetch error:', error);
     }
 }
 
@@ -33,13 +43,19 @@ async function fetchShopData() {
  * Render shop grid based on category filter
  */
 function renderShop(category) {
+    console.log(`🛍️ Shop: Rendering category '${category}'`);
     const grid = document.getElementById('rewards-grid');
-    if (!grid) return;
+    if (!grid) {
+        console.error('🛍️ Shop: Grid element #rewards-grid not found!');
+        return;
+    }
 
     // Filter brands
     const filteredBrands = category === 'all'
         ? shopBrands
         : shopBrands.filter(b => b.category === category);
+
+    console.log(`🛍️ Shop: Displaying ${filteredBrands.length} items`);
 
     // Clear grid
     grid.innerHTML = '';
@@ -82,14 +98,17 @@ function getMinPrice(brand) {
  * Filter shop by category (called by UI buttons)
  */
 function filterShop(category) {
+    console.log(`🛍️ Shop: Filter clicked '${category}'`);
+
     // Update active button state
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (btn.dataset.category === category) {
-            btn.classList.add('bg-loot-neon', 'text-loot-black');
-            btn.classList.remove('bg-loot-card', 'text-gray-400');
+    document.querySelectorAll('.shop-tab').forEach(btn => {
+        // Simple check if onclick contains the category
+        if (btn.getAttribute('onclick').includes(`'${category}'`)) {
+            btn.classList.add('active', 'bg-white/10', 'text-white', 'border-white/5');
+            btn.classList.remove('text-gray-400', 'border-transparent');
         } else {
-            btn.classList.remove('bg-loot-neon', 'text-loot-black');
-            btn.classList.add('bg-loot-card', 'text-gray-400');
+            btn.classList.remove('active', 'bg-white/10', 'text-white', 'border-white/5');
+            btn.classList.add('text-gray-400', 'border-transparent');
         }
     });
 
