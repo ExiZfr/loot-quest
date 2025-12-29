@@ -44,13 +44,23 @@ async function run() {
 
         console.log(`✅ FOUND USER: ${user.display_name} (${user.id})`);
 
-        // 2. Grant Points (Removed role update as column 'role' does not exist)
-        console.log(`💰 Adding ${POINTS_TO_ADD.toLocaleString()} points...`);
+
+        // 1.5 Ensure role column exists
+        try {
+            db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'");
+            console.log("⚠️ Added 'role' column to users table.");
+        } catch (e) {
+            // Column likely exists, ignore
+        }
+
+        // 2. Grant Points and Admin Role
+        console.log(`💰 Adding ${POINTS_TO_ADD.toLocaleString()} points and setting Admin role...`);
 
         db.run(`
             UPDATE users 
             SET balance = ?, 
-                total_earned = total_earned + ?
+                total_earned = total_earned + ?,
+                role = 'admin'
             WHERE id = ?
         `, [POINTS_TO_ADD, POINTS_TO_ADD, user.id]);
 

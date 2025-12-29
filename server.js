@@ -148,6 +148,7 @@ class Database {
         try { this.db.run('ALTER TABLE users ADD COLUMN ip_address TEXT'); } catch (e) { }
         try { this.db.run('ALTER TABLE users ADD COLUMN lifetime_earnings INTEGER DEFAULT 0'); } catch (e) { }
         try { this.db.run('ALTER TABLE users ADD COLUMN referral_unlocked INTEGER DEFAULT 0'); } catch (e) { }
+        try { this.db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"); } catch (e) { }
         this.db.run('CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code)');
 
         this.db.run(`
@@ -635,6 +636,29 @@ async function verifyAuth(req, res, next) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// MIDDLEWARE: Admin Authorization
+// ═══════════════════════════════════════════════════════════════════════════
+
+function requireAdmin(req, res, next) {
+    try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ success: false, error: 'Unauthorized' });
+        }
+
+        const user = db.get('SELECT role FROM users WHERE id = ?', [req.user.id]);
+
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Access denied: Admins only' });
+        }
+
+        next();
+    } catch (error) {
+        console.error('Admin check error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // AUTH ROUTES (Firebase-Only)
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1048,31 +1072,124 @@ app.get('/api/user/referral', isAuthenticated, (req, res) => {
 
         const response = {
             success: true,
-            referral: {
-                code: user.referral_code || 'GENERATING...',
-                shareUrl: user.referral_code ? `https://loot-quest.fr/?ref=${user.referral_code}` : 'https://loot-quest.fr',
-                hasReferrer: !!user.referred_by_user_id,
-                stats: {
-                    totalReferred: referralCount,
-                    activeReferred: unlockedCount,
-                    pendingReferred: Math.max(0, referralCount - unlockedCount),
-                    totalEarnings: totalCommission
-                },
-                config: {
-                    bonusAmount: REFERRAL_BONUS,
-                    threshold: REFERRAL_THRESHOLD,
-                    commissionRate: `${Math.round(REFERRAL_COMMISSION_RATE * 100)}%`
-                }
+            referralCode: user.referral_code,
+            referralLink: isProduction ? `https://loot-quest.fr/?ref=${user.referral_code}` : `http://localhost:${PORT}/?ref=${user.referral_code}`,
+            stats: {
+                totalReferrals: referralCount,
+                unlockedReferrals: unlockedCount,
+                totalCommission: totalCommission,
+                referralBonus: REFERRAL_BONUS,
+                commissionRate: REFERRAL_COMMISSION_RATE * 100 // Display as percentage
             }
         };
 
-        console.log(`✅ Sending response:`, response);
         res.json(response);
 
     } catch (error) {
-        console.error('❌❌❌ CRITICAL: Referral stats error:', error);
-        console.error('Stack trace:', error.stack);
-        res.status(500).json({ success: false, error: 'Failed to get referral info', details: error.message });
+        console.error('Referral stats error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch referral stats' });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADMIN ROUTES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/stats
+ * Overview dashboard
+ */
+app.get('/api/admin/stats', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const usersCount = db.get('SELECT COUNT(*) as c FROM users').c;
+        const totalPaid = db.get('SELECT SUM(amount) as s FROM transactions WHERE type="credit"').s || 0;
+        const pendingWithdrawals = db.get('SELECT COUNT(*) as c FROM withdrawals WHERE status="pending"').c;
+        const openReports = db.get('SELECT COUNT(*) as c FROM support_tickets WHERE type="bug" AND status="new"').c;
+        const unreadMessages = db.get('SELECT COUNT(*) as c FROM support_tickets WHERE type="contact" AND status="new"').c;
+
+        res.json({
+            success: true,
+            stats: {
+                users: usersCount,
+                totalPointsDistributed: totalPaid,
+                pendingWithdrawals,
+                openReports,
+                unreadMessages
+            }
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * GET /api/admin/reports (Bug Reports)
+ */
+app.get('/api/admin/reports', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const reports = db.all('SELECT * FROM support_tickets WHERE type="bug" ORDER BY created_at DESC LIMIT 50');
+        res.json({ success: true, reports });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * GET /api/admin/messages (Contact Us)
+ */
+app.get('/api/admin/messages', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const messages = db.all('SELECT * FROM support_tickets WHERE type="contact" ORDER BY created_at DESC LIMIT 50');
+        res.json({ success: true, messages });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * GET /api/admin/orders (Pending Withdrawals)
+ */
+app.get('/api/admin/orders', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const orders = db.all(`
+            SELECT w.*, u.email, u.display_name, u.balance, u.total_earned, u.ip_address
+            FROM withdrawals w
+            JOIN users u ON w.user_id = u.id
+            WHERE w.status = 'pending'
+            ORDER BY w.created_at DESC
+        `);
+        res.json({ success: true, orders });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * POST /api/admin/resolve-ticket
+ */
+app.post('/api/admin/resolve-ticket', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const { id, status } = req.body;
+        db.run('UPDATE support_tickets SET status = ?, resolved_at = datetime("now") WHERE id = ?', [status, id]);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * POST /api/admin/process-order
+ */
+app.post('/api/admin/process-order', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const { id, status, notes } = req.body;
+        db.run('UPDATE withdrawals SET status = ?, admin_notes = ?, processed_at = datetime("now") WHERE id = ?', [status, notes, id]);
+        if (status === 'completed') {
+            db.run('UPDATE withdrawals SET completed_at = datetime("now") WHERE id = ?', [id]);
+        }
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
     }
 });
 
