@@ -228,8 +228,8 @@ function updateWithdrawButton() {
 
     // Check user balance (assumed global variable or accessible via DOM)
     // For now, we'll check the text content of the balance display or default to 0
-    const balanceEl = document.getElementById('dash-balance');
-    const currentBalance = balanceEl ? parseInt(balanceEl.textContent) : 0;
+    const balanceEl = document.getElementById('user-balance');
+    const currentBalance = balanceEl ? parseInt(balanceEl.textContent.replace(/\s/g, '')) : 0;
 
     // Get translations
     const i18n = window.LootQuestI18n ? window.LootQuestI18n.getTranslation : (key) => key;
