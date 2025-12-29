@@ -1749,10 +1749,8 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
             return res.status(404).json({ success: false, error: 'Reward not found' });
         }
 
-        // Check stock
-        if (reward.stock === 0) {
-            return res.status(400).json({ success: false, error: 'Reward is out of stock' });
-        }
+        // Construct reward name for records
+        const rewardName = `${reward.brandName} ${reward.amount}`;
 
         // Get user from database
         const user = db.get(`
@@ -1791,8 +1789,8 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
         db.run(`
             UPDATE users 
             SET balance = balance - ?, 
-                total_withdrawn = total_withdrawn + ?,
-                first_withdrawal_at = COALESCE(first_withdrawal_at, datetime('now'))
+            total_withdrawn = total_withdrawn + ?,
+            first_withdrawal_at = COALESCE(first_withdrawal_at, datetime('now'))
             WHERE id = ?
         `, [reward.price, reward.price, userId]);
 
@@ -1801,13 +1799,13 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
         db.run(`
             INSERT INTO transactions (id, user_id, amount, type, source, description)
             VALUES (?, ?, ?, 'debit', 'withdrawal', ?)
-        `, [txId, userId, reward.price, `Redeemed: ${reward.name}`]);
+        `, [txId, userId, reward.price, `Redeemed: ${rewardName}`]);
 
         // Create withdrawal record
         db.run(`
             INSERT INTO withdrawals (user_id, reward_id, reward_name, points_spent, delivery_info, status)
             VALUES (?, ?, ?, ?, ?, 'pending')
-        `, [userId, rewardId, reward.name, reward.price, deliveryInfo || null]);
+        `, [userId, rewardId, rewardName, reward.price, deliveryInfo || null]);
 
         // Get the last insert ID (for the withdrawal)
         const lastWithdrawal = db.get('SELECT id FROM withdrawals ORDER BY id DESC LIMIT 1');
@@ -1816,14 +1814,14 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
         // Get updated balance
         const updatedUser = db.get('SELECT balance FROM users WHERE id = ?', [userId]);
 
-        console.log(`🎁 Withdrawal processed: ${reward.name} for user ${userId} (ID: ${withdrawalId})`);
+        console.log(`🎁 Withdrawal processed: ${rewardName} for user ${userId} (ID: ${withdrawalId})`);
 
         res.json({
             success: true,
             message: 'Withdrawal request submitted successfully!',
             withdrawal: {
                 id: withdrawalId,
-                reward: reward.name,
+                reward: rewardName,
                 pointsSpent: reward.price,
                 status: 'pending'
             },
