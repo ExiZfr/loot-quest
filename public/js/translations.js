@@ -248,7 +248,27 @@ const translations = {
         "contact_message_placeholder": "Tell us more about your question or concern...",
         "contact_send_btn": "Send Message",
         "contact_success_title": "Message Sent!",
-        "contact_success_message": "We'll get back to you within 24-48 hours."
+        "contact_success_message": "We'll get back to you within 24-48 hours.",
+        // Shop & Rewards (New)
+        "shop_title": "REWARDS SHOP",
+        "shop_subtitle": "Exchange your points for real rewards. Instant delivery to your email.",
+        "filter_all": "All",
+        "filter_gaming": "Gaming",
+        "filter_money": "Cash",
+        "filter_shopping": "Shopping",
+        "filter_mobile": "Mobile",
+
+        "shop_select_amount": "Select Amount",
+        "shop_select_amount_desc": "Choose the value of your gift card",
+        "shop_total_cost": "Total Cost",
+        "shop_select_option": "Select an option",
+        "shop_instant_delivery": "Instant Digital Delivery",
+        "shop_redeem_btn": "REDEEM REWARD",
+        "shop_need_points": "Need more points",
+        "shop_success_title": "Reward Claimed!",
+        "shop_success_desc": "You successfully redeemed",
+        "shop_code_sent": "Your code will be sent to:",
+        "shop_btn_awesome": "Awesome!"
     },
 
     "fr": {
@@ -496,7 +516,27 @@ const translations = {
         "contact_message_placeholder": "Parle-nous de ta question ou préoccupation...",
         "contact_send_btn": "Envoyer le Message",
         "contact_success_title": "Message Envoyé !",
-        "contact_success_message": "Nous te répondrons sous 24-48h."
+        "contact_success_message": "Nous te répondrons sous 24-48h.",
+        // Shop & Rewards (New)
+        shop_title: "BOUTIQUE CADEAUX",
+        shop_subtitle: "Échangez vos points contre de vraies récompenses. Livraison instantanée par email.",
+        filter_all: "Tout",
+        filter_gaming: "Jeux",
+        filter_money: "Argent",
+        filter_shopping: "Shopping",
+        filter_mobile: "Mobile",
+
+        shop_select_amount: "Choisir le Montant",
+        shop_select_amount_desc: "Choisissez la valeur de votre carte cadeau",
+        shop_total_cost: "Coût Total",
+        shop_select_option: "Sélectionnez une option",
+        shop_instant_delivery: "Livraison Digitale Instantanée",
+        shop_redeem_btn: "ÉCHANGER",
+        shop_need_points: "Points insuffisants",
+        shop_success_title: "Récompense Réclamée !",
+        shop_success_desc: "Vous avez échangé avec succès",
+        shop_code_sent: "Votre code sera envoyé à :",
+        shop_btn_awesome: "Génial !"
     }
 };
 

@@ -290,24 +290,52 @@ function initFirebase() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// LOAD REWARDS CATALOG
+// REWARDS CATALOG MANAGEMENT
 // ═══════════════════════════════════════════════════════════════════════════
 
-let rewardsCatalog = { rewards: [] };
+let rewardsCatalog = { brands: [] };
+let flatRewardsMap = new Map(); // For O(1) lookup by denomination ID
 
 function loadRewards() {
     try {
-        const rewardsPath = path.join(__dirname, 'rewards.json');
-        rewardsCatalog = JSON.parse(fs.readFileSync(rewardsPath, 'utf8'));
-        console.log(`🎁 Loaded ${rewardsCatalog.rewards.length} rewards from catalog`);
+        const rewardsPath = path.join(__dirname, 'content', 'rewards.json');
+        if (fs.existsSync(rewardsPath)) {
+            rewardsCatalog = JSON.parse(fs.readFileSync(rewardsPath, 'utf8'));
+
+            // Build flat map for easy lookup
+            flatRewardsMap.clear();
+            rewardsCatalog.brands.forEach(brand => {
+                brand.denominations.forEach(denom => {
+                    flatRewardsMap.set(denom.id, {
+                        ...denom,
+                        brandName: brand.name,
+                        brandId: brand.id,
+                        category: brand.category,
+                        image: brand.image,
+                        color: brand.color
+                    });
+                });
+            });
+
+            console.log(`🎁 Loaded ${rewardsCatalog.brands.length} brands with ${flatRewardsMap.size} denominations`);
+        } else {
+            console.warn('⚠️ rewards.json not found, using empty catalog');
+        }
     } catch (error) {
-        console.error('❌ Failed to load rewards.json:', error.message);
+        console.error('Failed to load rewards.json:', error.message);
     }
 }
 
-// Helper to get reward by ID
-function getRewardById(rewardId) {
-    return rewardsCatalog.rewards.find(r => r.id === rewardId) || null;
+// Initial Load
+loadRewards();
+
+/**
+ * Get a specific reward denomination by ID
+ * @param {string} id - The denomination ID (e.g. 'roblox_100')
+ * @returns {object|null} The reward object with denomination details + brand info
+ */
+function getRewardById(id) {
+    return flatRewardsMap.get(id) || null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1680,17 +1708,14 @@ app.get('/api/postback/lootably', (req, res) => {
 app.get('/api/rewards', (req, res) => {
     const { category } = req.query;
 
-    let rewards = rewardsCatalog.rewards;
+    let brands = rewardsCatalog.brands;
 
     // Filter by category if provided
     if (category && category !== 'all') {
-        rewards = rewards.filter(r => r.category === category);
+        brands = brands.filter(b => b.category === category);
     }
 
-    // Filter out of stock items (stock = 0)
-    rewards = rewards.filter(r => r.stock !== 0);
-
-    res.json({ success: true, rewards });
+    res.json({ success: true, brands });
 });
 
 /**
@@ -1846,7 +1871,7 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         firebaseConfigured: firebaseInitialized,
-        rewardsLoaded: rewardsCatalog.rewards.length
+        rewardsLoaded: rewardsCatalog.brands.length
     });
 });
 
