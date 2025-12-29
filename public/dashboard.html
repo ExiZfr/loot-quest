@@ -541,6 +541,10 @@
     </main>
 
     <!-- JS Logic (Preserved but Minimized for functionality) -->
+    <!-- Shared Logic -->
+    <script src="/js/translations.js"></script>
+    <script src="/js/shop.js"></script>
+
     <script>
         // --- CONFIG & STATE ---
         const LOOTABLY_PLACEMENT_ID = 'clq9zy73v';
@@ -587,7 +591,11 @@
                     state.user = data.user;
                     state.balance = data.user.balance || 0;
                     updateUI(state.user);
-                    initShop(); // Preload
+
+                    // Initialize Shop from shared script
+                    if (window.initShop) {
+                        window.initShop();
+                    }
 
                     // Welcome Flow
                     if (new URLSearchParams(window.location.search).get('welcome') === '1') showWelcomeModal();
@@ -608,6 +616,11 @@
             const img = document.getElementById('sidebar-avatar');
             img.src = avatar;
             img.onload = () => img.classList.remove('opacity-0');
+
+            // Update shared shop state if available
+            if (window.updateUserBalance) {
+                window.updateUserBalance(user.balance);
+            }
         }
 
         // --- NAVIGATION ---
@@ -656,67 +669,6 @@
             `;
             container.appendChild(el);
             setTimeout(() => el.remove(), 4000);
-        }
-
-        // --- SHOP & REFERRAL LOGIC (Minified for space, logic preserved) ---
-        // Mock Data
-        const SHOP_DATA = [
-            { id: 'fortnite-1000', name: '1000 V-Bucks', category: 'gaming', price: 10, cost: 10000, logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Fortnite_F_lettermark_logo.png', gradient: 'from-blue-600 to-purple-600', popular: true },
-            { id: 'roblox-800', name: '800 Robux', category: 'gaming', price: 10, cost: 10000, logo: 'https://upload.wikimedia.org/wikipedia/commons/3/36/Roblox_Logo_2022.png', gradient: 'from-slate-700 to-slate-900', popular: true },
-            { id: 'paypal-10', name: 'PayPal 10€', category: 'cash', price: 10, cost: 10000, logo: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg', gradient: 'from-blue-700 to-indigo-800', popular: true },
-        ];
-        let shopState = { category: 'all' };
-
-        function initShop() { renderShop(); }
-        function filterCategory(c) {
-            shopState.category = c;
-            document.querySelectorAll('.shop-tab').forEach(b => {
-                b.classList.remove('active', 'bg-white/10', 'text-white');
-                b.classList.add('text-gray-400');
-            });
-            event.target.classList.add('active', 'bg-white/10', 'text-white');
-            event.target.classList.remove('text-gray-400');
-            renderShop();
-        }
-
-        function renderShop() {
-            const grid = document.getElementById('shop-grid');
-            const filtered = SHOP_DATA.filter(i => shopState.category === 'all' || shopState.category === i.category || (shopState.category === 'popular' && i.popular));
-
-            grid.innerHTML = filtered.map(item => {
-                const canAfford = state.balance >= item.cost;
-                return `
-                <div class="group relative bg-[#151A23] border border-white/5 rounded-2xl overflow-hidden flex flex-col h-full active:scale-[0.98] transition-all">
-                    <div class="h-28 bg-gradient-to-br ${item.gradient} relative p-4 flex items-center justify-center">
-                        <img src="${item.logo}" class="h-14 w-auto object-contain drop-shadow-2xl z-10">
-                        ${item.popular ? '<span class="absolute top-2 right-2 px-1.5 py-0.5 bg-black/40 text-[10px] font-bold text-yellow-400 rounded">TOP</span>' : ''}
-                    </div>
-                    <div class="p-4 flex-1 flex flex-col">
-                        <h3 class="font-bold text-white mb-0.5">${item.name}</h3>
-                        <div class="mt-auto pt-4">
-                            <div class="flex items-center justify-between mb-3">
-                                <span class="text-xl font-bold text-white">${item.cost.toLocaleString()} <span class="text-xs text-gray-500">pts</span></span>
-                            </div>
-                            <button onclick="confirmRedeem('${item.id}', '${item.name}', ${item.cost})" 
-                                class="w-full py-2.5 rounded-xl font-bold text-sm ${canAfford ? 'bg-white text-black' : 'bg-white/5 text-gray-500'}">
-                                ${canAfford ? 'ÉCHANGER' : 'MANQUE PTS'}
-                            </button>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        window.confirmRedeem = function (id, name, cost) {
-            if (state.balance < cost) return;
-            if (confirm(`Confirmer l'échange de ${cost} pts pour ${name}?`)) {
-                // Optimistic
-                state.balance -= cost;
-                updateUI(state.user);
-                renderShop();
-                showToast('success', 'Échange réussi', 'Code envoyé par email');
-                // API Call would go here
-            }
         }
 
         // --- REFERRAL & WELCOME ---
