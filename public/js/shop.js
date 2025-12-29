@@ -171,8 +171,10 @@ function openBrandModal(brandId) {
 
     openModal(currentBrand.name, content);
 
-    // Re-initialize icons for the new modal content
-    lucide.createIcons();
+    // Re-initialize icons for the new modal content (if lucide is loaded)
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+    }
 
     // Apply translations to the new content
     if (window.LanguageManager) {
