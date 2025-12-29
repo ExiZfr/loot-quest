@@ -22,7 +22,6 @@ async function run() {
         // 1. Find User
         console.log(`🔍 Searching for user "${TARGET_USER}"...`);
 
-        // Get all users to search (sql.js doesn't support LIKE comfortably in prepared without binding)
         const stmt = db.prepare("SELECT id, display_name, email FROM users");
         let user = null;
 
@@ -40,36 +39,28 @@ async function run() {
 
         if (!user) {
             console.error(`❌ User "${TARGET_USER}" NOT FOUND.`);
-            // List last 5 users
-            console.log("Here are the last 5 registered users:");
-            const logs = db.exec("SELECT display_name, email FROM users ORDER BY id DESC LIMIT 5");
-            if (logs.length > 0 && logs[0].values) {
-                logs[0].values.forEach(v => console.log(` - ${v[0]} (${v[1]})`));
-            }
-            process.exit(0);
+            process.exit(1); // Exit with error code if user not found
         }
 
         console.log(`✅ FOUND USER: ${user.display_name} (${user.id})`);
 
-        // 2. Grant Admin & Points
-        console.log(`💰 Adding ${POINTS_TO_ADD.toLocaleString()} points and Admin role...`);
+        // 2. Grant Points (Removed role update as column 'role' does not exist)
+        console.log(`💰 Adding ${POINTS_TO_ADD.toLocaleString()} points...`);
 
         db.run(`
             UPDATE users 
             SET balance = ?, 
-                total_earned = total_earned + ?,
-                role = 'admin'
+                total_earned = total_earned + ?
             WHERE id = ?
         `, [POINTS_TO_ADD, POINTS_TO_ADD, user.id]);
 
-        // 3. SAVE CHANGES (Critical for sql.js)
+        // 3. SAVE CHANGES
         const data = db.export();
         const bufferToWrite = Buffer.from(data);
         fs.writeFileSync(DB_PATH, bufferToWrite);
 
         console.log('════════════════════════════════════════');
         console.log('💾 DATABASE SAVED SUCCESSFULLY');
-        console.log('👑 ADMIN PRIVILEGES GRANTED 👑');
         console.log(`👤 User: ${user.display_name}`);
         console.log(`💰 Balance set to: ${POINTS_TO_ADD.toLocaleString()} PTS`);
         console.log('════════════════════════════════════════');
