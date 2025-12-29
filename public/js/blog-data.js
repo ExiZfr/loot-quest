@@ -340,20 +340,10 @@ export const blogPosts = [
 
 export const categories = [
     { id: 'all', label: 'Tout', icon: 'grid' },
-    { id: 'Fortnite', label: 'Fortnite', icon: 'crosshair' },
-    { id: 'Roblox', label: 'Roblox', icon: 'box' },
-    { id: 'PlayStation', label: 'PlayStation', icon: 'gamepad-2' },
-    { id: 'Xbox', label: 'Xbox', icon: 'gamepad-2' },
-    { id: 'Nintendo', label: 'Nintendo', icon: 'gamepad-2' },
-    { id: 'Genshin', label: 'Genshin', icon: 'sparkles' },
-    { id: 'Valorant', label: 'Valorant', icon: 'crosshair' },
-    { id: 'Minecraft', label: 'Minecraft', icon: 'box' },
-    { id: 'Apex', label: 'Apex', icon: 'target' },
-    { id: 'LoL', label: 'LoL', icon: 'swords' },
-    { id: 'PayPal', label: 'PayPal', icon: 'credit-card' },
-    { id: 'Steam', label: 'Steam', icon: 'gamepad-2' },
+    { id: 'Gaming', label: 'Gaming', icon: 'gamepad-2' },
     { id: 'Shopping', label: 'Shopping', icon: 'shopping-bag' },
-    { id: 'Reviews', label: 'Reviews', icon: 'star' },
-    { id: 'Safety', label: 'Sécurité', icon: 'shield-check' }
+    { id: 'Streaming', label: 'Streaming', icon: 'tv' },
+    { id: 'Mobile', label: 'Mobile', icon: 'smartphone' },
+    { id: 'Money', label: 'Argent', icon: 'dollar-sign' }
 ];
 

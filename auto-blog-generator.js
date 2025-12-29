@@ -340,8 +340,14 @@ function updateBlogData(entry) {
     const blogDataPath = path.join(__dirname, 'public', 'js', 'blog-data.js');
     let content = fs.readFileSync(blogDataPath, 'utf8');
 
-    // Find the closing bracket of blogPosts array
-    const insertPosition = content.lastIndexOf('];');
+    // Find the FIRST ]; which closes the blogPosts array
+    // NOT the last one which closes categories
+    const blogPostsArrayEnd = content.indexOf('];\n\nexport const categories');
+
+    if (blogPostsArrayEnd === -1) {
+        console.error('   ❌ Could not find blogPosts array end marker');
+        return;
+    }
 
     const newEntry = `,
     {
@@ -357,9 +363,10 @@ function updateBlogData(entry) {
         lang: "${entry.lang}"
     }`;
 
-    content = content.slice(0, insertPosition) + newEntry + content.slice(insertPosition);
+    // Insert BEFORE the first ];
+    content = content.slice(0, blogPostsArrayEnd) + newEntry + '\n' + content.slice(blogPostsArrayEnd);
     fs.writeFileSync(blogDataPath, content);
-    console.log(`   📝 Updated blog-data.js`);
+    console.log(`   📝 Updated blog-data.js (ID: ${entry.id})`);
 }
 
 async function startAutoGeneration() {
