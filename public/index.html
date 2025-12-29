@@ -2832,11 +2832,15 @@
         // ════════════════ LEGAL MODALS ════════════════
 
         async function openLegalModal(type) {
-            const titles = {
-                'terms-of-service': 'Terms of Service',
-                'privacy-policy': 'Privacy Policy',
-                'cookie-policy': 'Cookie Policy',
-                'faq': 'Frequently Asked Questions'
+            // Get current language
+            const currentLang = window.LootQuestI18n ? window.LootQuestI18n.getCurrentLang() : 'en';
+            const dict = translations[currentLang] || translations.en;
+
+            const titleKeys = {
+                'terms-of-service': 'legal_terms_title',
+                'privacy-policy': 'legal_privacy_title',
+                'cookie-policy': 'legal_cookie_title',
+                'faq': 'legal_faq_title'
             };
             const icons = {
                 'terms-of-service': 'file-text',
@@ -2845,8 +2849,10 @@
                 'faq': 'help-circle'
             };
 
+            const title = dict[titleKeys[type]] || 'Legal';
+
             // Show loading
-            openModal(titles[type] || 'Legal', '<div class="flex items-center justify-center py-12"><div class="animate-spin w-8 h-8 border-2 border-loot-neon border-t-transparent rounded-full"></div></div>', icons[type] || 'file-text');
+            openModal(title, '<div class="flex items-center justify-center py-12"><div class="animate-spin w-8 h-8 border-2 border-loot-neon border-t-transparent rounded-full"></div></div>', icons[type] || 'file-text');
 
             try {
                 const res = await fetch(`/api/legal/${type}`);
@@ -2854,7 +2860,7 @@
 
                 if (data.success && data.content) {
                     let html = `<div class="legal-content">`;
-                    html += `<p class="text-sm text-gray-500 mb-4">Last updated: ${data.content.lastUpdated || 'N/A'}</p>`;
+                    html += `<p class="text-sm text-gray-500 mb-4">${dict.legal_last_updated || 'Last updated:'} ${data.content.lastUpdated || 'N/A'}</p>`;
 
                     data.content.sections.forEach(section => {
                         html += `<h3>${section.title}</h3>`;
@@ -2870,11 +2876,11 @@
                     html += `</div>`;
                     modalBody.innerHTML = html;
                 } else {
-                    modalBody.innerHTML = '<p class="text-red-400">Failed to load content.</p>';
+                    modalBody.innerHTML = `<p class="text-red-400">${dict.legal_load_error || 'Failed to load content.'}</p>`;
                 }
             } catch (error) {
                 console.error('Failed to load legal content:', error);
-                modalBody.innerHTML = '<p class="text-red-400">Failed to load content.</p>';
+                modalBody.innerHTML = `<p class="text-red-400">${dict.legal_load_error || 'Failed to load content.'}</p>`;
             }
         }
 

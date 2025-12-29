@@ -229,7 +229,26 @@ const translations = {
         "transaction_complete": "// TRANSACTION.COMPLETE",
         "robux_delivered": "ROBUX DELIVERED",
         "survey_label": "Survey: Cyber Security",
-        "points_abbr": "PTS"
+        "points_abbr": "PTS",
+
+        // Legal Modals
+        "legal_terms_title": "Terms of Service",
+        "legal_privacy_title": "Privacy Policy",
+        "legal_cookie_title": "Cookie Policy",
+        "legal_faq_title": "Frequently Asked Questions",
+        "legal_last_updated": "Last updated:",
+        "legal_load_error": "Failed to load content.",
+
+        // Contact Modal (openModal usage)
+        "contact_modal_title": "Contact Us",
+        "contact_subject_label": "Subject *",
+        "contact_message_label": "Message *",
+        "contact_email_label": "Your Email *",
+        "contact_subject_placeholder": "What can we help you with?",
+        "contact_message_placeholder": "Tell us more about your question or concern...",
+        "contact_send_btn": "Send Message",
+        "contact_success_title": "Message Sent!",
+        "contact_success_message": "We'll get back to you within 24-48 hours."
     },
 
     "fr": {
@@ -458,7 +477,26 @@ const translations = {
         "transaction_complete": "// TRANSACTION.COMPLETE",
         "robux_delivered": "ROBUX LIVRÉS",
         "survey_label": "Sondage : Cybersécurité",
-        "points_abbr": "PTS"
+        "points_abbr": "PTS",
+
+        // Legal Modals
+        "legal_terms_title": "Conditions d'Utilisation",
+        "legal_privacy_title": "Politique de Confidentialité",
+        "legal_cookie_title": "Politique des Cookies",
+        "legal_faq_title": "Questions Fréquentes",
+        "legal_last_updated": "Dernière mise à jour :",
+        "legal_load_error": "Échec du chargement du contenu.",
+
+        // Contact Modal
+        "contact_modal_title": "Nous Contacter",
+        "contact_subject_label": "Sujet *",
+        "contact_message_label": "Message *",
+        "contact_email_label": "Votre Email *",
+        "contact_subject_placeholder": "Comment pouvons-nous vous aider ?",
+        "contact_message_placeholder": "Parle-nous de ta question ou préoccupation...",
+        "contact_send_btn": "Envoyer le Message",
+        "contact_success_title": "Message Envoyé !",
+        "contact_success_message": "Nous te répondrons sous 24-48h."
     }
 };
 
