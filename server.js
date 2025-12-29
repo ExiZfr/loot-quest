@@ -1241,7 +1241,7 @@ app.post('/api/admin/setup-first-admin', (req, res) => {
         console.error('Setup error:', e);
         res.status(500).json({ success: false, error: e.message });
     }
-}
+});
 
 /**
  * POST /api/user/apply-referral
