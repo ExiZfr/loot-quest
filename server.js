@@ -1945,7 +1945,8 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
 
-        // Check 7-day rule for first withdrawal
+        // Check 7-day rule for first withdrawal (TEMPORARILY DISABLED FOR TESTING)
+        /*
         if (!user.first_withdrawal_at) {
             const accountAge = Date.now() - new Date(user.created_at).getTime();
             if (accountAge < SEVEN_DAYS_MS) {
@@ -1957,6 +1958,8 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
                 });
             }
         }
+        */
+
 
         // Check balance
         if (user.balance < reward.price) {
