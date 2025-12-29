@@ -2855,7 +2855,8 @@
             openModal(title, '<div class="flex items-center justify-center py-12"><div class="animate-spin w-8 h-8 border-2 border-loot-neon border-t-transparent rounded-full"></div></div>', icons[type] || 'file-text');
 
             try {
-                const res = await fetch(`/api/legal/${type}`);
+                // Request content in user's selected language
+                const res = await fetch(`/api/legal/${type}?lang=${currentLang}`);
                 const data = await res.json();
 
                 if (data.success && data.content) {
@@ -2865,7 +2866,7 @@
                     data.content.sections.forEach(section => {
                         html += `<h3>${section.title}</h3>`;
                         section.paragraphs.forEach(p => {
-                            if (p.startsWith('⚠️') || p.startsWith('WARNING')) {
+                            if (p.startsWith('⚠️') || p.startsWith('WARNING') || p.startsWith('ATTENTION')) {
                                 html += `<div class="warning-box"><p>${p}</p></div>`;
                             } else {
                                 html += `<p>${p}</p>`;

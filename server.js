@@ -1870,14 +1870,25 @@ function loadLegalContent() {
 
 /**
  * GET /api/legal/:page
- * Returns legal page content (terms-of-service, privacy-policy, cookie-policy)
+ * Returns legal page content (terms-of-service, privacy-policy, cookie-policy, faq)
+ * Query params:
+ *   - lang: Language code ('en' or 'fr'), defaults to 'en'
  */
 app.get('/api/legal/:page', (req, res) => {
     const page = req.params.page;
-    const content = legalContent[page];
+    const lang = req.query.lang || 'en'; // Default to English
+
+    const pageContent = legalContent[page];
+
+    if (!pageContent) {
+        return res.status(404).json({ success: false, error: 'Page not found' });
+    }
+
+    // Get content for requested language, fallback to English if not available
+    const content = pageContent[lang] || pageContent['en'];
 
     if (!content) {
-        return res.status(404).json({ success: false, error: 'Page not found' });
+        return res.status(404).json({ success: false, error: 'Content not available' });
     }
 
     res.json({ success: true, content: content });
