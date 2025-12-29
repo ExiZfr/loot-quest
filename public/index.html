@@ -587,10 +587,12 @@
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Robux_2019_Logo_gold.svg"
                                         alt="Robux" class="w-full h-full object-contain">
                                 </div>
-                                <h3 class="font-display text-2xl font-bold mb-2">Roblox Robux</h3>
-                                <p class="text-gray-400 text-sm mb-6">The ultimate currency for Roblox.</p>
-                                <button onclick="loginWithGoogle()"
-                                    class="w-full btn-neon py-3 rounded-lg font-bold">CLAIM NOW</button>
+                                <h3 class="font-display text-2xl font-bold mb-2" data-i18n="reward_robux_title">Roblox
+                                    Robux</h3>
+                                <p class="text-gray-400 text-sm mb-6" data-i18n="reward_robux_desc">The ultimate
+                                    currency for Roblox.</p>
+                                <button onclick="loginWithGoogle()" class="w-full btn-neon py-3 rounded-lg font-bold"
+                                    data-i18n="claim_now">CLAIM NOW</button>
                             </div>
                         </div>
 
@@ -608,19 +610,20 @@
                             </div>
                             <div
                                 class="bg-loot-card rounded-[22px] p-8 h-full flex flex-col items-center text-center relative">
-                                <div
-                                    class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-loot-purple text-xs font-bold px-3 py-1 rounded-full border border-loot-black">
-                                    POPULAR</div>
+                                <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-loot-purple text-xs font-bold px-3 py-1 rounded-full border border-loot-black"
+                                    data-i18n="popular_badge">POPULAR</div>
                                 <div
                                     class="w-32 h-32 mb-6 transform group-hover:scale-110 transition-transform duration-500 filter drop-shadow-[0_0_15px_rgba(188,19,254,0.3)]">
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/3/31/Epic_Games_logo.svg"
                                         alt="V-Bucks"
                                         class="w-full h-full object-contain p-4 invert bg-black/20 rounded-full">
                                 </div>
-                                <h3 class="font-display text-2xl font-bold mb-2">Fortnite V-Bucks</h3>
-                                <p class="text-gray-400 text-sm mb-6">Skins, Battle Passes & Emotes.</p>
-                                <button onclick="loginWithGoogle()"
-                                    class="w-full btn-glow py-3 rounded-lg font-bold">CLAIM NOW</button>
+                                <h3 class="font-display text-2xl font-bold mb-2" data-i18n="reward_vbucks_title">
+                                    Fortnite V-Bucks</h3>
+                                <p class="text-gray-400 text-sm mb-6" data-i18n="reward_vbucks_desc">Skins, Battle
+                                    Passes & Emotes.</p>
+                                <button onclick="loginWithGoogle()" class="w-full btn-glow py-3 rounded-lg font-bold"
+                                    data-i18n="claim_now">CLAIM NOW</button>
                             </div>
                         </div>
 
@@ -640,10 +643,12 @@
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg"
                                         alt="PayPal" class="w-full h-full object-contain p-2">
                                 </div>
-                                <h3 class="font-display text-2xl font-bold mb-2">PayPal Cash</h3>
-                                <p class="text-gray-400 text-sm mb-6">Real money directly to your account.</p>
-                                <button onclick="loginWithGoogle()"
-                                    class="w-full btn-neon py-3 rounded-lg font-bold">CLAIM NOW</button>
+                                <h3 class="font-display text-2xl font-bold mb-2" data-i18n="reward_paypal_title">PayPal
+                                    Cash</h3>
+                                <p class="text-gray-400 text-sm mb-6" data-i18n="reward_paypal_desc">Real money directly
+                                    to your account.</p>
+                                <button onclick="loginWithGoogle()" class="w-full btn-neon py-3 rounded-lg font-bold"
+                                    data-i18n="claim_now">CLAIM NOW</button>
                             </div>
                         </div>
                     </div>
@@ -657,16 +662,16 @@
                     <div class="max-w-7xl mx-auto px-6 flex items-center justify-between text-sm">
                         <div id="server-status" class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                            <span class="text-gray-400">All Systems Operational</span>
+                            <span class="text-gray-400" data-i18n="status_operational">All Systems Operational</span>
                         </div>
                         <div class="flex items-center gap-4 text-gray-500">
                             <span class="flex items-center gap-1">
                                 <i data-lucide="shield-check" class="w-4 h-4 text-loot-neon"></i>
-                                SSL Secured
+                                <span data-i18n="status_ssl">SSL Secured</span>
                             </span>
                             <span class="flex items-center gap-1">
                                 <i data-lucide="lock" class="w-4 h-4 text-loot-purple"></i>
-                                256-bit Encryption
+                                <span data-i18n="status_encryption">256-bit Encryption</span>
                             </span>
                         </div>
                     </div>
@@ -683,7 +688,7 @@
                                 <i data-lucide="gamepad-2" class="text-loot-neon"></i>
                                 <span>LOOT<span class="text-gradient-primary">QUEST</span></span>
                             </a>
-                            <p class="text-gray-400 text-sm mb-6 max-w-xs">
+                            <p class="text-gray-400 text-sm mb-6 max-w-xs" data-i18n="footer_brand_desc">
                                 The trusted platform for gamers to earn Robux, V-Bucks, and real rewards through simple
                                 tasks.
                             </p>
@@ -779,7 +784,7 @@
                         <div class="flex items-center gap-4">
                             <span class="flex items-center gap-1">
                                 <i data-lucide="globe" class="w-4 h-4"></i>
-                                English (US)
+                                <span data-i18n="footer_lang_label">English (US)</span>
                             </span>
                         </div>
                     </div>
@@ -790,27 +795,30 @@
         <!-- ==================== DASHBOARD (Hidden by default) ==================== -->
         <main id="dashboard" class="hidden min-h-screen pt-24 px-6 max-w-7xl mx-auto">
             <div class="text-center py-20">
-                <h2 class="text-3xl font-display font-bold mb-4">Welcome back, <span id="user-name-display"
-                        class="text-loot-neon">Gamer</span></h2>
+                <h2 class="text-3xl font-display font-bold mb-4"><span data-i18n="dash_welcome_back">Welcome
+                        back,</span> <span id="user-name-display" class="text-loot-neon"
+                        data-i18n="dash_gamer">Gamer</span></h2>
                 <div class="glass-card p-8 rounded-2xl max-w-md mx-auto">
-                    <p class="text-gray-400 mb-2">Current Balance</p>
+                    <p class="text-gray-400 mb-2" data-i18n="dash_current_balance">Current Balance</p>
                     <div class="text-5xl font-bold text-white mb-2" id="dash-balance">0</div>
-                    <div class="text-loot-gold font-mono text-sm">LOOT POINTS AVAILABLE</div>
+                    <div class="text-loot-gold font-mono text-sm" data-i18n="dash_loot_points">LOOT POINTS AVAILABLE
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 max-w-md mx-auto mt-8">
                     <button class="glass-card p-6 rounded-xl hover:bg-loot-card/80 flex flex-col items-center gap-3">
                         <i data-lucide="sword" class="w-8 h-8 text-loot-purple"></i>
-                        <span class="font-bold">Offers</span>
+                        <span class="font-bold" data-i18n="dash_offers">Offers</span>
                     </button>
                     <button class="glass-card p-6 rounded-xl hover:bg-loot-card/80 flex flex-col items-center gap-3">
                         <i data-lucide="gift" class="w-8 h-8 text-loot-neon"></i>
-                        <span class="font-bold">Redeem</span>
+                        <span class="font-bold" data-i18n="dash_redeem">Redeem</span>
                     </button>
                 </div>
 
                 <button onclick="logout()" class="mt-8 text-gray-500 hover:text-white text-sm">
-                    <i data-lucide="log-out" class="w-4 h-4 inline mr-1"></i> Logout
+                    <i data-lucide="log-out" class="w-4 h-4 inline mr-1"></i> <span
+                        data-i18n="dash_logout">Logout</span>
                 </button>
             </div>
         </main>
@@ -1240,7 +1248,7 @@
             <div class="inline-flex items-center gap-3 mx-8 py-1">
                 <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                 <span class="font-bold text-gray-300">${win.user}</span>
-                <span class="text-gray-500 text-sm">withdrew</span>
+                <span class="text-gray-500 text-sm" data-i18n="payout_withdrew">withdrew</span>
                 <span class="font-bold text-loot-neon">${win.amount}</span>
             </div>
         `).join('');
