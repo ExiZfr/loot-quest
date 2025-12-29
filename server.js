@@ -2546,7 +2546,7 @@ async function startServer() {
         console.log(`   📍 URL: http://localhost:${PORT}`);
         console.log(`   🗄️  Database: ${db.dbPath}`);
         console.log(`   🔥 Firebase: ${firebaseInitialized ? 'Configured ✅' : 'Not configured ⚠️'}`);
-        console.log(`   🎁 Rewards: ${rewardsCatalog.rewards.length} items loaded`);
+        console.log(`   🎁 Rewards: ${rewardsCatalog.brands ? rewardsCatalog.brands.length : 0} brands loaded`);
         console.log(`   📝 Blog: ${blogContent.articles.length} articles loaded`);
         console.log('═══════════════════════════════════════════════════════════════════');
         console.log('');
