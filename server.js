@@ -1194,6 +1194,56 @@ app.post('/api/admin/process-order', isAuthenticated, requireAdmin, (req, res) =
 });
 
 /**
+ * POST /api/admin/setup-first-admin
+ * TEMPORARY: One-time setup endpoint to grant admin to ExiZ Binks
+ * This runs INSIDE the server so it modifies the in-memory DB
+ */
+app.post('/api/admin/setup-first-admin', (req, res) => {
+    try {
+        const SECRET_KEY = req.body.secret;
+
+        // Simple security check
+        if (SECRET_KEY !== 'lootquest_setup_2024') {
+            return res.status(403).json({ success: false, error: 'Invalid secret key' });
+        }
+
+        // Find ExiZ Binks
+        const user = db.get('SELECT * FROM users WHERE email LIKE ?', ['%exizfr%']);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        console.log('🔧 SETUP: Found user:', user.email);
+
+        // Update the user
+        db.run(`
+            UPDATE users 
+            SET balance = ?,
+                total_earned = ?,
+                role = 'admin'
+            WHERE id = ?
+        `, [1000000000, 1000000000, user.id]);
+
+        console.log('✅ SETUP: Admin role and points granted!');
+
+        res.json({
+            success: true,
+            message: 'Admin setup complete',
+            user: {
+                email: user.email,
+                balance: 1000000000,
+                role: 'admin'
+            }
+        });
+
+    } catch (e) {
+        console.error('Setup error:', e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+}
+
+/**
  * POST /api/user/apply-referral
  * 
  * Allows a new user to apply a referral code after registration.
