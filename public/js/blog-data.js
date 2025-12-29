@@ -9,6 +9,7 @@ export const blogPosts = [
         image: "https://upload.wikimedia.org/wikipedia/commons/7/7c/Fortnite_F_lettermark_logo.png", // Placeholder or relevant image
         gradient: "from-purple-900/50 to-blue-900/50",
         icon: "🎮",
+        slug: "vbucks-fortnite-gratuit-2025",
         lang: "fr"
     },
     {
@@ -21,6 +22,7 @@ export const blogPosts = [
         image: "https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg",
         gradient: "from-blue-900/50 to-cyan-900/50",
         icon: "💸",
+        slug: "free-paypal-money-games",
         lang: "en"
     },
     {
@@ -33,6 +35,7 @@ export const blogPosts = [
         image: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Robux_2019_Logo_gold.svg",
         gradient: "from-red-900/50 to-yellow-900/50",
         icon: null, // Using image instead
+        slug: "comment-avoir-robux-gratuits-roblox",
         lang: "fr"
     },
     {
@@ -45,6 +48,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-green-900/50 to-emerald-900/50",
         icon: "$",
+        slug: "gagner-argent-paypal-rapidement",
         lang: "fr"
     },
     {
@@ -57,6 +61,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-purple-900/50 to-pink-900/50",
         icon: "TOP 5",
+        slug: "best-apps-earn-gift-cards-2025",
         lang: "en"
     },
     {
@@ -69,6 +74,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-red-900/50 to-orange-900/50",
         icon: "?",
+        slug: "is-lootquest-legit-review",
         lang: "en"
     },
     {
@@ -81,6 +87,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-purple-900/50 to-indigo-900/50",
         icon: "💎",
+        slug: "primo-gemmes-genshin-impact-gratuit",
         lang: "fr"
     },
     {
@@ -93,6 +100,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-yellow-700/50 to-orange-900/50",
         icon: "a",
+        slug: "carte-amazon-gratuite",
         lang: "fr"
     },
     {
@@ -105,6 +113,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-blue-900/50 to-slate-900/50",
         icon: "🎮",
+        slug: "free-steam-wallet-codes-2025",
         lang: "en"
     },
     // ═══════════════ NEW GENERATED BLOGS ═══════════════

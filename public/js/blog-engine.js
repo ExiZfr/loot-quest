@@ -105,12 +105,17 @@ class BlogEngine {
             return;
         }
 
-        this.grid.innerHTML = posts.map((post, index) => `
+        this.grid.innerHTML = posts.map((post, index) => {
+            // Determine URL: Use explicit slug if available, otherwise generate it
+            const slug = post.slug || (this.slugify(post.title) + '-' + post.lang);
+            const postUrl = `/blog/${slug}.html`;
+
+            return `
             <article 
                 class="group relative h-full glass-panel rounded-3xl overflow-hidden hover:scale-[1.02] transition-all duration-500 border border-white/5 hover:border-loot-neon/30 hover:shadow-[0_0_30px_-5px_rgba(0,243,255,0.15)] flex flex-col"
                 style="animation-delay: ${index * 50}ms; opacity: 0; animation: fadeInUp 0.5s forwards ${index * 0.05}s;"
             >
-                <a href="#" class="absolute inset-0 z-10"></a>
+                <a href="${postUrl}" class="absolute inset-0 z-10"></a>
                 
                 <!-- Image/Art Section -->
                 <div class="relative h-56 overflow-hidden shrink-0">
@@ -160,9 +165,21 @@ class BlogEngine {
                     </div>
                 </div>
             </article>
-        `).join('');
+        `}).join('');
 
         lucide.createIcons();
+    }
+
+    slugify(text) {
+        return text.toLowerCase()
+            .replace(/[àáâãäå]/g, 'a')
+            .replace(/[èéêë]/g, 'e')
+            .replace(/[ìíîï]/g, 'i')
+            .replace(/[òóôõö]/g, 'o')
+            .replace(/[ùúûü]/g, 'u')
+            .replace(/[ç]/g, 'c')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
     }
 
     animateEntrance() {
