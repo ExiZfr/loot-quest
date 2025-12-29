@@ -231,20 +231,17 @@ function updateWithdrawButton() {
     const balanceEl = document.getElementById('user-balance');
     const currentBalance = balanceEl ? parseInt(balanceEl.textContent.replace(/\s/g, '')) : 0;
 
-    // Get translations
-    const i18n = window.LootQuestI18n ? window.LootQuestI18n.getTranslation : (key) => key;
-
     if (currentBalance >= selectedDenomination.price) {
         btn.disabled = false;
         btn.classList.remove('bg-gray-700', 'text-gray-400', 'cursor-not-allowed');
-        btn.classList.add('btn-glow', 'text-white', 'cursor-pointer');
-        btn.textContent = i18n('shop_redeem_btn') || 'REDEEM REWARD';
+        btn.classList.add('bg-gradient-to-r', 'from-loot-neon', 'to-loot-purple', 'text-white', 'cursor-pointer', 'hover:opacity-90');
+        btn.textContent = 'REDEEM REWARD';
     } else {
         btn.disabled = true;
         btn.classList.add('bg-gray-700', 'text-gray-400', 'cursor-not-allowed');
-        btn.classList.remove('btn-glow', 'text-white', 'cursor-pointer');
-        const needPointsMsg = i18n('shop_need_points') || 'Need more points';
-        btn.textContent = `${needPointsMsg} (${selectedDenomination.price - currentBalance})`;
+        btn.classList.remove('bg-gradient-to-r', 'from-loot-neon', 'to-loot-purple', 'text-white', 'cursor-pointer', 'hover:opacity-90');
+        const needed = selectedDenomination.price - currentBalance;
+        btn.textContent = `Need ${needed.toLocaleString()} more points`;
     }
 }
 
