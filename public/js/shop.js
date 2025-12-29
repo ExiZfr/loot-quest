@@ -258,14 +258,22 @@ async function confirmWithdrawal() {
     btn.innerHTML = '<div class="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mx-auto"></div>';
 
     try {
-        const token = await window.auth.currentUser.getIdToken();
+        // Build headers - include token if Firebase user is logged in
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        // Check if Firebase auth is available and user is logged in
+        const firebaseUser = firebase.auth().currentUser;
+        if (firebaseUser) {
+            const token = await firebaseUser.getIdToken();
+            headers['Authorization'] = `Bearer ${token}`;
+        }
 
         const response = await fetch('/api/withdraw', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
+            credentials: 'include', // Important for session cookies (Discord/OAuth users)
+            headers: headers,
             body: JSON.stringify({
                 rewardId: selectedDenomination.id
             })
@@ -275,6 +283,9 @@ async function confirmWithdrawal() {
 
         if (data.success) {
             closeModal();
+
+            // Get user email from Firebase or state
+            const userEmail = firebaseUser?.email || state?.user?.email || 'your email';
 
             // Show Success Modal
             openModal('Reward Claimed!', `
@@ -286,7 +297,7 @@ async function confirmWithdrawal() {
                     <p class="text-gray-400 mb-6">You successfully redeemed <strong>${selectedDenomination.amount}</strong>.</p>
                     <div class="bg-loot-dark p-4 rounded-xl border border-white/10 mb-6">
                         <p class="text-sm text-gray-500 mb-1">Your code will be sent to:</p>
-                        <p class="text-white font-mono">${window.auth.currentUser.email}</p>
+                        <p class="text-white font-mono">${userEmail}</p>
                     </div>
                     <button onclick="closeModal()" class="w-full btn-neon py-3 rounded-xl font-bold">Awesome!</button>
                 </div>
