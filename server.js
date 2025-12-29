@@ -130,6 +130,7 @@ class Database {
                 balance INTEGER DEFAULT 0 CHECK(balance >= 0),
                 total_earned INTEGER DEFAULT 0,
                 total_withdrawn INTEGER DEFAULT 0,
+                role TEXT DEFAULT 'user',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 first_withdrawal_at DATETIME,
                 last_login_at DATETIME
