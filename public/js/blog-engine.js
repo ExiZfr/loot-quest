@@ -1,4 +1,4 @@
-import { blogPosts, categories } from `./blog-data.js?v=${Date.now()}`;
+import { blogPosts, categories } from './blog-data.js';
 
 class BlogEngine {
     constructor() {

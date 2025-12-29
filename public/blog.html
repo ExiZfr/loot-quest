@@ -381,7 +381,11 @@
         </div>
     </footer>
 
-    <script type="module" src="/js/blog-engine.js"></script>
+    <script type="module">
+        // Cache-busting for auto-generated blogs
+        const timestamp = new Date().getTime();
+        import(`/js/blog-engine.js?v=${timestamp}`);
+    </script>
 
     <script>
         function toggleMobileMenu() {
