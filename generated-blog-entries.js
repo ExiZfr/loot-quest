@@ -1,113 +1,6 @@
-export const blogPosts = [
-    {
-        id: 1,
-        title: "Comment obtenir des V-Bucks Fortnite gratuits en 2025",
-        excerpt: "Fini les générateurs fake. Découvrez la seule méthode sûre pour farmer les V-Bucks avec LootQuest.",
-        category: "Fortnite",
-        readTime: "5 min",
-        date: "26 Déc 2025",
-        image: "https://upload.wikimedia.org/wikipedia/commons/7/7c/Fortnite_F_lettermark_logo.png", // Placeholder or relevant image
-        gradient: "from-purple-900/50 to-blue-900/50",
-        icon: "🎮",
-        lang: "fr"
-    },
-    {
-        id: 2,
-        title: "How to earn free PayPal money playing games",
-        excerpt: "Turn your gaming skills into cash. The ultimate guide to maximizing your earnings on offerwalls.",
-        category: "PayPal",
-        readTime: "English",
-        date: "Dec 26, 2025",
-        image: "https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg",
-        gradient: "from-blue-900/50 to-cyan-900/50",
-        icon: "💸",
-        lang: "en"
-    },
-    {
-        id: 3,
-        title: "Robux Gratuits : La SEULE méthode légale",
-        excerpt: "Évitez les hacks et découvrez comment gagner de vrais codes Robux officiels.",
-        category: "Roblox",
-        readTime: "4 min",
-        date: "26 Déc 2025",
-        image: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Robux_2019_Logo_gold.svg",
-        gradient: "from-red-900/50 to-yellow-900/50",
-        icon: null, // Using image instead
-        lang: "fr"
-    },
-    {
-        id: 4,
-        title: "Comment Gagner 10€ PayPal Rapidement",
-        excerpt: "Stratégie 'Multi-Offer' pour maximiser vos gains en jouant sur mobile.",
-        category: "Argent",
-        readTime: "5 min",
-        date: "26 Déc 2025",
-        image: null,
-        gradient: "from-green-900/50 to-emerald-900/50",
-        icon: "$",
-        lang: "fr"
-    },
-    {
-        id: 5,
-        title: "Top 5 Legit Apps to Earn Gift Cards (2025)",
-        excerpt: "We ranked the best paying apps. See where LootQuest stands vs Swagbucks.",
-        category: "Reviews",
-        readTime: "English",
-        date: "Dec 26, 2025",
-        image: null,
-        gradient: "from-purple-900/50 to-pink-900/50",
-        icon: "TOP 5",
-        lang: "en"
-    },
-    {
-        id: 6,
-        title: "Is LootQuest Legit? Honest Review",
-        excerpt: "Scam or legit? We break down the business model and transparency report.",
-        category: "Safety",
-        readTime: "English",
-        date: "Dec 26, 2025",
-        image: null,
-        gradient: "from-red-900/50 to-orange-900/50",
-        icon: "?",
-        lang: "en"
-    },
-    {
-        id: 7,
-        title: "Primo-Gemmes Gratuites : Le Guide Ultime",
-        excerpt: "Ne ratez pas la prochaine bannière. Voici comment farmer les primos légalement.",
-        category: "Genshin",
-        readTime: "5 min",
-        date: "26 Déc 2025",
-        image: null,
-        gradient: "from-purple-900/50 to-indigo-900/50",
-        icon: "💎",
-        lang: "fr"
-    },
-    {
-        id: 8,
-        title: "Cartes Amazon Gratuites : L'Astuce",
-        excerpt: "Financez vos achats Amazon en jouant sur votre téléphone.",
-        category: "Shopping",
-        readTime: "4 min",
-        date: "26 Déc 2025",
-        image: null,
-        gradient: "from-yellow-700/50 to-orange-900/50",
-        icon: "a",
-        lang: "fr"
-    },
-    {
-        id: 9,
-        title: "Free Steam Wallet Codes: Stop Using Generators",
-        excerpt: "Steam Sales are coming. Learn how to top up your wallet for free and safely.",
-        category: "Steam",
-        readTime: "English",
-        date: "Dec 26, 2025",
-        image: null,
-        gradient: "from-blue-900/50 to-slate-900/50",
-        icon: "🎮",
-        lang: "en"
-    },
-    // ═══════════════ NEW GENERATED BLOGS ═══════════════
+// Generated blog entries - Add these to blogPosts array in public/js/blog-data.js
+
+const newEntries = [
     {
         id: 100,
         title: "Cartes PSN Gratuites: Obtenez-les Légitimement!",
@@ -117,7 +10,7 @@ export const blogPosts = [
         date: "29 déc. 2025",
         image: null,
         gradient: "from-blue-900/50 to-indigo-900/50",
-        icon: "🎮",
+        icon: "�",
         lang: "fr"
     },
     {
@@ -129,7 +22,7 @@ export const blogPosts = [
         date: "Dec 29, 2025",
         image: null,
         gradient: "from-blue-900/50 to-indigo-900/50",
-        icon: "🎮",
+        icon: "�",
         lang: "en"
     },
     {
@@ -147,7 +40,7 @@ export const blogPosts = [
     {
         id: 104,
         title: "Cartes Nintendo eShop Gratuites: Le Guide Ultime!",
-        excerpt: "Obtenez des cartes Nintendo eShop gratuites avec LootQuest! Dites adieu aux arnaques et bonjour aux jeux gratuits!",
+        excerpt: "Obtenez des cartes Nintendo eShop gratuites avec LootQuest! Dites adieu aux arnaques et bonjour aux jeux gratuits! Découvrez comment.",
         category: "Nintendo",
         readTime: "5 min",
         date: "29 déc. 2025",
@@ -183,7 +76,7 @@ export const blogPosts = [
     {
         id: 107,
         title: "Free Robux? Legit Ways to Earn Robux with LootQuest",
-        excerpt: "Ditch the Robux scams! Learn how to earn FREE Robux safely and legitimately using LootQuest.",
+        excerpt: "Ditch the Robux scams! Learn how to earn FREE Robux safely and legitimately using LootQuest. Get your dream Roblox avatar today!",
         category: "Roblox",
         readTime: "English",
         date: "Dec 29, 2025",
@@ -195,7 +88,7 @@ export const blogPosts = [
     {
         id: 108,
         title: "V-Bucks Fortnite Gratuits: Le Guide LootQuest",
-        excerpt: "Obtenez des V-Bucks Fortnite gratuits légitimement avec LootQuest! Découvrez comment gagner des cartes cadeaux facilement.",
+        excerpt: "Obtenez des V-Bucks Fortnite gratuits légitimement avec LootQuest! Découvrez comment gagner des cartes cadeaux facilement et sans arnaques.",
         category: "Fortnite",
         readTime: "5 min",
         date: "29 déc. 2025",
@@ -207,7 +100,7 @@ export const blogPosts = [
     {
         id: 109,
         title: "Free V-Bucks Fortnite: Get Rewards Legitimately",
-        excerpt: "Want free V-Bucks in Fortnite? Ditch the scams! Learn how to earn FREE V-Bucks with LootQuest.",
+        excerpt: "Want free V-Bucks in Fortnite? Ditch the scams! Learn how to earn FREE V-Bucks with LootQuest by completing simple offers and tasks.",
         category: "Fortnite",
         readTime: "English",
         date: "Dec 29, 2025",
@@ -219,7 +112,7 @@ export const blogPosts = [
     {
         id: 110,
         title: "Genshin Impact: Primo-gemmes Gratuites!",
-        excerpt: "Obtiens des primo-gemmes gratuites pour Genshin Impact grâce à LootQuest! Oublie les hacks, joue et gagne!",
+        excerpt: "Obtiens des primo-gemmes gratuites pour Genshin Impact grâce à LootQuest! Oublie les hacks, joue et gagne des cartes cadeaux!",
         category: "Genshin",
         readTime: "5 min",
         date: "29 déc. 2025",
@@ -231,7 +124,7 @@ export const blogPosts = [
     {
         id: 111,
         title: "Free Primogems: Genshin Impact LootQuest Guide",
-        excerpt: "Want free Primogems in Genshin Impact? Ditch the scams and use LootQuest! Earn gift cards legitimately.",
+        excerpt: "Want free Primogems in Genshin Impact? Ditch the scams and use LootQuest! Earn gift cards legitimately and unlock your favorite characters.",
         category: "Genshin",
         readTime: "English",
         date: "Dec 29, 2025",
@@ -243,7 +136,7 @@ export const blogPosts = [
     {
         id: 112,
         title: "VP Valorant Gratuits: Obtenez-les avec LootQuest!",
-        excerpt: "Gagnez des Valorant Points (VP) GRATUITEMENT et légalement avec LootQuest! Dites adieu aux arnaques!",
+        excerpt: "Gagnez des Valorant Points (VP) GRATUITEMENT et légalement avec LootQuest! Dites adieu aux arnaques et bonjour aux skins épiques!",
         category: "Valorant",
         readTime: "5 min",
         date: "29 déc. 2025",
@@ -255,7 +148,7 @@ export const blogPosts = [
     {
         id: 113,
         title: "Free Valorant Points: Get VP with LootQuest",
-        excerpt: "Want free Valorant Points (VP)? Stop wasting time on scams. Learn how to earn VP for FREE with LootQuest.",
+        excerpt: "Want free Valorant Points (VP)? Stop wasting time on scams. Learn how to earn VP for FREE with LootQuest. Get your skins now!",
         category: "Valorant",
         readTime: "English",
         date: "Dec 29, 2025",
@@ -267,7 +160,7 @@ export const blogPosts = [
     {
         id: 114,
         title: "Minecoins Minecraft GRATUITES : Le Guide Ultime",
-        excerpt: "Obtiens des Minecoins Minecraft gratuitement et légalement avec LootQuest ! Dis adieu aux arnaques!",
+        excerpt: "Obtiens des Minecoins Minecraft gratuitement et légalement avec LootQuest ! Dis adieu aux arnaques et bienvenue aux récompenses réelles.",
         category: "Minecraft",
         readTime: "5 min",
         date: "29 déc. 2025",
@@ -279,7 +172,7 @@ export const blogPosts = [
     {
         id: 115,
         title: "Free Minecraft Minecoins: Get Them Legally!",
-        excerpt: "Want free Minecraft Minecoins? Stop searching for sketchy generators! Learn how to earn REAL Minecoins with LootQuest.",
+        excerpt: "Want free Minecraft Minecoins? Stop searching for sketchy generators! Learn how to earn REAL Minecoins easily with LootQuest.",
         category: "Minecraft",
         readTime: "English",
         date: "Dec 29, 2025",
@@ -291,7 +184,7 @@ export const blogPosts = [
     {
         id: 116,
         title: "Apex Coins Gratuit: Le Guide Ultime (2024)",
-        excerpt: "Obtiens des Apex Coins gratuitement et légalement avec LootQuest! Arrête les générateurs frauduleux!",
+        excerpt: "Obtiens des Apex Coins gratuitement et légalement avec LootQuest! Arrête les générateurs frauduleux, commence à gagner dès aujourd'hui!",
         category: "Apex",
         readTime: "5 min",
         date: "29 déc. 2025",
@@ -315,7 +208,7 @@ export const blogPosts = [
     {
         id: 118,
         title: "RP League of Legends Gratos? C'est possible!",
-        excerpt: "Obtiens des RP League of Legends gratuitement et légalement avec LootQuest. Dis adieu aux arnaques!",
+        excerpt: "Obtiens des RP League of Legends gratuitement et légalement avec LootQuest. Dis adieu aux arnaques et bonjour aux skins!",
         category: "LoL",
         readTime: "5 min",
         date: "29 déc. 2025",
@@ -337,23 +230,3 @@ export const blogPosts = [
         lang: "en"
     }
 ];
-
-export const categories = [
-    { id: 'all', label: 'Tout', icon: 'grid' },
-    { id: 'Fortnite', label: 'Fortnite', icon: 'crosshair' },
-    { id: 'Roblox', label: 'Roblox', icon: 'box' },
-    { id: 'PlayStation', label: 'PlayStation', icon: 'gamepad-2' },
-    { id: 'Xbox', label: 'Xbox', icon: 'gamepad-2' },
-    { id: 'Nintendo', label: 'Nintendo', icon: 'gamepad-2' },
-    { id: 'Genshin', label: 'Genshin', icon: 'sparkles' },
-    { id: 'Valorant', label: 'Valorant', icon: 'crosshair' },
-    { id: 'Minecraft', label: 'Minecraft', icon: 'box' },
-    { id: 'Apex', label: 'Apex', icon: 'target' },
-    { id: 'LoL', label: 'LoL', icon: 'swords' },
-    { id: 'PayPal', label: 'PayPal', icon: 'credit-card' },
-    { id: 'Steam', label: 'Steam', icon: 'gamepad-2' },
-    { id: 'Shopping', label: 'Shopping', icon: 'shopping-bag' },
-    { id: 'Reviews', label: 'Reviews', icon: 'star' },
-    { id: 'Safety', label: 'Sécurité', icon: 'shield-check' }
-];
-
