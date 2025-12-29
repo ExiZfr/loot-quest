@@ -1,30 +1,44 @@
 {
+    "version": "2.0",
+    "lastUpdated": "2025-12-30",
+    "economy": {
+        "pointsPerDollar": 1000,
+        "userSplit": 0.60,
+        "platformSplit": 0.40,
+        "referralRate": 0.05,
+        "markupStrategy": "degressive",
+        "formula": "Points crédités = USD × 0.60 × 1000"
+    },
     "brands": [
         {
             "id": "roblox",
             "name": "Roblox",
             "category": "gaming",
             "image": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Robux_2019_Logo_gold.svg",
-            "color": "#CE2323",
+            "color": "#FDDB5E",
             "denominations": [
                 {
                     "id": "roblox_100",
                     "amount": "100 Robux",
+                    "valueUSD": 1.25,
                     "price": 1000
                 },
                 {
                     "id": "roblox_400",
                     "amount": "400 Robux",
+                    "valueUSD": 5,
                     "price": 4000
                 },
                 {
                     "id": "roblox_800",
                     "amount": "800 Robux",
+                    "valueUSD": 10,
                     "price": 8000
                 },
                 {
                     "id": "roblox_2000",
                     "amount": "2000 Robux",
+                    "valueUSD": 25,
                     "price": 20000
                 }
             ]
@@ -34,27 +48,31 @@
             "name": "Fortnite V-Bucks",
             "category": "gaming",
             "image": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Fortnite_F_lettermark_logo.png",
-            "color": "#12a8e6",
+            "color": "#9D4DFF",
             "denominations": [
                 {
                     "id": "vbucks_1000",
                     "amount": "1000 V-Bucks",
-                    "price": 9000
+                    "valueUSD": 8,
+                    "price": 6400
                 },
                 {
                     "id": "vbucks_2800",
                     "amount": "2800 V-Bucks",
-                    "price": 23000
+                    "valueUSD": 20,
+                    "price": 16000
                 },
                 {
                     "id": "vbucks_5000",
                     "amount": "5000 V-Bucks",
-                    "price": 38000
+                    "valueUSD": 32,
+                    "price": 25600
                 },
                 {
                     "id": "vbucks_13500",
                     "amount": "13500 V-Bucks",
-                    "price": 85000
+                    "valueUSD": 80,
+                    "price": 64000
                 }
             ]
         },
@@ -63,22 +81,25 @@
             "name": "Valorant Points",
             "category": "gaming",
             "image": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg",
-            "color": "#FF4655",
+            "color": "#FD4556",
             "denominations": [
                 {
                     "id": "val_10",
-                    "amount": "950 VP",
-                    "price": 10000
+                    "amount": "1000 VP",
+                    "valueUSD": 10,
+                    "price": 8000
                 },
                 {
-                    "id": "val_20",
-                    "amount": "2050 VP",
+                    "id": "val_25",
+                    "amount": "2575 VP",
+                    "valueUSD": 25,
                     "price": 20000
                 },
                 {
                     "id": "val_50",
                     "amount": "5350 VP",
-                    "price": 50000
+                    "valueUSD": 50,
+                    "price": 40000
                 }
             ]
         },
@@ -87,75 +108,166 @@
             "name": "League of Legends RP",
             "category": "gaming",
             "image": "https://upload.wikimedia.org/wikipedia/commons/d/d8/League_of_Legends_2019_vector.svg",
-            "color": "#C9AA71",
+            "color": "#C89B3C",
             "denominations": [
                 {
                     "id": "rp_10",
                     "amount": "1380 RP",
-                    "price": 10000
+                    "valueUSD": 10,
+                    "price": 8000
                 },
                 {
                     "id": "rp_20",
                     "amount": "2800 RP",
-                    "price": 20000
+                    "valueUSD": 20,
+                    "price": 16000
                 },
                 {
                     "id": "rp_50",
                     "amount": "7200 RP",
-                    "price": 50000
+                    "valueUSD": 50,
+                    "price": 40000
                 }
             ]
         },
         {
-            "id": "genshin",
-            "name": "Genshin Impact",
+            "id": "discord",
+            "name": "Discord Nitro",
             "category": "gaming",
-            "image": "https://upload.wikimedia.org/wikipedia/en/5/5d/Genshin_Impact_logo.svg",
-            "color": "#4A6E8D",
+            "image": "https://upload.wikimedia.org/wikipedia/fr/4/4f/Discord_Logo_sans_texte.svg",
+            "color": "#5865F2",
             "denominations": [
                 {
-                    "id": "genesis_60",
-                    "amount": "60 Genesis Crystals",
-                    "price": 1000
+                    "id": "nitro_basic",
+                    "amount": "1 Mois Nitro Basic",
+                    "valueUSD": 3,
+                    "price": 2400
                 },
                 {
-                    "id": "genesis_300",
-                    "amount": "300 Genesis Crystals",
-                    "price": 5000
+                    "id": "nitro_month",
+                    "amount": "1 Mois Nitro",
+                    "valueUSD": 10,
+                    "price": 8000
                 },
                 {
-                    "id": "genesis_980",
-                    "amount": "980 Genesis Crystals",
-                    "price": 15000
-                },
-                {
-                    "id": "welkin",
-                    "amount": "Blessing of the Welkin Moon",
-                    "price": 5000
+                    "id": "nitro_year",
+                    "amount": "1 An Nitro",
+                    "valueUSD": 100,
+                    "price": 80000
                 }
             ]
         },
         {
-            "id": "apex",
-            "name": "Apex Legends Coins",
+            "id": "steam",
+            "name": "Steam",
             "category": "gaming",
-            "image": "https://apexlegends.wiki.gg/images/Apex_Coins.svg",
-            "color": "#DA292A",
+            "image": "https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg",
+            "color": "#1B2838",
             "denominations": [
                 {
-                    "id": "apex_1000",
-                    "amount": "1000 Coins",
-                    "price": 10000
+                    "id": "steam_5",
+                    "amount": "5€",
+                    "valueUSD": 5,
+                    "price": 4000
                 },
                 {
-                    "id": "apex_2150",
-                    "amount": "2150 Coins",
+                    "id": "steam_10",
+                    "amount": "10€",
+                    "valueUSD": 10,
+                    "price": 8000
+                },
+                {
+                    "id": "steam_20",
+                    "amount": "20€",
+                    "valueUSD": 20,
+                    "price": 16000
+                },
+                {
+                    "id": "steam_50",
+                    "amount": "50€",
+                    "valueUSD": 50,
+                    "price": 40000
+                }
+            ]
+        },
+        {
+            "id": "psn",
+            "name": "PlayStation Store",
+            "category": "gaming",
+            "image": "https://upload.wikimedia.org/wikipedia/commons/0/00/PlayStation_logo.svg",
+            "color": "#003791",
+            "denominations": [
+                {
+                    "id": "psn_10",
+                    "amount": "10€",
+                    "valueUSD": 10,
+                    "price": 8000
+                },
+                {
+                    "id": "psn_20",
+                    "amount": "20€",
+                    "valueUSD": 20,
+                    "price": 16000
+                },
+                {
+                    "id": "psn_50",
+                    "amount": "50€",
+                    "valueUSD": 50,
+                    "price": 40000
+                }
+            ]
+        },
+        {
+            "id": "xbox",
+            "name": "Xbox",
+            "category": "gaming",
+            "image": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Xbox_one_logo.svg",
+            "color": "#107C10",
+            "denominations": [
+                {
+                    "id": "xbox_10",
+                    "amount": "10€",
+                    "valueUSD": 10,
+                    "price": 8000
+                },
+                {
+                    "id": "xbox_25",
+                    "amount": "25€",
+                    "valueUSD": 25,
                     "price": 20000
                 },
                 {
-                    "id": "apex_6700",
-                    "amount": "6700 Coins",
-                    "price": 60000
+                    "id": "xbox_50",
+                    "amount": "50€",
+                    "valueUSD": 50,
+                    "price": 40000
+                }
+            ]
+        },
+        {
+            "id": "nintendo",
+            "name": "Nintendo eShop",
+            "category": "gaming",
+            "image": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Nintendo.svg",
+            "color": "#E60012",
+            "denominations": [
+                {
+                    "id": "nintendo_15",
+                    "amount": "15€",
+                    "valueUSD": 15,
+                    "price": 12000
+                },
+                {
+                    "id": "nintendo_25",
+                    "amount": "25€",
+                    "valueUSD": 25,
+                    "price": 20000
+                },
+                {
+                    "id": "nintendo_50",
+                    "amount": "50€",
+                    "valueUSD": 50,
+                    "price": 40000
                 }
             ]
         },
@@ -164,32 +276,37 @@
             "name": "PayPal",
             "category": "money",
             "image": "https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg",
-            "color": "#00457C",
+            "color": "#003087",
             "denominations": [
                 {
                     "id": "paypal_5",
-                    "amount": "€5.00",
-                    "price": 5000
+                    "amount": "5€",
+                    "valueUSD": 5,
+                    "price": 4000
                 },
                 {
                     "id": "paypal_10",
-                    "amount": "€10.00",
-                    "price": 10000
+                    "amount": "10€",
+                    "valueUSD": 10,
+                    "price": 8000
                 },
                 {
                     "id": "paypal_20",
-                    "amount": "€20.00",
-                    "price": 20000
+                    "amount": "20€",
+                    "valueUSD": 20,
+                    "price": 16000
                 },
                 {
                     "id": "paypal_50",
-                    "amount": "€50.00",
-                    "price": 50000
+                    "amount": "50€",
+                    "valueUSD": 50,
+                    "price": 40000
                 },
                 {
                     "id": "paypal_100",
-                    "amount": "€100.00",
-                    "price": 100000
+                    "amount": "100€",
+                    "valueUSD": 100,
+                    "price": 80000
                 }
             ]
         },
@@ -201,43 +318,82 @@
             "color": "#FF9900",
             "denominations": [
                 {
-                    "id": "amazon_5",
-                    "amount": "€5.00",
-                    "price": 5000
-                },
-                {
                     "id": "amazon_10",
-                    "amount": "€10.00",
-                    "price": 10000
+                    "amount": "10€",
+                    "valueUSD": 10,
+                    "price": 8000
                 },
                 {
                     "id": "amazon_25",
-                    "amount": "€25.00",
-                    "price": 25000
+                    "amount": "25€",
+                    "valueUSD": 25,
+                    "price": 20000
                 },
                 {
                     "id": "amazon_50",
-                    "amount": "€50.00",
-                    "price": 50000
+                    "amount": "50€",
+                    "valueUSD": 50,
+                    "price": 40000
+                },
+                {
+                    "id": "amazon_100",
+                    "amount": "100€",
+                    "valueUSD": 100,
+                    "price": 80000
                 }
             ]
         },
         {
-            "id": "netflix",
-            "name": "Netflix",
-            "category": "shopping",
-            "image": "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg",
-            "color": "#E50914",
+            "id": "googleplay",
+            "name": "Google Play",
+            "category": "mobile",
+            "image": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Google_Play_Arrow_logo.svg",
+            "color": "#34A853",
             "denominations": [
                 {
-                    "id": "netflix_25",
-                    "amount": "€25.00",
-                    "price": 25000
+                    "id": "gplay_10",
+                    "amount": "10€",
+                    "valueUSD": 10,
+                    "price": 8000
                 },
                 {
-                    "id": "netflix_50",
-                    "amount": "€50.00",
-                    "price": 50000
+                    "id": "gplay_25",
+                    "amount": "25€",
+                    "valueUSD": 25,
+                    "price": 20000
+                },
+                {
+                    "id": "gplay_50",
+                    "amount": "50€",
+                    "valueUSD": 50,
+                    "price": 40000
+                }
+            ]
+        },
+        {
+            "id": "appstore",
+            "name": "Apple Gift Card",
+            "category": "mobile",
+            "image": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
+            "color": "#A2AAAD",
+            "denominations": [
+                {
+                    "id": "apple_10",
+                    "amount": "10€",
+                    "valueUSD": 10,
+                    "price": 8000
+                },
+                {
+                    "id": "apple_25",
+                    "amount": "25€",
+                    "valueUSD": 25,
+                    "price": 20000
+                },
+                {
+                    "id": "apple_50",
+                    "amount": "50€",
+                    "valueUSD": 50,
+                    "price": 40000
                 }
             ]
         },
@@ -250,56 +406,42 @@
             "denominations": [
                 {
                     "id": "spotify_10",
-                    "amount": "€10.00",
-                    "price": 10000
+                    "amount": "10€",
+                    "valueUSD": 10,
+                    "price": 8000
                 },
                 {
                     "id": "spotify_30",
-                    "amount": "€30.00",
-                    "price": 30000
-                },
-                {
-                    "id": "spotify_60",
-                    "amount": "€60.00",
-                    "price": 60000
+                    "amount": "30€",
+                    "valueUSD": 30,
+                    "price": 24000
                 }
             ]
         },
         {
-            "id": "deezer",
-            "name": "Deezer",
+            "id": "netflix",
+            "name": "Netflix",
             "category": "shopping",
-            "image": "https://upload.wikimedia.org/wikipedia/commons/d/db/Deezer_logo.svg",
-            "color": "#EF5466",
+            "image": "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg",
+            "color": "#E50914",
             "denominations": [
                 {
-                    "id": "deezer_10",
-                    "amount": "€10.00",
-                    "price": 10000
+                    "id": "netflix_15",
+                    "amount": "15€",
+                    "valueUSD": 15,
+                    "price": 12000
                 },
                 {
-                    "id": "deezer_30",
-                    "amount": "€30.00",
-                    "price": 30000
-                }
-            ]
-        },
-        {
-            "id": "applemusic",
-            "name": "Apple Music",
-            "category": "shopping",
-            "image": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Apple_Music_icon.svg",
-            "color": "#FA243C",
-            "denominations": [
-                {
-                    "id": "apple_10",
-                    "amount": "€10.00",
-                    "price": 10000
+                    "id": "netflix_25",
+                    "amount": "25€",
+                    "valueUSD": 25,
+                    "price": 20000
                 },
                 {
-                    "id": "apple_25",
-                    "amount": "€25.00",
-                    "price": 25000
+                    "id": "netflix_50",
+                    "amount": "50€",
+                    "valueUSD": 50,
+                    "price": 40000
                 }
             ]
         },
@@ -313,60 +455,14 @@
                 {
                     "id": "disney_month",
                     "amount": "1 Mois Standard",
-                    "price": 9000
+                    "valueUSD": 9,
+                    "price": 7200
                 },
                 {
                     "id": "disney_year",
                     "amount": "1 An",
-                    "price": 90000
-                }
-            ]
-        },
-        {
-            "id": "googleplay",
-            "name": "Google Play",
-            "category": "mobile",
-            "image": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Google_Play_Arrow_logo.svg",
-            "color": "#34A853",
-            "denominations": [
-                {
-                    "id": "google_10",
-                    "amount": "€10.00",
-                    "price": 10000
-                },
-                {
-                    "id": "google_15",
-                    "amount": "€15.00",
-                    "price": 15000
-                },
-                {
-                    "id": "google_25",
-                    "amount": "€25.00",
-                    "price": 25000
-                }
-            ]
-        },
-        {
-            "id": "appstore",
-            "name": "Apple Gift Card",
-            "category": "mobile",
-            "image": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
-            "color": "#000000",
-            "denominations": [
-                {
-                    "id": "apple_10",
-                    "amount": "€10.00",
-                    "price": 10000
-                },
-                {
-                    "id": "apple_15",
-                    "amount": "€15.00",
-                    "price": 15000
-                },
-                {
-                    "id": "apple_25",
-                    "amount": "€25.00",
-                    "price": 25000
+                    "valueUSD": 90,
+                    "price": 72000
                 }
             ]
         }
