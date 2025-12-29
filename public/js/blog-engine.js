@@ -48,8 +48,27 @@ class BlogEngine {
         this.renderGrid();
     }
 
+    parseDate(dateStr) {
+        // Parse French dates like "29 déc. 2025" or English "Dec 29, 2025"
+        const months = {
+            'jan': 0, 'fév': 1, 'mar': 2, 'avr': 3, 'mai': 4, 'juin': 5,
+            'juil': 6, 'août': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'déc': 11,
+            'jan.': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
+            'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
+        };
+
+        const parts = dateStr.toLowerCase().replace(/\./g, '').split(' ');
+        if (parts.length >= 3) {
+            const day = parseInt(parts[0]);
+            const month = months[parts[1]] || 0;
+            const year = parseInt(parts[2]);
+            return new Date(year, month, day);
+        }
+        return new Date(0); // Fallback to epoch if parsing fails
+    }
+
     getFilteredPosts() {
-        return blogPosts.filter(post => {
+        const filtered = blogPosts.filter(post => {
             const matchesSearch =
                 post.title.toLowerCase().includes(this.searchQuery) ||
                 post.excerpt.toLowerCase().includes(this.searchQuery);
@@ -59,6 +78,13 @@ class BlogEngine {
                 post.category === this.currentFilter;
 
             return matchesSearch && matchesCategory;
+        });
+
+        // Sort by date (newest first)
+        return filtered.sort((a, b) => {
+            const dateA = this.parseDate(a.date);
+            const dateB = this.parseDate(b.date);
+            return dateB - dateA; // Descending order (newest first)
         });
     }
 
