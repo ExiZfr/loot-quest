@@ -788,15 +788,93 @@
             navigate('settings');
         }
 
+
         async function handleLogout() {
             await firebase.auth().signOut();
             await fetch('/api/auth/logout', { method: 'POST' });
             window.location.href = '/';
         }
 
+        // ===== MODAL FUNCTIONS FOR SHOP =====
+        function openModal(title, content) {
+            // Remove existing modal if any
+            closeModal();
+
+            const modalHTML = `
+                <div id="shop-modal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-fade-in">
+                    <!-- Backdrop -->
+                    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
+                    
+                    <!-- Modal Content -->
+                    <div class="relative bg-surface border border-white/10 rounded-3xl max-w-md w-full shadow-2xl animate-slide-up">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between p-6 border-b border-white/10">
+                            <h2 class="text-2xl font-bold font-display text-white">${title}</h2>
+                            <button onclick="closeModal()" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div class="p-6">
+                            ${content}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('shop-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Make functions globally available for shop.js
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+        window.selectDenomination = window.selectDenomination || function () { };
+
         // Init
         navigate('home');
     </script>
+
+    <style>
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slide-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.2s ease-out;
+        }
+
+        .animate-slide-up {
+            animation: slide-up 0.3s ease-out;
+        }
+    </style>
 </body>
 
 </html>
