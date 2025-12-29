@@ -844,9 +844,41 @@
             }
         }
 
+        // Show toast notification
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `glass-panel p-4 rounded-xl border-l-4 ${type === 'success' ? 'border-green-500' : 'border-red-500'} flex items-center gap-3 shadow-2xl toast pointer-events-auto`;
+            toast.innerHTML = `
+                <div class="text-2xl">${type === 'success' ? '✅' : '⚠️'}</div>
+                <div>
+                    <p class="font-bold text-white text-sm">${type === 'success' ? 'Success' : 'Error'}</p>
+                    <p class="text-xs text-gray-400">${message}</p>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        // Update balance UI after withdrawal
+        function updateBalanceUI(newBalance) {
+            const balanceEl = document.getElementById('user-balance');
+            if (balanceEl) {
+                balanceEl.textContent = newBalance.toLocaleString();
+            }
+            // Also update state if available
+            if (window.state && window.state.user) {
+                window.state.user.balance = newBalance;
+            }
+        }
+
         // Make functions globally available for shop.js
         window.openModal = openModal;
         window.closeModal = closeModal;
+        window.showToast = showToast;
+        window.updateBalanceUI = updateBalanceUI;
         window.selectDenomination = window.selectDenomination || function () { };
 
         // Init
