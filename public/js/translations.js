@@ -170,7 +170,66 @@ const translations = {
         // CTA
         "ready_claim": "Ready to Claim Your Loot?",
         "join_thousands": "Join thousands of players earning free rewards every day.",
-        "start_quest": "Start Your Quest"
+        "start_quest": "Start Your Quest",
+
+        // Bug Report Modal
+        "bug_modal_title": "Report a Bug",
+        "bug_modal_subtitle": "Help us improve LootQuest",
+        "bug_category_label": "Category",
+        "bug_category_placeholder": "Select a category",
+        "bug_category_ui": "UI / Display Issue",
+        "bug_category_offers": "Offers not crediting",
+        "bug_category_withdrawal": "Withdrawal problem",
+        "bug_category_login": "Login / Account issue",
+        "bug_category_performance": "Performance / Loading",
+        "bug_category_other": "Other",
+        "bug_title_label": "Title",
+        "bug_title_placeholder": "Brief description of the issue",
+        "bug_description_label": "Description",
+        "bug_description_placeholder": "Explain what happened, what you expected, and steps to reproduce...",
+        "bug_email_label": "Your Email (optional)",
+        "bug_email_placeholder": "For follow-up (if not logged in)",
+        "bug_submit_btn": "Submit Report",
+        "bug_success_title": "Thank You!",
+        "bug_success_message": "Your bug report has been submitted. We'll look into it.",
+
+        // Reward Cards
+        "reward_robux_title": "Roblox Robux",
+        "reward_robux_desc": "The ultimate currency for Roblox.",
+        "reward_vbucks_title": "Fortnite V-Bucks",
+        "reward_vbucks_desc": "Skins, Battle Passes & Emotes.",
+        "reward_paypal_title": "PayPal Cash",
+        "reward_paypal_desc": "Real money directly to your account.",
+        "popular_badge": "POPULAR",
+
+        // Server Status
+        "status_operational": "All Systems Operational",
+        "status_ssl": "SSL Secured",
+        "status_encryption": "256-bit Encryption",
+
+        // Dashboard
+        "dash_welcome_back": "Welcome back,",
+        "dash_gamer": "Gamer",
+        "dash_current_balance": "Current Balance",
+        "dash_loot_points": "LOOT POINTS AVAILABLE",
+        "dash_offers": "Offers",
+        "dash_redeem": "Redeem",
+        "dash_logout": "Logout",
+
+        // Payout Ticker
+        "payout_withdrew": "withdrew",
+
+        // Footer Brand
+        "footer_brand_desc": "The trusted platform for gamers to earn Robux, V-Bucks, and real rewards through simple tasks.",
+        "footer_lang_label": "English (US)",
+
+        // System Messages
+        "system_access": "// SYSTEM.ACCESS",
+        "mission_log": "// MISSION.LOG",
+        "transaction_complete": "// TRANSACTION.COMPLETE",
+        "robux_delivered": "ROBUX DELIVERED",
+        "survey_label": "Survey: Cyber Security",
+        "points_abbr": "PTS"
     },
 
     "fr": {
@@ -340,7 +399,66 @@ const translations = {
         // CTA
         "ready_claim": "Prêt à Réclamer Ton Butin ?",
         "join_thousands": "Rejoins des milliers de joueurs qui gagnent des récompenses gratuites chaque jour.",
-        "start_quest": "Commence Ta Quête"
+        "start_quest": "Commence Ta Quête",
+
+        // Bug Report Modal
+        "bug_modal_title": "Signaler un Bug",
+        "bug_modal_subtitle": "Aide-nous à améliorer LootQuest",
+        "bug_category_label": "Catégorie",
+        "bug_category_placeholder": "Sélectionner une catégorie",
+        "bug_category_ui": "UI / Problème d'Affichage",
+        "bug_category_offers": "Offres non créditées",
+        "bug_category_withdrawal": "Problème de Retrait",
+        "bug_category_login": "Connexion / Problème de Compte",
+        "bug_category_performance": "Performance / Chargement",
+        "bug_category_other": "Autre",
+        "bug_title_label": "Titre",
+        "bug_title_placeholder": "Brève description du problème",
+        "bug_description_label": "Description",
+        "bug_description_placeholder": "Explique ce qui s'est passé, ce que tu attendais et les étapes pour reproduire...",
+        "bug_email_label": "Ton Email (optionnel)",
+        "bug_email_placeholder": "Pour le suivi (si non connecté)",
+        "bug_submit_btn": "Envoyer le Signalement",
+        "bug_success_title": "Merci !",
+        "bug_success_message": "Ton signalement de bug a été envoyé. Nous allons nous en occuper.",
+
+        // Reward Cards
+        "reward_robux_title": "Roblox Robux",
+        "reward_robux_desc": "La monnaie ultime pour Roblox.",
+        "reward_vbucks_title": "Fortnite V-Bucks",
+        "reward_vbucks_desc": "Skins, Battle Pass & Emotes.",
+        "reward_paypal_title": "PayPal Cash",
+        "reward_paypal_desc": "De l'argent réel directement sur ton compte.",
+        "popular_badge": "POPULAIRE",
+
+        // Server Status
+        "status_operational": "Tous les Systèmes Opérationnels",
+        "status_ssl": "SSL Sécurisé",
+        "status_encryption": "Chiffrement 256-bit",
+
+        // Dashboard
+        "dash_welcome_back": "Bienvenue",
+        "dash_gamer": "Joueur",
+        "dash_current_balance": "Solde Actuel",
+        "dash_loot_points": "LOOT POINTS DISPONIBLES",
+        "dash_offers": "Offres",
+        "dash_redeem": "Échanger",
+        "dash_logout": "Déconnexion",
+
+        // Payout Ticker
+        "payout_withdrew": "a retiré",
+
+        // Footer Brand
+        "footer_brand_desc": "La plateforme de confiance pour les joueurs qui veulent gagner des Robux, V-Bucks et de vraies récompenses via des tâches simples.",
+        "footer_lang_label": "Français (FR)",
+
+        // System Messages
+        "system_access": "// SYSTEM.ACCESS",
+        "mission_log": "// MISSION.LOG",
+        "transaction_complete": "// TRANSACTION.COMPLETE",
+        "robux_delivered": "ROBUX LIVRÉS",
+        "survey_label": "Sondage : Cybersécurité",
+        "points_abbr": "PTS"
     }
 };
 

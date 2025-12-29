@@ -114,6 +114,15 @@
             }
         });
 
+        // Update placeholders with data-i18n-placeholder attribute
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.dataset.i18nPlaceholder;
+            const translation = dict[key];
+            if (translation) {
+                el.placeholder = translation;
+            }
+        });
+
         // Update language switcher button
         updateLangSwitcherUI(lang);
 
