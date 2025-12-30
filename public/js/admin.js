@@ -54,8 +54,9 @@ async function fetchStats() {
 
 function animateValue(id, value) {
     const el = document.getElementById(id);
-    // Simple direct update for now, can add counting animation later
-    el.innerText = value.toLocaleString();
+    if (!el) return;
+    // Ensure value is a number, default to 0 if undefined/null
+    el.innerText = (value || 0).toLocaleString();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
