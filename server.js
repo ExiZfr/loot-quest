@@ -2593,7 +2593,7 @@ app.get('/api/user/profile', verifyAuth, (req, res) => {
         const withdrawals = db.all(`
             SELECT 
                 id, reward_name, points_spent, status, 
-                created_at, processed_at, admin_note
+                created_at, processed_at, admin_notes
             FROM withdrawals 
             WHERE user_id = ? 
             ORDER BY created_at DESC 
