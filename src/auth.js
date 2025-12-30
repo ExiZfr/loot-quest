@@ -128,6 +128,7 @@ function createUserSession(req, userData) {
         username: userData.username,
         picture: userData.picture,
         provider: userData.provider,
+        role: userData.role || 'user', // Admin role
         loginTime: Date.now()
     };
 }
