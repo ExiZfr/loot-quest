@@ -155,6 +155,15 @@ class Database {
         try { this.db.run('ALTER TABLE users ADD COLUMN user_agent TEXT'); } catch (e) { }
         try { this.db.run('ALTER TABLE users ADD COLUMN last_activity_at DATETIME'); } catch (e) { }
 
+        // Personal Info for Withdrawals (KYC)
+        try { this.db.run('ALTER TABLE users ADD COLUMN first_name TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN last_name TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN address TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN city TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN postal_code TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN country TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN personal_info_completed INTEGER DEFAULT 0'); } catch (e) { }
+
         this.db.run('CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code)');
 
         this.db.run(`
@@ -2361,12 +2370,22 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
 
         // Get user from database
         const user = db.get(`
-            SELECT balance, created_at, first_withdrawal_at 
+            SELECT balance, created_at, first_withdrawal_at, personal_info_completed 
             FROM users WHERE id = ?
         `, [userId]);
 
         if (!user) {
             return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Check if personal info is required (first withdrawal)
+        if (!user.personal_info_completed) {
+            return res.status(400).json({
+                success: false,
+                error: 'Personal information required for first withdrawal',
+                code: 'PERSONAL_INFO_REQUIRED',
+                needsPersonalInfo: true
+            });
         }
 
         // Check 7-day rule for first withdrawal (TEMPORARILY DISABLED FOR TESTING)
@@ -2444,6 +2463,107 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
     } catch (error) {
         console.error('Withdrawal error:', error);
         res.status(500).json({ success: false, error: 'Failed to process withdrawal' });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PERSONAL INFO ROUTES (KYC for Withdrawals)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/user/personal-info
+ * Check if user has completed personal info
+ */
+app.get('/api/user/personal-info', verifyAuth, (req, res) => {
+    try {
+        const userId = req.user.uid;
+        const user = db.get(`
+            SELECT first_name, last_name, address, city, postal_code, country, personal_info_completed
+            FROM users WHERE id = ?
+        `, [userId]);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        res.json({
+            success: true,
+            completed: !!user.personal_info_completed,
+            info: user.personal_info_completed ? {
+                firstName: user.first_name,
+                lastName: user.last_name,
+                address: user.address,
+                city: user.city,
+                postalCode: user.postal_code,
+                country: user.country
+            } : null
+        });
+    } catch (e) {
+        console.error('Personal info check error:', e);
+        res.status(500).json({ success: false, error: 'Failed to check personal info' });
+    }
+});
+
+/**
+ * POST /api/user/personal-info
+ * Save user personal info for KYC (first withdrawal requirement)
+ */
+app.post('/api/user/personal-info', verifyAuth, (req, res) => {
+    try {
+        const userId = req.user.uid;
+        const { firstName, lastName, address, city, postalCode, country } = req.body;
+
+        // Validation
+        if (!firstName || !lastName || !address || !city || !postalCode || !country) {
+            return res.status(400).json({
+                success: false,
+                error: 'All fields are required: firstName, lastName, address, city, postalCode, country'
+            });
+        }
+
+        // Basic validation
+        if (firstName.length < 2 || firstName.length > 50) {
+            return res.status(400).json({ success: false, error: 'First name must be between 2 and 50 characters' });
+        }
+        if (lastName.length < 2 || lastName.length > 50) {
+            return res.status(400).json({ success: false, error: 'Last name must be between 2 and 50 characters' });
+        }
+        if (address.length < 5 || address.length > 200) {
+            return res.status(400).json({ success: false, error: 'Address must be between 5 and 200 characters' });
+        }
+        if (city.length < 2 || city.length > 100) {
+            return res.status(400).json({ success: false, error: 'City must be between 2 and 100 characters' });
+        }
+        if (postalCode.length < 3 || postalCode.length > 20) {
+            return res.status(400).json({ success: false, error: 'Postal code must be between 3 and 20 characters' });
+        }
+        if (country.length < 2 || country.length > 100) {
+            return res.status(400).json({ success: false, error: 'Country must be between 2 and 100 characters' });
+        }
+
+        // Update user with personal info
+        db.run(`
+            UPDATE users SET
+                first_name = ?,
+                last_name = ?,
+                address = ?,
+                city = ?,
+                postal_code = ?,
+                country = ?,
+                personal_info_completed = 1
+            WHERE id = ?
+        `, [firstName.trim(), lastName.trim(), address.trim(), city.trim(), postalCode.trim(), country.trim(), userId]);
+
+        console.log(`📋 Personal info saved for user ${userId}`);
+
+        res.json({
+            success: true,
+            message: 'Personal information saved successfully'
+        });
+
+    } catch (e) {
+        console.error('Save personal info error:', e);
+        res.status(500).json({ success: false, error: 'Failed to save personal info' });
     }
 });
 

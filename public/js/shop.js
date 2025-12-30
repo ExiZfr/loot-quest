@@ -308,6 +308,9 @@ async function confirmWithdrawal() {
             // Update balance UI
             updateBalanceUI(data.newBalance);
 
+        } else if (data.code === 'PERSONAL_INFO_REQUIRED' || data.needsPersonalInfo) {
+            // Show Personal Info Modal
+            showPersonalInfoModal();
         } else {
             // Show Error
             showToast(data.error || 'Transaction failed', 'error');
@@ -319,5 +322,174 @@ async function confirmWithdrawal() {
         showToast('Connection error. Please try again.', 'error');
         btn.textContent = originalText;
         btn.disabled = false;
+    }
+}
+
+/**
+ * Show Personal Info Modal for KYC (first withdrawal)
+ */
+function showPersonalInfoModal() {
+    const content = `
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-loot-purple/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="user-check" class="w-8 h-8 text-loot-purple"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Informations Personnelles</h3>
+            <p class="text-gray-400 text-sm">Pour votre premier retrait, nous avons besoin de quelques informations.</p>
+        </div>
+
+        <form id="personal-info-form" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Prénom *</label>
+                    <input type="text" name="firstName" required minlength="2" maxlength="50"
+                           class="w-full px-4 py-3 bg-loot-dark border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-loot-neon focus:outline-none transition"
+                           placeholder="Jean">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Nom *</label>
+                    <input type="text" name="lastName" required minlength="2" maxlength="50"
+                           class="w-full px-4 py-3 bg-loot-dark border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-loot-neon focus:outline-none transition"
+                           placeholder="Dupont">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Adresse *</label>
+                <input type="text" name="address" required minlength="5" maxlength="200"
+                       class="w-full px-4 py-3 bg-loot-dark border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-loot-neon focus:outline-none transition"
+                       placeholder="123 Rue de la Paix">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Ville *</label>
+                    <input type="text" name="city" required minlength="2" maxlength="100"
+                           class="w-full px-4 py-3 bg-loot-dark border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-loot-neon focus:outline-none transition"
+                           placeholder="Paris">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Code Postal *</label>
+                    <input type="text" name="postalCode" required minlength="3" maxlength="20"
+                           class="w-full px-4 py-3 bg-loot-dark border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-loot-neon focus:outline-none transition"
+                           placeholder="75001">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Pays *</label>
+                <select name="country" required
+                        class="w-full px-4 py-3 bg-loot-dark border border-white/10 rounded-xl text-white focus:border-loot-neon focus:outline-none transition">
+                    <option value="">Sélectionnez votre pays</option>
+                    <option value="France">France</option>
+                    <option value="Belgique">Belgique</option>
+                    <option value="Suisse">Suisse</option>
+                    <option value="Canada">Canada</option>
+                    <option value="Luxembourg">Luxembourg</option>
+                    <option value="Monaco">Monaco</option>
+                    <option value="Autre">Autre</option>
+                </select>
+            </div>
+
+            <div id="personal-info-error" class="text-red-400 text-sm hidden"></div>
+
+            <button type="submit" id="save-info-btn"
+                    class="w-full py-4 mt-4 rounded-xl font-bold text-lg bg-gradient-to-r from-loot-neon to-loot-purple text-white hover:opacity-90 transition">
+                Confirmer et Continuer
+            </button>
+        </form>
+
+        <p class="text-xs text-gray-500 text-center mt-4">
+            <i data-lucide="lock" class="w-3 h-3 inline"></i>
+            Vos données sont sécurisées et utilisées uniquement pour la livraison.
+        </p>
+    `;
+
+    openModal('Vérification Requise', content);
+
+    // Re-initialize icons
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+    }
+
+    // Handle form submission
+    setTimeout(() => {
+        const form = document.getElementById('personal-info-form');
+        if (form) {
+            form.addEventListener('submit', handlePersonalInfoSubmit);
+        }
+    }, 100);
+}
+
+/**
+ * Handle Personal Info Form Submission
+ */
+async function handlePersonalInfoSubmit(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const btn = document.getElementById('save-info-btn');
+    const errorDiv = document.getElementById('personal-info-error');
+
+    // Get form data
+    const formData = new FormData(form);
+    const data = {
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName'),
+        address: formData.get('address'),
+        city: formData.get('city'),
+        postalCode: formData.get('postalCode'),
+        country: formData.get('country')
+    };
+
+    // Show loading
+    btn.disabled = true;
+    btn.innerHTML = '<div class="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mx-auto"></div>';
+
+    try {
+        // Build headers
+        const headers = { 'Content-Type': 'application/json' };
+        const firebaseUser = firebase.auth().currentUser;
+        if (firebaseUser) {
+            const token = await firebaseUser.getIdToken();
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch('/api/user/personal-info', {
+            method: 'POST',
+            credentials: 'include',
+            headers: headers,
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Close modal and retry withdrawal
+            closeModal();
+            showToast('Informations enregistrées!', 'success');
+
+            // Re-open brand modal to continue withdrawal
+            if (currentBrand) {
+                setTimeout(() => {
+                    openBrandModal(currentBrand.id);
+                    // Re-select the denomination if one was selected
+                    if (selectedDenomination) {
+                        setTimeout(() => selectDenomination(selectedDenomination.id), 200);
+                    }
+                }, 500);
+            }
+        } else {
+            errorDiv.textContent = result.error || 'Erreur lors de la sauvegarde';
+            errorDiv.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Confirmer et Continuer';
+        }
+    } catch (error) {
+        console.error('Personal info submit error:', error);
+        errorDiv.textContent = 'Erreur de connexion. Veuillez réessayer.';
+        errorDiv.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Confirmer et Continuer';
     }
 }
