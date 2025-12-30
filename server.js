@@ -150,6 +150,11 @@ class Database {
         try { this.db.run('ALTER TABLE users ADD COLUMN lifetime_earnings INTEGER DEFAULT 0'); } catch (e) { }
         try { this.db.run('ALTER TABLE users ADD COLUMN referral_unlocked INTEGER DEFAULT 0'); } catch (e) { }
         try { this.db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"); } catch (e) { }
+
+        // Admin Panel & Fraud Detection Columns
+        try { this.db.run('ALTER TABLE users ADD COLUMN user_agent TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN last_activity_at DATETIME'); } catch (e) { }
+
         this.db.run('CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code)');
 
         this.db.run(`
@@ -190,6 +195,10 @@ class Database {
         this.db.run('CREATE INDEX IF NOT EXISTS idx_withdrawals_user_id ON withdrawals(user_id)');
         this.db.run('CREATE INDEX IF NOT EXISTS idx_withdrawals_status ON withdrawals(status)');
         this.db.run('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
+
+        // Withdrawals fraud tracking columns
+        try { this.db.run('ALTER TABLE withdrawals ADD COLUMN request_ip TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE withdrawals ADD COLUMN request_user_agent TEXT'); } catch (e) { }
 
         // Support tickets table (for bug reports & contact forms)
         this.db.run(`
@@ -374,6 +383,9 @@ app.set('trust proxy', 1);
 // Redis Session Middleware (Production-Ready)
 const isProduction = process.env.NODE_ENV === 'production';
 app.use(createSessionMiddleware(isProduction));
+
+// Expose db instance for middleware to use (activity tracking)
+app.locals.db = db;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -1113,27 +1125,55 @@ app.get('/api/user/referral', isAuthenticated, (req, res) => {
 
 /**
  * GET /api/admin/stats
- * Overview dashboard
+ * Enhanced overview dashboard with fraud monitoring metrics
  */
 app.get('/api/admin/stats', isAuthenticated, requireAdmin, (req, res) => {
     try {
+        // Basic counts
         const usersCount = db.get('SELECT COUNT(*) as c FROM users').c;
-        const totalPaid = db.get('SELECT SUM(amount) as s FROM transactions WHERE type="credit"').s || 0;
         const pendingWithdrawals = db.get('SELECT COUNT(*) as c FROM withdrawals WHERE status="pending"').c;
         const openReports = db.get('SELECT COUNT(*) as c FROM support_tickets WHERE type="bug" AND status="new"').c;
         const unreadMessages = db.get('SELECT COUNT(*) as c FROM support_tickets WHERE type="contact" AND status="new"').c;
+
+        // Online users (last activity within 5 minutes)
+        const onlineUsers = db.get(`
+            SELECT COUNT(*) as c FROM users 
+            WHERE datetime(last_activity_at) > datetime('now', '-5 minutes')
+        `).c || 0;
+
+        // Daily points distributed (today's credits)
+        const dailyPointsResult = db.get(`
+            SELECT COALESCE(SUM(amount), 0) as total 
+            FROM transactions 
+            WHERE type = 'credit' 
+            AND date(created_at) = date('now')
+        `);
+        const dailyPoints = dailyPointsResult?.total || 0;
+
+        // Total points distributed all time
+        const totalPaid = db.get('SELECT COALESCE(SUM(amount), 0) as s FROM transactions WHERE type="credit"').s || 0;
+
+        // Estimated revenue (40% of total points = platform profit)
+        // Convert points to dollars: points / 1000
+        const estimatedRevenue = Math.floor((totalPaid * PLATFORM_SPLIT) / POINTS_PER_DOLLAR * 100) / 100;
+        const dailyRevenue = Math.floor((dailyPoints * PLATFORM_SPLIT) / POINTS_PER_DOLLAR * 100) / 100;
 
         res.json({
             success: true,
             stats: {
                 users: usersCount,
+                onlineUsers,
                 totalPointsDistributed: totalPaid,
+                dailyPointsDistributed: dailyPoints,
                 pendingWithdrawals,
                 openReports,
-                unreadMessages
+                unreadMessages,
+                estimatedRevenue,
+                dailyRevenue
             }
         });
     } catch (e) {
+        console.error('Admin stats error:', e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -1205,6 +1245,390 @@ app.post('/api/admin/process-order', isAuthenticated, requireAdmin, (req, res) =
         }
         res.json({ success: true });
     } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FRAUD DETECTION ROUTES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/withdrawals/pending
+ * Returns pending withdrawals with comprehensive fraud detection data
+ */
+app.get('/api/admin/withdrawals/pending', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        // Get pending withdrawals with user info
+        const withdrawals = db.all(`
+            SELECT 
+                w.id,
+                w.user_id,
+                w.reward_id,
+                w.reward_name,
+                w.points_spent,
+                w.delivery_info,
+                w.status,
+                w.created_at as request_date,
+                w.request_ip,
+                w.request_user_agent,
+                u.display_name,
+                u.email,
+                u.ip_address as registration_ip,
+                u.user_agent as registration_user_agent,
+                u.created_at as account_created,
+                u.total_earned,
+                u.total_withdrawn,
+                u.balance,
+                u.last_activity_at,
+                u.role
+            FROM withdrawals w
+            JOIN users u ON w.user_id = u.id
+            WHERE w.status = 'pending'
+            ORDER BY w.created_at DESC
+        `);
+
+        // Enrich each withdrawal with fraud indicators
+        const enrichedWithdrawals = withdrawals.map(w => {
+            // Calculate account age in days
+            const accountAge = Math.floor((Date.now() - new Date(w.account_created).getTime()) / (1000 * 60 * 60 * 24));
+
+            // Check IP mismatch
+            const ipMismatch = w.registration_ip && w.request_ip && w.registration_ip !== w.request_ip;
+
+            // Get task history (last 10 completed offers)
+            const taskHistory = db.all(`
+                SELECT offer_name, amount, created_at, ip_address
+                FROM transactions 
+                WHERE user_id = ? AND type = 'credit' AND source = 'lootably'
+                ORDER BY created_at DESC
+                LIMIT 10
+            `, [w.user_id]);
+
+            // Calculate velocity (points earned in last hour)
+            const velocityResult = db.get(`
+                SELECT COALESCE(SUM(amount), 0) as total 
+                FROM transactions 
+                WHERE user_id = ? AND type = 'credit' 
+                AND datetime(created_at) > datetime('now', '-1 hour')
+            `, [w.user_id]);
+            const hourlyVelocity = velocityResult?.total || 0;
+
+            // Determine risk level
+            let riskLevel = 'low';
+            let riskFlags = [];
+
+            if (accountAge < 1) {
+                riskLevel = 'high';
+                riskFlags.push('Account < 24 hours old');
+            } else if (accountAge < 7) {
+                if (riskLevel !== 'high') riskLevel = 'medium';
+                riskFlags.push('Account < 7 days old');
+            }
+
+            if (ipMismatch) {
+                if (riskLevel !== 'high') riskLevel = 'medium';
+                riskFlags.push('IP mismatch between registration and withdrawal');
+            }
+
+            if (hourlyVelocity > 5000) {
+                riskLevel = 'high';
+                riskFlags.push(`High velocity: ${hourlyVelocity} points in last hour`);
+            } else if (hourlyVelocity > 2000) {
+                if (riskLevel !== 'high') riskLevel = 'medium';
+                riskFlags.push(`Elevated velocity: ${hourlyVelocity} points in last hour`);
+            }
+
+            // Check if earnings are suspicious (earned more than withdrew + balance)
+            if (w.total_earned > 0 && taskHistory.length < 3 && w.points_spent > 5000) {
+                if (riskLevel !== 'high') riskLevel = 'medium';
+                riskFlags.push('Low activity but high withdrawal');
+            }
+
+            return {
+                id: w.id,
+                userId: w.user_id,
+                rewardName: w.reward_name,
+                pointsSpent: w.points_spent,
+                deliveryInfo: w.delivery_info,
+                requestDate: w.request_date,
+                user: {
+                    displayName: w.display_name,
+                    email: w.email,
+                    accountAge,
+                    totalEarned: w.total_earned,
+                    totalWithdrawn: w.total_withdrawn,
+                    balance: w.balance
+                },
+                security: {
+                    registrationIp: w.registration_ip,
+                    requestIp: w.request_ip,
+                    ipMismatch,
+                    userAgent: w.request_user_agent || w.registration_user_agent,
+                    lastActivity: w.last_activity_at
+                },
+                taskHistory,
+                riskLevel,
+                riskFlags,
+                hourlyVelocity
+            };
+        });
+
+        res.json({
+            success: true,
+            withdrawals: enrichedWithdrawals,
+            count: enrichedWithdrawals.length
+        });
+
+    } catch (e) {
+        console.error('Pending withdrawals error:', e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * GET /api/admin/user/:userId/security
+ * Returns detailed user security profile for inspection modal
+ */
+app.get('/api/admin/user/:userId/security', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Get user info (exclude sensitive data like password_hash)
+        const user = db.get(`
+            SELECT 
+                id, email, display_name, avatar_url, provider,
+                balance, total_earned, total_withdrawn,
+                created_at, last_login_at, last_activity_at,
+                ip_address, user_agent, role,
+                referral_code, referred_by_user_id,
+                lifetime_earnings, referral_unlocked
+            FROM users WHERE id = ?
+        `, [userId]);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Get transaction history (last 50)
+        const transactions = db.all(`
+            SELECT id, amount, type, source, offer_name, description, ip_address, created_at
+            FROM transactions 
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            LIMIT 50
+        `, [userId]);
+
+        // Get withdrawal history
+        const withdrawals = db.all(`
+            SELECT id, reward_name, points_spent, status, created_at, processed_at, completed_at, request_ip
+            FROM withdrawals 
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            LIMIT 20
+        `, [userId]);
+
+        // Calculate suspicious patterns
+        const accountAge = Math.floor((Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24));
+
+        // Get unique IPs used
+        const uniqueIps = db.all(`
+            SELECT DISTINCT ip_address, COUNT(*) as count 
+            FROM transactions 
+            WHERE user_id = ? AND ip_address IS NOT NULL
+            GROUP BY ip_address
+        `, [userId]);
+
+        // Calculate earnings velocity (points per day)
+        const earningsPerDay = accountAge > 0 ? Math.round(user.total_earned / accountAge) : user.total_earned;
+
+        // Get referrer info if referred
+        let referrer = null;
+        if (user.referred_by_user_id) {
+            referrer = db.get('SELECT display_name, email FROM users WHERE id = ?', [user.referred_by_user_id]);
+        }
+
+        // Get users this person referred
+        const referrals = db.all(`
+            SELECT id, display_name, created_at, total_earned 
+            FROM users 
+            WHERE referred_by_user_id = ?
+        `, [userId]);
+
+        // Build suspicious activity flags
+        const suspiciousFlags = [];
+
+        if (accountAge < 1 && user.total_earned > 1000) {
+            suspiciousFlags.push({ type: 'velocity', message: 'Earned over 1000 points in first 24 hours' });
+        }
+
+        if (uniqueIps.length > 5) {
+            suspiciousFlags.push({ type: 'ip', message: `Used ${uniqueIps.length} different IP addresses` });
+        }
+
+        if (earningsPerDay > 10000) {
+            suspiciousFlags.push({ type: 'earnings', message: `Extremely high earnings: ${earningsPerDay} pts/day average` });
+        }
+
+        // Check for same-IP referrals
+        const sameIpReferrals = referrals.filter(r => {
+            const refUser = db.get('SELECT ip_address FROM users WHERE id = ?', [r.id]);
+            return refUser && refUser.ip_address === user.ip_address;
+        });
+
+        if (sameIpReferrals.length > 0) {
+            suspiciousFlags.push({ type: 'referral', message: `${sameIpReferrals.length} referrals share same IP (self-referral?)` });
+        }
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                email: user.email,
+                displayName: user.display_name,
+                avatarUrl: user.avatar_url,
+                provider: user.provider,
+                balance: user.balance,
+                totalEarned: user.total_earned,
+                totalWithdrawn: user.total_withdrawn,
+                createdAt: user.created_at,
+                lastLoginAt: user.last_login_at,
+                lastActivityAt: user.last_activity_at,
+                role: user.role,
+                accountAge,
+                earningsPerDay
+            },
+            security: {
+                registrationIp: user.ip_address,
+                registrationUserAgent: user.user_agent,
+                uniqueIps,
+                suspiciousFlags
+            },
+            transactions,
+            withdrawals,
+            referral: {
+                code: user.referral_code,
+                referrer,
+                referrals: referrals.map(r => ({
+                    displayName: r.display_name,
+                    createdAt: r.created_at,
+                    totalEarned: r.total_earned
+                }))
+            }
+        });
+
+    } catch (e) {
+        console.error('User security error:', e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * POST /api/admin/withdrawals/:id/action
+ * Process withdrawal with approve/reject/ban options
+ */
+app.post('/api/admin/withdrawals/:id/action', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, notes } = req.body; // action: 'approve', 'reject', 'ban'
+
+        // Get the withdrawal
+        const withdrawal = db.get('SELECT * FROM withdrawals WHERE id = ?', [id]);
+        if (!withdrawal) {
+            return res.status(404).json({ success: false, error: 'Withdrawal not found' });
+        }
+
+        if (withdrawal.status !== 'pending') {
+            return res.status(400).json({ success: false, error: 'Withdrawal already processed' });
+        }
+
+        const userId = withdrawal.user_id;
+        const adminNotes = notes || `Processed by admin: ${action}`;
+
+        switch (action) {
+            case 'approve':
+                // Mark as completed
+                db.run(`
+                    UPDATE withdrawals 
+                    SET status = 'completed', 
+                        admin_notes = ?, 
+                        processed_at = datetime('now'),
+                        completed_at = datetime('now')
+                    WHERE id = ?
+                `, [adminNotes, id]);
+
+                console.log(`✅ Withdrawal #${id} APPROVED for user ${userId}`);
+                break;
+
+            case 'reject':
+                // Reject and refund points
+                db.run(`
+                    UPDATE withdrawals 
+                    SET status = 'cancelled', 
+                        admin_notes = ?, 
+                        processed_at = datetime('now')
+                    WHERE id = ?
+                `, [adminNotes, id]);
+
+                // Refund points to user
+                db.run('UPDATE users SET balance = balance + ? WHERE id = ?', [withdrawal.points_spent, userId]);
+
+                // Log refund transaction
+                const refundTxId = `refund_${id}_${Date.now()}`;
+                db.run(`
+                    INSERT INTO transactions (id, user_id, amount, type, source, description)
+                    VALUES (?, ?, ?, 'credit', 'admin_refund', ?)
+                `, [refundTxId, userId, withdrawal.points_spent, `Withdrawal #${id} rejected - points refunded`]);
+
+                console.log(`❌ Withdrawal #${id} REJECTED - ${withdrawal.points_spent} points refunded to user ${userId}`);
+                break;
+
+            case 'ban':
+                // Reject, refund, and ban user
+                db.run(`
+                    UPDATE withdrawals 
+                    SET status = 'cancelled', 
+                        admin_notes = ?, 
+                        processed_at = datetime('now')
+                    WHERE id = ?
+                `, [`BANNED: ${adminNotes}`, id]);
+
+                // Refund points
+                db.run('UPDATE users SET balance = balance + ? WHERE id = ?', [withdrawal.points_spent, userId]);
+
+                // Log refund
+                const banRefundTxId = `refund_ban_${id}_${Date.now()}`;
+                db.run(`
+                    INSERT INTO transactions (id, user_id, amount, type, source, description)
+                    VALUES (?, ?, ?, 'credit', 'admin_refund', ?)
+                `, [banRefundTxId, userId, withdrawal.points_spent, `Withdrawal #${id} - banned user refund`]);
+
+                // Ban the user (set role to 'banned')
+                db.run("UPDATE users SET role = 'banned' WHERE id = ?", [userId]);
+
+                // Cancel all other pending withdrawals from this user
+                db.run(`
+                    UPDATE withdrawals 
+                    SET status = 'cancelled', admin_notes = 'User banned'
+                    WHERE user_id = ? AND status = 'pending'
+                `, [userId]);
+
+                console.log(`🚫 User ${userId} BANNED - Withdrawal #${id} cancelled`);
+                break;
+
+            default:
+                return res.status(400).json({ success: false, error: 'Invalid action. Use: approve, reject, or ban' });
+        }
+
+        res.json({
+            success: true,
+            message: `Withdrawal ${action}ed successfully`,
+            action,
+            withdrawalId: id
+        });
+
+    } catch (e) {
+        console.error('Withdrawal action error:', e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -1987,11 +2411,14 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
             VALUES (?, ?, ?, 'debit', 'withdrawal', ?)
         `, [txId, userId, reward.price, `Redeemed: ${rewardName}`]);
 
-        // Create withdrawal record
+        // Create withdrawal record with fraud tracking data
+        const requestIp = getClientIP(req);
+        const requestUserAgent = req.headers['user-agent'] || null;
+
         db.run(`
-            INSERT INTO withdrawals (user_id, reward_id, reward_name, points_spent, delivery_info, status)
-            VALUES (?, ?, ?, ?, ?, 'pending')
-        `, [userId, rewardId, rewardName, reward.price, deliveryInfo || null]);
+            INSERT INTO withdrawals (user_id, reward_id, reward_name, points_spent, delivery_info, status, request_ip, request_user_agent)
+            VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
+        `, [userId, rewardId, rewardName, reward.price, deliveryInfo || null, requestIp, requestUserAgent]);
 
         // Get the last insert ID (for the withdrawal)
         const lastWithdrawal = db.get('SELECT id FROM withdrawals ORDER BY id DESC LIMIT 1');

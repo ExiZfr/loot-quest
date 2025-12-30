@@ -41,6 +41,46 @@
             color: #bc13fe;
             border-right: 2px solid #bc13fe;
         }
+
+        .risk-low {
+            color: #22c55e;
+        }
+
+        .risk-medium {
+            color: #f59e0b;
+        }
+
+        .risk-high {
+            color: #ef4444;
+        }
+
+        .risk-badge-low {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .risk-badge-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .risk-badge-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .glow-green {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .glow-red {
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+        }
     </style>
 </head>
 
@@ -57,11 +97,17 @@
             <div class="p-6 border-b border-white/5">
                 <h1 class="font-display font-bold text-xl tracking-tight text-white">LOOT<span
                         class="text-loot-neon">ADMIN</span></h1>
+                <div class="text-xs text-gray-500 mt-1">Fraud Detection v2.0</div>
             </div>
             <nav class="flex-1 p-4 space-y-2">
                 <button onclick="switchTab('overview')" id="nav-overview"
                     class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium active">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Overview
+                    <i data-lucide="activity" class="w-5 h-5"></i> Live Monitor
+                </button>
+                <button onclick="switchTab('killzone')" id="nav-killzone"
+                    class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
+                    <i data-lucide="shield-alert" class="w-5 h-5"></i> Kill Zone <span id="badge-killzone"
+                        class="ml-auto bg-red-500/10 text-red-500 text-xs px-2 py-0.5 rounded-full hidden">0</span>
                 </button>
                 <button onclick="switchTab('orders')" id="nav-orders"
                     class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
@@ -80,6 +126,7 @@
                 </button>
             </nav>
             <div class="p-4 border-t border-white/5">
+                <div class="text-xs text-gray-600 mb-2">Auto-refresh: <span id="refresh-countdown">30s</span></div>
                 <button onclick="window.location.href='/dashboard.html'"
                     class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
                     <i data-lucide="log-out" class="w-5 h-5"></i> Back to Site
@@ -90,31 +137,103 @@
         <!-- Main Content -->
         <main class="flex-1 overflow-y-auto bg-loot-black relative">
 
-            <!-- OVERVIEW TAB -->
+            <!-- LIVE MONITOR TAB -->
             <div id="tab-overview" class="p-8 space-y-8">
-                <h2 class="text-2xl font-bold font-display text-white">Dashboard Overview</h2>
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold font-display text-white">🔴 Live Monitor</h2>
+                    <div class="flex items-center gap-2 text-sm text-gray-500">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        Real-time
+                    </div>
+                </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="glass p-6 rounded-xl">
-                        <div class="text-gray-400 text-sm mb-1">Total Users</div>
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                <i data-lucide="users" class="w-5 h-5 text-purple-400"></i>
+                            </div>
+                            <div class="text-gray-400 text-sm">Total Users</div>
+                        </div>
                         <div class="text-3xl font-bold text-white" id="stat-users">-</div>
                     </div>
-                    <div class="glass p-6 rounded-xl">
-                        <div class="text-gray-400 text-sm mb-1">Points Distributed</div>
-                        <div class="text-3xl font-bold text-loot-gold" id="stat-points">-</div>
+                    <div class="glass p-6 rounded-xl" id="card-online">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                <i data-lucide="activity" class="w-5 h-5 text-green-400"></i>
+                            </div>
+                            <div class="text-gray-400 text-sm">Online Now</div>
+                        </div>
+                        <div class="text-3xl font-bold text-green-400" id="stat-online">-</div>
+                    </div>
+                    <div class="glass p-6 rounded-xl" id="card-pending">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                <i data-lucide="alert-circle" class="w-5 h-5 text-red-400"></i>
+                            </div>
+                            <div class="text-gray-400 text-sm">Pending Requests</div>
+                        </div>
+                        <div class="text-3xl font-bold text-red-400" id="stat-pending">-</div>
                     </div>
                     <div class="glass p-6 rounded-xl">
-                        <div class="text-gray-400 text-sm mb-1">Pending Orders</div>
-                        <div class="text-3xl font-bold text-loot-neon" id="stat-orders">-</div>
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                                <i data-lucide="dollar-sign" class="w-5 h-5 text-yellow-400"></i>
+                            </div>
+                            <div class="text-gray-400 text-sm">Daily Revenue</div>
+                        </div>
+                        <div class="text-3xl font-bold text-loot-gold" id="stat-revenue">$-</div>
+                    </div>
+                </div>
+
+                <!-- Extended Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="glass p-6 rounded-xl">
+                        <div class="text-gray-400 text-sm mb-2">Points Distributed Today</div>
+                        <div class="text-2xl font-bold text-loot-neon" id="stat-daily-points">-</div>
                     </div>
                     <div class="glass p-6 rounded-xl">
-                        <div class="text-gray-400 text-sm mb-1">Open Tickets</div>
-                        <div class="text-3xl font-bold text-loot-purple" id="stat-tickets">-</div>
+                        <div class="text-gray-400 text-sm mb-2">Total Points All Time</div>
+                        <div class="text-2xl font-bold text-white" id="stat-total-points">-</div>
+                    </div>
+                    <div class="glass p-6 rounded-xl">
+                        <div class="text-gray-400 text-sm mb-2">Open Tickets</div>
+                        <div class="text-2xl font-bold text-loot-purple" id="stat-tickets">-</div>
                     </div>
                 </div>
             </div>
 
-            <!-- ORDERS TAB -->
+            <!-- KILL ZONE TAB (Fraud Detection) -->
+            <div id="tab-killzone" class="p-8 space-y-8 hidden">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold font-display text-white">⚔️ Kill Zone - Fraud Detection</h2>
+                    <button onclick="loadKillZone()"
+                        class="px-4 py-2 bg-white/5 rounded-lg text-sm hover:bg-white/10 transition">
+                        <i data-lucide="refresh-cw" class="w-4 h-4 inline mr-2"></i>Refresh
+                    </button>
+                </div>
+
+                <div class="glass rounded-xl overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-white/5 text-gray-400 text-sm uppercase">
+                            <tr>
+                                <th class="p-4">User</th>
+                                <th class="p-4">Reward</th>
+                                <th class="p-4">Account Age</th>
+                                <th class="p-4">Risk</th>
+                                <th class="p-4">Request Time</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="killzone-list" class="divide-y divide-white/5 text-sm">
+                            <!-- JS Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ORDERS TAB (Legacy) -->
             <div id="tab-orders" class="p-8 space-y-8 hidden">
                 <h2 class="text-2xl font-bold font-display text-white">Gift Card Orders</h2>
                 <div class="glass rounded-xl overflow-hidden">
@@ -154,6 +273,137 @@
         </main>
     </div>
 
+    <!-- INSPECTION MODAL -->
+    <div id="inspection-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
+        <div
+            class="absolute inset-4 md:inset-8 lg:inset-16 bg-loot-card rounded-2xl overflow-hidden flex flex-col z-10 border border-white/10">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-loot-dark">
+                <div class="flex items-center gap-4">
+                    <div id="modal-avatar"
+                        class="w-12 h-12 rounded-full bg-loot-purple flex items-center justify-center text-white font-bold text-xl">
+                        ?</div>
+                    <div>
+                        <h3 id="modal-username" class="text-xl font-bold text-white">Loading...</h3>
+                        <div id="modal-email" class="text-sm text-gray-400"></div>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="p-2 hover:bg-white/10 rounded-lg transition">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- User Stats Row -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="glass p-4 rounded-lg">
+                        <div class="text-xs text-gray-500 uppercase">Account Age</div>
+                        <div id="modal-account-age" class="text-lg font-bold text-white">-</div>
+                    </div>
+                    <div class="glass p-4 rounded-lg">
+                        <div class="text-xs text-gray-500 uppercase">Total Earned</div>
+                        <div id="modal-total-earned" class="text-lg font-bold text-loot-gold">-</div>
+                    </div>
+                    <div class="glass p-4 rounded-lg">
+                        <div class="text-xs text-gray-500 uppercase">Total Withdrawn</div>
+                        <div id="modal-total-withdrawn" class="text-lg font-bold text-white">-</div>
+                    </div>
+                    <div class="glass p-4 rounded-lg">
+                        <div class="text-xs text-gray-500 uppercase">Current Balance</div>
+                        <div id="modal-balance" class="text-lg font-bold text-loot-neon">-</div>
+                    </div>
+                </div>
+
+                <!-- Security Alerts -->
+                <div id="security-alerts" class="space-y-2">
+                    <!-- JS Injected -->
+                </div>
+
+                <!-- Two Column Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Security Panel -->
+                    <div class="glass p-6 rounded-xl">
+                        <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i data-lucide="shield" class="w-5 h-5 text-loot-neon"></i>
+                            Security Profile
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="text-xs text-gray-500 uppercase mb-1">Registration IP</div>
+                                <div id="modal-reg-ip" class="font-mono text-sm text-white">-</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 uppercase mb-1">Current/Request IP</div>
+                                <div id="modal-req-ip" class="font-mono text-sm text-white">-</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 uppercase mb-1">IP Match Status</div>
+                                <div id="modal-ip-status" class="text-sm">-</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 uppercase mb-1">User Agent</div>
+                                <div id="modal-user-agent" class="text-xs text-gray-400 font-mono break-all">-</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 uppercase mb-1">Unique IPs Used</div>
+                                <div id="modal-unique-ips" class="text-sm text-white">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task History -->
+                    <div class="glass p-6 rounded-xl">
+                        <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i data-lucide="list" class="w-5 h-5 text-loot-gold"></i>
+                            Task History (Last 10)
+                        </h4>
+                        <div id="modal-task-history" class="space-y-2 max-h-64 overflow-y-auto">
+                            <!-- JS Injected -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction History -->
+                <div class="glass p-6 rounded-xl">
+                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="credit-card" class="w-5 h-5 text-loot-purple"></i>
+                        Recent Transactions
+                    </h4>
+                    <div id="modal-transactions" class="space-y-2 max-h-48 overflow-y-auto">
+                        <!-- JS Injected -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer (Actions) -->
+            <div class="p-6 border-t border-white/10 bg-loot-dark flex justify-between items-center">
+                <div id="modal-withdrawal-info" class="text-sm text-gray-400">
+                    <!-- Withdrawal details -->
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closeModal()"
+                        class="px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition font-medium">
+                        Cancel
+                    </button>
+                    <button onclick="handleWithdrawalAction('reject')"
+                        class="px-6 py-3 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition font-bold">
+                        ❌ Reject & Refund
+                    </button>
+                    <button onclick="handleWithdrawalAction('ban')"
+                        class="px-6 py-3 bg-red-900 text-red-300 rounded-lg hover:bg-red-800 transition font-bold">
+                        🚫 Ban User
+                    </button>
+                    <button onclick="handleWithdrawalAction('approve')"
+                        class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-bold">
+                        ✅ Approve & Pay
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
     <div id="toast" class="fixed bottom-6 right-6 z-50 translate-y-24 transition-transform duration-300">
         <div
@@ -167,10 +417,12 @@
         lucide.createIcons();
 
         let currentUser = null;
+        let currentWithdrawal = null;
+        let refreshInterval = null;
+        let countdownInterval = null;
 
         async function init() {
             try {
-                // Check Auth & Admin Status
                 const res = await fetch('/api/user/me');
                 const data = await res.json();
 
@@ -179,14 +431,28 @@
                     return;
                 }
 
-                // Temporary check until role property is fully propagated in all endpoints
-                // We'll trust the API calls to fail if not admin
                 loadStats();
                 document.getElementById('auth-check').classList.add('hidden');
+
+                // Start auto-refresh
+                startAutoRefresh();
             } catch (e) {
                 console.error(e);
                 window.location.href = '/';
             }
+        }
+
+        function startAutoRefresh() {
+            let countdown = 30;
+
+            countdownInterval = setInterval(() => {
+                countdown--;
+                document.getElementById('refresh-countdown').innerText = countdown + 's';
+                if (countdown <= 0) {
+                    loadStats();
+                    countdown = 30;
+                }
+            }, 1000);
         }
 
         function switchTab(tabId) {
@@ -196,6 +462,7 @@
             document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
             document.getElementById(`nav-${tabId}`).classList.add('active');
 
+            if (tabId === 'killzone') loadKillZone();
             if (tabId === 'orders') loadOrders();
             if (tabId === 'reports') loadReports();
             if (tabId === 'messages') loadMessages();
@@ -206,20 +473,225 @@
             try {
                 const res = await fetch('/api/admin/stats');
                 const data = await res.json();
-                if (!data.success) { if (res.status === 403) alert("Access Denied"); return; }
+                if (!data.success) {
+                    if (res.status === 403) alert("Access Denied");
+                    return;
+                }
 
                 const s = data.stats;
                 document.getElementById('stat-users').innerText = s.users.toLocaleString();
-                document.getElementById('stat-points').innerText = s.totalPointsDistributed.toLocaleString();
-                document.getElementById('stat-orders').innerText = s.pendingWithdrawals;
+                document.getElementById('stat-online').innerText = s.onlineUsers || 0;
+                document.getElementById('stat-pending').innerText = s.pendingWithdrawals;
+                document.getElementById('stat-revenue').innerText = '$' + (s.dailyRevenue || 0).toFixed(2);
+                document.getElementById('stat-daily-points').innerText = (s.dailyPointsDistributed || 0).toLocaleString();
+                document.getElementById('stat-total-points').innerText = s.totalPointsDistributed.toLocaleString();
                 document.getElementById('stat-tickets').innerText = s.openReports + s.unreadMessages;
 
+                // Update badges
                 if (s.pendingWithdrawals > 0) {
-                    const badge = document.getElementById('badge-orders');
+                    const badge = document.getElementById('badge-killzone');
                     badge.innerText = s.pendingWithdrawals;
                     badge.classList.remove('hidden');
+                    document.getElementById('card-pending').classList.add('glow-red');
+                } else {
+                    document.getElementById('badge-killzone').classList.add('hidden');
+                    document.getElementById('card-pending').classList.remove('glow-red');
+                }
+
+                if (s.onlineUsers > 0) {
+                    document.getElementById('card-online').classList.add('glow-green');
+                } else {
+                    document.getElementById('card-online').classList.remove('glow-green');
+                }
+
+                if (s.pendingWithdrawals > 0) {
+                    document.getElementById('badge-orders').innerText = s.pendingWithdrawals;
+                    document.getElementById('badge-orders').classList.remove('hidden');
                 }
             } catch (e) { console.error(e); }
+        }
+
+        async function loadKillZone() {
+            const list = document.getElementById('killzone-list');
+            list.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Loading...</td></tr>';
+
+            try {
+                const res = await fetch('/api/admin/withdrawals/pending');
+                const data = await res.json();
+                if (!data.success) return;
+
+                if (data.withdrawals.length === 0) {
+                    list.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500">✅ No pending withdrawals. All clear!</td></tr>';
+                    return;
+                }
+
+                list.innerHTML = data.withdrawals.map(w => `
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="p-4">
+                            <div class="font-bold text-white">${w.user.displayName}</div>
+                            <div class="text-xs text-gray-500">${w.user.email}</div>
+                        </td>
+                        <td class="p-4">
+                            <div class="text-loot-neon">${w.rewardName}</div>
+                            <div class="text-xs text-gray-500">${w.pointsSpent.toLocaleString()} PTS</div>
+                        </td>
+                        <td class="p-4 text-gray-400">${w.user.accountAge} days</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded text-xs font-bold risk-badge-${w.riskLevel}">
+                                ${w.riskLevel.toUpperCase()}
+                            </span>
+                            ${w.riskFlags.length > 0 ? `<div class="text-xs text-gray-500 mt-1">${w.riskFlags.length} flag(s)</div>` : ''}
+                        </td>
+                        <td class="p-4 text-gray-400">${dayjs(w.requestDate).fromNow()}</td>
+                        <td class="p-4 text-right">
+                            <button onclick="openInspection('${w.id}', '${w.userId}')" class="px-4 py-2 bg-loot-purple/20 text-loot-purple rounded hover:bg-loot-purple/30 text-xs font-bold">
+                                🔍 INSPECT
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function openInspection(withdrawalId, userId) {
+            currentWithdrawal = { id: withdrawalId, userId };
+            document.getElementById('inspection-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            // Load user security data
+            try {
+                const res = await fetch(`/api/admin/user/${userId}/security`);
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast('Failed to load user data');
+                    return;
+                }
+
+                const u = data.user;
+                const sec = data.security;
+
+                // Populate modal
+                document.getElementById('modal-avatar').innerText = u.displayName[0].toUpperCase();
+                document.getElementById('modal-username').innerText = u.displayName;
+                document.getElementById('modal-email').innerText = u.email;
+                document.getElementById('modal-account-age').innerText = u.accountAge + ' days';
+                document.getElementById('modal-total-earned').innerText = u.totalEarned.toLocaleString() + ' PTS';
+                document.getElementById('modal-total-withdrawn').innerText = u.totalWithdrawn.toLocaleString() + ' PTS';
+                document.getElementById('modal-balance').innerText = u.balance.toLocaleString() + ' PTS';
+
+                // Security info
+                document.getElementById('modal-reg-ip').innerText = sec.registrationIp || 'N/A';
+                document.getElementById('modal-req-ip').innerText = sec.uniqueIps[0]?.ip_address || 'N/A';
+                document.getElementById('modal-user-agent').innerText = sec.registrationUserAgent || 'N/A';
+                document.getElementById('modal-unique-ips').innerText = sec.uniqueIps.length + ' unique IP(s)';
+
+                // IP Status
+                const ipStatus = document.getElementById('modal-ip-status');
+                if (sec.uniqueIps.length > 3) {
+                    ipStatus.innerHTML = '<span class="text-red-400">⚠️ Multiple IPs detected</span>';
+                } else {
+                    ipStatus.innerHTML = '<span class="text-green-400">✓ IP consistent</span>';
+                }
+
+                // Security Alerts
+                const alertsDiv = document.getElementById('security-alerts');
+                if (sec.suspiciousFlags.length > 0) {
+                    alertsDiv.innerHTML = sec.suspiciousFlags.map(f => `
+                        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-center gap-3">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-400"></i>
+                            <span class="text-red-400 text-sm">${f.message}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    alertsDiv.innerHTML = `
+                        <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3 flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-400"></i>
+                            <span class="text-green-400 text-sm">No suspicious activity detected</span>
+                        </div>
+                    `;
+                }
+
+                // Task History
+                const taskDiv = document.getElementById('modal-task-history');
+                const creditTxs = data.transactions.filter(t => t.type === 'credit' && t.source === 'lootably').slice(0, 10);
+                if (creditTxs.length > 0) {
+                    taskDiv.innerHTML = creditTxs.map(t => `
+                        <div class="flex justify-between items-center p-2 bg-white/5 rounded text-sm">
+                            <span class="text-gray-300">${t.offer_name || 'Offer'}</span>
+                            <div class="text-right">
+                                <span class="text-loot-gold">+${t.amount}</span>
+                                <div class="text-xs text-gray-500">${dayjs(t.created_at).fromNow()}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    taskDiv.innerHTML = '<div class="text-gray-500 text-sm">No completed offers</div>';
+                }
+
+                // Recent Transactions
+                const txDiv = document.getElementById('modal-transactions');
+                txDiv.innerHTML = data.transactions.slice(0, 10).map(t => `
+                    <div class="flex justify-between items-center p-2 bg-white/5 rounded text-sm">
+                        <div>
+                            <span class="text-gray-300">${t.source}</span>
+                            <div class="text-xs text-gray-500">${t.description || ''}</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="${t.type === 'credit' ? 'text-green-400' : 'text-red-400'}">${t.type === 'credit' ? '+' : '-'}${t.amount}</span>
+                            <div class="text-xs text-gray-500">${dayjs(t.created_at).fromNow()}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Withdrawal info
+                document.getElementById('modal-withdrawal-info').innerHTML = `
+                    Withdrawal #${withdrawalId} • ${u.displayName}
+                `;
+
+                lucide.createIcons();
+            } catch (e) {
+                console.error(e);
+                showToast('Error loading inspection data');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('inspection-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+            currentWithdrawal = null;
+        }
+
+        async function handleWithdrawalAction(action) {
+            if (!currentWithdrawal) return;
+
+            const confirmMsg = {
+                'approve': 'Approve this withdrawal and mark as completed?',
+                'reject': 'Reject this withdrawal and refund points to the user?',
+                'ban': '⚠️ BAN this user? This will reject all pending withdrawals and prevent future access.'
+            };
+
+            if (!confirm(confirmMsg[action])) return;
+
+            try {
+                const res = await fetch(`/api/admin/withdrawals/${currentWithdrawal.id}/action`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, notes: `Admin action: ${action}` })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Withdrawal ${action}ed successfully`);
+                    closeModal();
+                    loadKillZone();
+                    loadStats();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
         }
 
         async function loadOrders() {
