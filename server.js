@@ -2046,6 +2046,36 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
 // ADMIN ROUTES & FRAUD DETECTION
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SETUP ROUTES (Can be disabled in production)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/setup-admin/:email?secret=...
+ * Promotes a user to admin.
+ */
+app.get('/api/setup-admin/:email', (req, res) => {
+    const { email } = req.params;
+    const { secret } = req.query;
+
+    if (secret !== 'LOOTQUEST_GOD') {
+        return res.status(403).json({ success: false, error: 'Invalid secret' });
+    }
+
+    const user = db.get("SELECT * FROM users WHERE email = ?", [email]);
+    if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    db.run("UPDATE users SET role = 'admin' WHERE id = ?", [user.id]);
+
+    res.json({
+        success: true,
+        message: `User ${email} is now an Admin!`,
+        user: { id: user.id, email: user.email, role: 'admin' }
+    });
+});
+
 /**
  * GET /api/admin/stats
  * Returns real-time health metrics of the platform.

@@ -22,6 +22,14 @@ async function init() {
         console.error('Init failed:', e);
         if (e.message.includes('401') || e.message.includes('403')) {
             window.location.href = '/?error=admin_only';
+        } else {
+            // Show error in overlay instead of infinite spinner
+            const overlay = document.getElementById('auth-overlay');
+            overlay.innerHTML = `
+                <div class="text-red-500 font-bold mb-2">ACCESS ERROR</div>
+                <div class="text-gray-500 text-sm font-mono">${e.message || 'Unknown Error'}</div>
+                <a href="/" class="mt-4 px-4 py-2 bg-white/10 rounded hover:bg-white/20 text-white text-sm">Return Home</a>
+            `;
         }
     }
 }
