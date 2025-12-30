@@ -13,52 +13,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function init() {
     try {
-        // STEP 1: Verify user is logged in and has admin role
-        const meRes = await fetch('/api/user/me', { credentials: 'include' });
-        const meData = await meRes.json();
-
-        if (!meData.success || !meData.user) {
-            // Not logged in
-            window.location.href = '/?error=not_logged_in';
-            return;
-        }
-
-        if (meData.user.role !== 'admin') {
-            // Logged in but not admin
-            const overlay = document.getElementById('auth-overlay');
-            overlay.innerHTML = `
-                <div class="text-red-500 font-bold mb-4">🚫 ACCESS DENIED</div>
-                <div class="text-gray-400 text-sm mb-2">Cette page est réservée aux administrateurs.</div>
-                <div class="text-gray-500 text-xs font-mono mb-6">User: ${meData.user.email} | Role: ${meData.user.role || 'user'}</div>
-                <a href="/dashboard.html" class="px-6 py-3 bg-loot-purple hover:bg-purple-600 rounded-lg text-white font-bold transition-colors">Retour au Dashboard</a>
-            `;
-            return;
-        }
-
-        // STEP 2: User is admin, load dashboard data
         await Promise.all([
             fetchStats(),
             fetchWithdrawals()
         ]);
-
         document.getElementById('auth-overlay').classList.add('hidden');
-
     } catch (e) {
         console.error('Init failed:', e);
-        // Show error in overlay
-        const overlay = document.getElementById('auth-overlay');
-        overlay.innerHTML = `
-            <div class="text-red-500 font-bold mb-2">ACCESS ERROR</div>
-            <div class="text-gray-500 text-sm font-mono mb-4">${e.message || 'Unknown Error'}</div>
-            <a href="/" class="px-4 py-2 bg-white/10 rounded hover:bg-white/20 text-white text-sm">Return Home</a>
-        `;
+        if (e.message.includes('401') || e.message.includes('403')) {
+            window.location.href = '/?error=admin_only';
+        }
     }
 }
 
 async function refreshData() {
     const btn = document.querySelector('button[onclick="refreshData()"] i');
     btn.classList.add('animate-spin');
-    await Promise.all([fetchStats(), fetchWithdrawals()]);
+    await init();
     setTimeout(() => btn.classList.remove('animate-spin'), 1000);
 }
 
