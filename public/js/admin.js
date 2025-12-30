@@ -37,7 +37,9 @@ async function refreshData() {
 // 1. STATS MONITOR
 // ═══════════════════════════════════════════════════════════════════════════
 async function fetchStats() {
-    const res = await fetch('/api/admin/stats');
+    const res = await fetch('/api/admin/stats', {
+        credentials: 'include'
+    });
     if (res.status === 401 || res.status === 403) throw new Error(res.status);
     const data = await res.json();
 
@@ -60,7 +62,9 @@ function animateValue(id, value) {
 // 2. KILL ZONE (WITHDRAWALS)
 // ═══════════════════════════════════════════════════════════════════════════
 async function fetchWithdrawals() {
-    const res = await fetch('/api/admin/withdrawals/pending');
+    const res = await fetch('/api/admin/withdrawals/pending', {
+        credentials: 'include'
+    });
     if (!res.ok) return; // Silent fail if auth issue (handled by stats)
 
     const data = await res.json();
@@ -217,6 +221,7 @@ async function performAction(action) {
     try {
         const res = await fetch(`/api/admin/withdrawals/${currentInspectId}/action`, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action, reason })
         });
