@@ -4,9 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LootQuest | Admin Panel</title>
+    <title>LootQuest | GOD MODE</title>
     <link rel="icon" href="/favicon.png?v=2" type="image/png">
+
+    <!-- Tailwind & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Utilities -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/plugin/relativeTime.min.js"></script>
@@ -17,7 +24,14 @@
             theme: {
                 extend: {
                     colors: {
-                        loot: { black: '#050505', dark: '#0a0a0a', card: '#121212', neon: '#00f3ff', purple: '#bc13fe', gold: '#ffd700' }
+                        loot: {
+                            black: '#050505',
+                            card: '#121212',
+                            neon: '#00f3ff',
+                            purple: '#bc13fe',
+                            gold: '#ffd700',
+                            danger: '#ff3333'
+                        }
                     },
                     fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Space Grotesk', 'sans-serif'] }
                 }
@@ -36,333 +50,207 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .sidebar-link.active {
-            background: rgba(188, 19, 254, 0.1);
-            color: #bc13fe;
-            border-right: 2px solid #bc13fe;
+        .security-flag {
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 51, 51, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 51, 51, 0);
+            }
         }
     </style>
 </head>
 
-<body class="antialiased">
+<body class="antialiased h-screen overflow-hidden flex">
 
-    <!-- Auth Check Overlay -->
-    <div id="auth-check" class="fixed inset-0 z-50 bg-loot-black flex items-center justify-center">
-        <div class="animate-spin w-12 h-12 border-4 border-loot-purple border-t-transparent rounded-full"></div>
+    <!-- Auth Overlay -->
+    <div id="auth-overlay" class="fixed inset-0 z-50 bg-loot-black flex flex-col items-center justify-center">
+        <div class="animate-spin w-12 h-12 border-4 border-loot-purple border-t-transparent rounded-full mb-4"></div>
+        <p class="text-gray-500 font-mono text-sm">VERIFYING ADMIN ACCESS...</p>
     </div>
 
-    <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-loot-card border-r border-white/5 flex flex-col">
-            <div class="p-6 border-b border-white/5">
-                <h1 class="font-display font-bold text-xl tracking-tight text-white">LOOT<span
-                        class="text-loot-neon">ADMIN</span></h1>
+    <!-- 1. SIDEBAR -->
+    <aside class="w-20 lg:w-64 bg-loot-card border-r border-white/5 flex flex-col shrink-0">
+        <div class="h-20 flex items-center justify-center lg:justify-start lg:px-6 border-b border-white/5">
+            <span class="font-display font-bold text-xl tracking-tight text-white hidden lg:block">LOOT<span
+                    class="text-loot-danger">GOD</span></span>
+            <span class="lg:hidden font-bold text-2xl text-loot-danger">L</span>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2">
+            <button
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-loot-danger/10 text-loot-danger border border-loot-danger/20">
+                <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                <span class="hidden lg:block font-bold">Fraud Control</span>
+            </button>
+            <a href="/dashboard.html"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-all">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
+                <span class="hidden lg:block">Exit to Site</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 2. MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto relative p-6 lg:p-10">
+
+        <!-- Live Monitor -->
+        <div class="mb-10">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold font-display text-white flex items-center gap-2">
+                    <i data-lucide="activity" class="text-loot-neon"></i> Live Monitor
+                </h2>
+                <button onclick="refreshData()"
+                    class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded text-gray-300 flex items-center gap-2 transition-colors">
+                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> Sync
+                </button>
             </div>
-            <nav class="flex-1 p-4 space-y-2">
-                <button onclick="switchTab('overview')" id="nav-overview"
-                    class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium active">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Overview
-                </button>
-                <button onclick="switchTab('orders')" id="nav-orders"
-                    class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
-                    <i data-lucide="shopping-cart" class="w-5 h-5"></i> Orders <span id="badge-orders"
-                        class="ml-auto bg-loot-neon/10 text-loot-neon text-xs px-2 py-0.5 rounded-full hidden">0</span>
-                </button>
-                <button onclick="switchTab('reports')" id="nav-reports"
-                    class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
-                    <i data-lucide="alert-triangle" class="w-5 h-5"></i> Reports <span id="badge-reports"
-                        class="ml-auto bg-red-500/10 text-red-500 text-xs px-2 py-0.5 rounded-full hidden">0</span>
-                </button>
-                <button onclick="switchTab('messages')" id="nav-messages"
-                    class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
-                    <i data-lucide="mail" class="w-5 h-5"></i> Messages <span id="badge-messages"
-                        class="ml-auto bg-blue-500/10 text-blue-500 text-xs px-2 py-0.5 rounded-full hidden">0</span>
-                </button>
-            </nav>
-            <div class="p-4 border-t border-white/5">
-                <button onclick="window.location.href='/dashboard.html'"
-                    class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
-                    <i data-lucide="log-out" class="w-5 h-5"></i> Back to Site
-                </button>
-            </div>
-        </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto bg-loot-black relative">
-
-            <!-- OVERVIEW TAB -->
-            <div id="tab-overview" class="p-8 space-y-8">
-                <h2 class="text-2xl font-bold font-display text-white">Dashboard Overview</h2>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="glass p-6 rounded-xl">
-                        <div class="text-gray-400 text-sm mb-1">Total Users</div>
-                        <div class="text-3xl font-bold text-white" id="stat-users">-</div>
-                    </div>
-                    <div class="glass p-6 rounded-xl">
-                        <div class="text-gray-400 text-sm mb-1">Points Distributed</div>
-                        <div class="text-3xl font-bold text-loot-gold" id="stat-points">-</div>
-                    </div>
-                    <div class="glass p-6 rounded-xl">
-                        <div class="text-gray-400 text-sm mb-1">Pending Orders</div>
-                        <div class="text-3xl font-bold text-loot-neon" id="stat-orders">-</div>
-                    </div>
-                    <div class="glass p-6 rounded-xl">
-                        <div class="text-gray-400 text-sm mb-1">Open Tickets</div>
-                        <div class="text-3xl font-bold text-loot-purple" id="stat-tickets">-</div>
-                    </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Stat Cards -->
+                <div class="glass p-5 rounded-xl border-l-2 border-loot-purple">
+                    <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Total Users</div>
+                    <div class="text-3xl font-display font-bold" id="stat-users">...</div>
+                </div>
+                <div class="glass p-5 rounded-xl border-l-2 border-loot-neon">
+                    <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Online Now</div>
+                    <div class="text-3xl font-display font-bold text-loot-neon" id="stat-online">...</div>
+                </div>
+                <div class="glass p-5 rounded-xl border-l-2 border-loot-danger">
+                    <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Pending Requests</div>
+                    <div class="text-3xl font-display font-bold text-loot-danger" id="stat-pending">...</div>
+                </div>
+                <div class="glass p-5 rounded-xl border-l-2 border-loot-gold">
+                    <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Daily Rev (Est.)</div>
+                    <div class="text-3xl font-display font-bold text-loot-gold" id="stat-revenue">...</div>
                 </div>
             </div>
+        </div>
 
-            <!-- ORDERS TAB -->
-            <div id="tab-orders" class="p-8 space-y-8 hidden">
-                <h2 class="text-2xl font-bold font-display text-white">Gift Card Orders</h2>
-                <div class="glass rounded-xl overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-white/5 text-gray-400 text-sm uppercase">
-                            <tr>
-                                <th class="p-4">User</th>
-                                <th class="p-4">Reward</th>
-                                <th class="p-4">Cost</th>
-                                <th class="p-4">Date</th>
-                                <th class="p-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orders-list" class="divide-y divide-white/5 text-sm">
-                            <!-- JS Injected -->
-                        </tbody>
-                    </table>
+        <!-- The Kill Zone -->
+        <div class="mb-10">
+            <h2 class="text-2xl font-bold font-display text-white mb-6 flex items-center gap-2">
+                <i data-lucide="skull" class="text-loot-danger"></i> The Kill Zone
+                <span class="text-sm font-sans font-normal text-gray-500 ml-2">(Pending Withdrawals)</span>
+            </h2>
+
+            <!-- Table -->
+            <div class="glass rounded-xl overflow-hidden min-h-[300px]">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-white/5 text-gray-400 text-xs uppercase font-bold tracking-wider">
+                        <tr>
+                            <th class="p-4">Risk</th>
+                            <th class="p-4">User</th>
+                            <th class="p-4">Request</th>
+                            <th class="p-4">Wait Time</th>
+                            <th class="p-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="withdrawals-list" class="divide-y divide-white/5 text-sm">
+                        <!-- Injected via JS -->
+                    </tbody>
+                </table>
+                <div id="empty-state" class="hidden flex flex-col items-center justify-center py-20 text-gray-500">
+                    <i data-lucide="check-circle" class="w-12 h-12 text-gray-600 mb-4"></i>
+                    <p>All clean. No pending requests.</p>
                 </div>
             </div>
+        </div>
+    </main>
 
-            <!-- REPORTS TAB -->
-            <div id="tab-reports" class="p-8 space-y-8 hidden">
-                <h2 class="text-2xl font-bold font-display text-white">Bug Reports</h2>
-                <div id="reports-list" class="space-y-4">
-                    <!-- JS Injected -->
+    <!-- 3. INSPECTION MODAL -->
+    <div id="inspect-modal"
+        class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
+        <div class="glass w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border border-white/10 transform scale-95 transition-transform duration-200"
+            id="modal-content">
+
+            <!-- Header -->
+            <div class="p-6 border-b border-white/5 flex justify-between items-start bg-loot-card">
+                <div>
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="scan-face" class="text-loot-neon"></i> Security Profile
+                    </h3>
+                    <p class="text-sm text-gray-400" id="modal-user-id">ID: ...</p>
                 </div>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
             </div>
 
-            <!-- MESSAGES TAB -->
-            <div id="tab-messages" class="p-8 space-y-8 hidden">
-                <h2 class="text-2xl font-bold font-display text-white">Contact Messages</h2>
-                <div id="messages-list" class="space-y-4">
-                    <!-- JS Injected -->
+            <!-- Body -->
+            <div class="p-6 space-y-6">
+
+                <!-- Flags Section -->
+                <div id="modal-flags-container" class="hidden">
+                    <h4 class="text-xs uppercase font-bold text-gray-500 mb-2">Detected Flags</h4>
+                    <div id="modal-flags" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- User Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-black/40 p-3 rounded-lg">
+                        <span class="text-xs text-gray-500 block">IP Address</span>
+                        <div class="text-white font-mono" id="modal-ip">...</div>
+                        <div class="text-xs text-loot-danger mt-1 hidden" id="ip-warning">⚠️ DIFFERENT FROM REGISTRATION
+                        </div>
+                    </div>
+                    <div class="bg-black/40 p-3 rounded-lg">
+                        <span class="text-xs text-gray-500 block">Account Age</span>
+                        <div class="text-white" id="modal-age">...</div>
+                    </div>
+                    <div class="bg-black/40 p-3 rounded-lg">
+                        <span class="text-xs text-gray-500 block">Total Earned</span>
+                        <div class="text-white text-loot-gold font-bold" id="modal-earned">...</div>
+                    </div>
+                    <div class="bg-black/40 p-3 rounded-lg">
+                        <span class="text-xs text-gray-500 block">Current Request</span>
+                        <div class="text-white" id="modal-request">...</div>
+                    </div>
+                </div>
+
+                <!-- Task History -->
+                <div>
+                    <h4 class="text-xs uppercase font-bold text-gray-500 mb-2">Last Activities (Speed Check)</h4>
+                    <div class="bg-black/40 rounded-lg overflow-hidden border border-white/5">
+                        <table class="w-full text-xs">
+                            <thead class="bg-white/5 text-gray-500 text-left">
+                                <tr>
+                                    <th class="p-2">Task</th>
+                                    <th class="p-2">Reward</th>
+                                    <th class="p-2">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-history" class="text-gray-300">
+                                <!-- Tasks -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="flex gap-4 pt-4 border-t border-white/5">
+                    <button id="btn-reject"
+                        class="flex-1 py-3 bg-white/5 hover:bg-red-500/20 text-red-500 border border-transparent hover:border-red-500 rounded-xl font-bold transition-all flex justify-center items-center gap-2">
+                        <i data-lucide="ban"></i> REJECT & REFUND
+                    </button>
+                    <button id="btn-approve"
+                        class="flex-1 py-3 bg-loot-neon text-black hover:bg-cyan-400 rounded-xl font-bold shadow-lg shadow-loot-neon/20 transition-all flex justify-center items-center gap-2">
+                        <i data-lucide="check"></i> APPROVE PAYOUT
+                    </button>
                 </div>
             </div>
-
-        </main>
-    </div>
-
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-6 right-6 z-50 translate-y-24 transition-transform duration-300">
-        <div
-            class="bg-loot-card border border-loot-neon text-white px-6 py-4 rounded-xl shadow-neon flex items-center gap-3">
-            <i data-lucide="check-circle" class="text-loot-neon"></i>
-            <span id="toast-msg">Action completed</span>
         </div>
     </div>
 
-    <script>
-        lucide.createIcons();
-
-        let currentUser = null;
-
-        async function init() {
-            try {
-                // Check Auth & Admin Status
-                const res = await fetch('/api/user/me');
-                const data = await res.json();
-
-                if (!data.success) {
-                    window.location.href = '/?login=admin';
-                    return;
-                }
-
-                // Temporary check until role property is fully propagated in all endpoints
-                // We'll trust the API calls to fail if not admin
-                loadStats();
-                document.getElementById('auth-check').classList.add('hidden');
-            } catch (e) {
-                console.error(e);
-                window.location.href = '/';
-            }
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-
-            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
-            document.getElementById(`nav-${tabId}`).classList.add('active');
-
-            if (tabId === 'orders') loadOrders();
-            if (tabId === 'reports') loadReports();
-            if (tabId === 'messages') loadMessages();
-            if (tabId === 'overview') loadStats();
-        }
-
-        async function loadStats() {
-            try {
-                const res = await fetch('/api/admin/stats');
-                const data = await res.json();
-                if (!data.success) { if (res.status === 403) alert("Access Denied"); return; }
-
-                const s = data.stats;
-                document.getElementById('stat-users').innerText = s.users.toLocaleString();
-                document.getElementById('stat-points').innerText = s.totalPointsDistributed.toLocaleString();
-                document.getElementById('stat-orders').innerText = s.pendingWithdrawals;
-                document.getElementById('stat-tickets').innerText = s.openReports + s.unreadMessages;
-
-                if (s.pendingWithdrawals > 0) {
-                    const badge = document.getElementById('badge-orders');
-                    badge.innerText = s.pendingWithdrawals;
-                    badge.classList.remove('hidden');
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        async function loadOrders() {
-            const list = document.getElementById('orders-list');
-            list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Loading...</td></tr>';
-
-            try {
-                const res = await fetch('/api/admin/orders');
-                const data = await res.json();
-                if (!data.success) return;
-
-                if (data.orders.length === 0) {
-                    list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">No pending orders.</td></tr>';
-                    return;
-                }
-
-                list.innerHTML = data.orders.map(o => `
-                    <tr class="hover:bg-white/5 transition-colors">
-                        <td class="p-4">
-                            <div class="font-bold text-white">${o.display_name}</div>
-                            <div class="text-xs text-gray-500">${o.email}</div>
-                        </td>
-                        <td class="p-4 text-loot-neon">${o.reward_name}</td>
-                        <td class="p-4 text-loot-gold">${o.points_spent.toLocaleString()} PTS</td>
-                        <td class="p-4 text-gray-400">${dayjs(o.created_at).fromNow()}</td>
-                        <td class="p-4 text-right">
-                            <button onclick="processOrder(${o.id}, 'completed')" class="px-3 py-1 bg-green-500/20 text-green-500 rounded hover:bg-green-500/30 text-xs font-bold mr-2">APPROVE</button>
-                            <button onclick="processOrder(${o.id}, 'cancelled')" class="px-3 py-1 bg-red-500/20 text-red-500 rounded hover:bg-red-500/30 text-xs font-bold">REJECT</button>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (e) { console.error(e); }
-        }
-
-        async function loadReports() {
-            const list = document.getElementById('reports-list');
-            list.innerHTML = '<div class="text-center text-gray-500">Loading...</div>';
-
-            try {
-                const res = await fetch('/api/admin/reports');
-                const data = await res.json();
-
-                if (data.reports.length === 0) {
-                    list.innerHTML = '<div class="text-center text-gray-500">No reports found.</div>';
-                    return;
-                }
-
-                list.innerHTML = data.reports.map(r => `
-                    <div class="glass p-6 rounded-xl border-l-4 ${r.status === 'new' ? 'border-red-500' : 'border-green-500'}">
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-bold text-white text-lg">${r.subject}</h3>
-                            <span class="text-xs bg-white/10 px-2 py-1 rounded text-gray-400">${dayjs(r.created_at).fromNow()}</span>
-                        </div>
-                        <p class="text-gray-400 text-sm mb-4 bg-black/30 p-3 rounded font-mono">${r.content}</p>
-                        <div class="flex items-center justify-between">
-                             <div class="text-xs text-gray-500">USER ID: ${r.user_id || 'Anonymous'}</div>
-                             ${r.status === 'new' ?
-                        `<button onclick="resolveTicket(${r.id}, 'resolved')" class="text-xs bg-loot-neon/10 text-loot-neon px-3 py-1 rounded hover:bg-loot-neon/20">MARK RESOLVED</button>` :
-                        `<span class="text-xs text-green-500 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Resolved</span>`
-                    }
-                        </div>
-                    </div>
-                `).join('');
-                lucide.createIcons();
-            } catch (e) { console.error(e); }
-        }
-
-        async function loadMessages() {
-            const list = document.getElementById('messages-list');
-            list.innerHTML = '<div class="text-center text-gray-500">Loading...</div>';
-            try {
-                const res = await fetch('/api/admin/messages');
-                const data = await res.json();
-
-                if (data.messages.length === 0) {
-                    list.innerHTML = '<div class="text-center text-gray-500">No messages.</div>';
-                    return;
-                }
-
-                list.innerHTML = data.messages.map(m => `
-                   <div class="glass p-6 rounded-xl border-l-4 border-blue-500">
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h3 class="font-bold text-white text-lg">${m.subject}</h3>
-                                <div class="text-xs text-blue-400">${m.email}</div>
-                            </div>
-                            <span class="text-xs bg-white/10 px-2 py-1 rounded text-gray-400">${dayjs(m.created_at).fromNow()}</span>
-                        </div>
-                        <p class="text-gray-300 text-sm mb-4">${m.content}</p>
-                        <div class="flex justify-end">
-                            <a href="mailto:${m.email}" class="text-xs bg-white/5 border border-white/10 px-3 py-1 rounded hover:bg-white/10 flex items-center gap-2">
-                                <i data-lucide="reply" class="w-3 h-3"></i> Reply via Email
-                            </a>
-                        </div>
-                    </div>
-                `).join('');
-                lucide.createIcons();
-            } catch (e) { console.error(e); }
-        }
-
-        async function processOrder(id, status) {
-            if (!confirm(`Are you sure you want to mark this order as ${status.toUpperCase()}?`)) return;
-            try {
-                const res = await fetch('/api/admin/process-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, status, notes: `Processed by admin` })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast(`Order ${status}`);
-                    loadOrders();
-                    loadStats();
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            } catch (e) { alert(e.message); }
-        }
-
-        async function resolveTicket(id, status) {
-            try {
-                const res = await fetch('/api/admin/resolve-ticket', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, status })
-                });
-                if (await res.json().then(d => d.success)) {
-                    showToast('Ticket updated');
-                    loadReports();
-                    loadStats();
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            t.classList.remove('translate-y-24');
-            setTimeout(() => t.classList.add('translate-y-24'), 3000);
-        }
-
-        init();
-    </script>
+    <!-- Scripts -->
+    <script src="/js/admin.js"></script>
 </body>
 
 </html>
