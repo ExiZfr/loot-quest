@@ -2567,6 +2567,98 @@ app.post('/api/user/personal-info', verifyAuth, (req, res) => {
     }
 });
 
+/**
+ * GET /api/user/profile
+ * Get complete user profile including personal info and withdrawal history
+ */
+app.get('/api/user/profile', verifyAuth, (req, res) => {
+    try {
+        const userId = req.user.uid;
+
+        // Get user data with personal info
+        const user = db.get(`
+            SELECT 
+                id, email, display_name, avatar_url,
+                first_name, last_name, address, city, postal_code, country,
+                balance, total_earned, total_withdrawn, personal_info_completed,
+                created_at, first_withdrawal_at, referral_code
+            FROM users WHERE id = ?
+        `, [userId]);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Get withdrawal history (last 50)
+        const withdrawals = db.all(`
+            SELECT 
+                id, reward_name, points_spent, status, 
+                created_at, processed_at, admin_note
+            FROM withdrawals 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC 
+            LIMIT 50
+        `, [userId]);
+
+        // Calculate account stats
+        const stats = {
+            accountAge: Math.floor((Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24)), // days
+            totalWithdrawals: withdrawals.length,
+            pendingWithdrawals: withdrawals.filter(w => w.status === 'pending').length,
+            completedWithdrawals: withdrawals.filter(w => w.status === 'approved').length,
+            rejectedWithdrawals: withdrawals.filter(w => w.status === 'rejected').length
+        };
+
+        res.json({
+            success: true,
+            profile: {
+                // Basic info
+                email: user.email,
+                displayName: user.display_name,
+                avatarUrl: user.avatar_url,
+
+                // Personal info (KYC)
+                personalInfo: user.personal_info_completed ? {
+                    firstName: user.first_name,
+                    lastName: user.last_name,
+                    address: user.address,
+                    city: user.city,
+                    postalCode: user.postal_code,
+                    country: user.country
+                } : null,
+                personalInfoCompleted: !!user.personal_info_completed,
+
+                // Account stats
+                balance: user.balance,
+                totalEarned: user.total_earned,
+                totalWithdrawn: user.total_withdrawn,
+                createdAt: user.created_at,
+                firstWithdrawalAt: user.first_withdrawal_at,
+                referralCode: user.referral_code,
+
+                // Calculated stats
+                stats: stats
+            },
+
+            // Withdrawal history
+            withdrawals: withdrawals.map(w => ({
+                id: w.id,
+                rewardName: w.reward_name,
+                pointsSpent: w.points_spent,
+                status: w.status,
+                createdAt: w.created_at,
+                processedAt: w.processed_at,
+                adminNote: w.admin_note
+            }))
+        });
+
+    } catch (e) {
+        console.error('Profile fetch error:', e);
+        res.status(500).json({ success: false, error: 'Failed to load profile' });
+    }
+});
+
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ADMIN ROUTES (Optional - for manual management)
 // ═══════════════════════════════════════════════════════════════════════════
