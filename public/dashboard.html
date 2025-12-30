@@ -614,7 +614,18 @@
 
         async function authenticateUser(u) {
             try {
-                const res = await fetch('/api/user/me');
+                // Build headers for Firebase users
+                const headers = {};
+                const firebaseUser = firebase.auth().currentUser;
+                if (firebaseUser) {
+                    const token = await firebaseUser.getIdToken();
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const res = await fetch('/api/user/me', {
+                    credentials: 'include', // Important for session cookies
+                    headers: headers
+                });
                 const data = await res.json();
                 if (data.success) {
                     state.user = data.user;
