@@ -1279,8 +1279,8 @@ app.get('/api/admin/withdrawals/pending', isAuthenticated, requireAdmin, (req, r
                 w.delivery_info,
                 w.status,
                 w.created_at as request_date,
-                w.request_ip,
-                w.request_user_agent,
+                NULL as request_ip, -- w.request_ip, TEMP FIX - column exists in file but not in sql.js cache
+                NULL as request_user_agent, -- w.request_user_agent, TEMP FIX
                 u.display_name,
                 u.email,
                 u.ip_address as registration_ip,
