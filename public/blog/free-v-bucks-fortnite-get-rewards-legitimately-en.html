@@ -72,28 +72,27 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
     
-        /* 3-Column Layout (Desktop) */
-        .blog-container {
-            display: grid;
-            grid-template-columns: 160px 1fr 160px;
-            gap: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
+
+        /* === AD STYLES === */
+        .page-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
         }
 
-        /* Mobile: Stack vertically, pubs visibles */
-        @media (max-width: 768px) {
-            .blog-container {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
+        .ad-sidebar {
+            width: 160px;
+            flex-shrink: 0;
+            display: none;
+        }
+
+        /* Show sidebars only on large screens */
+        @media (min-width: 1200px) {
+            .ad-sidebar {
+                display: block;
             }
-            .ad-left { order: 1; }
-            .article-content { order: 2; }
-            .ad-right { order: 3; }
         }
 
-        /* Pub Skyscraper Style */
         .ad-vertical {
             background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
             border: 1px dashed rgba(99, 102, 241, 0.3);
@@ -103,17 +102,7 @@
             align-items: center;
             justify-content: center;
             position: sticky;
-            top: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .ad-vertical {
-                min-height: 250px;
-                position: static;
-            }
-        }
-
-        .ad-placeholder {
+            top: 100px;
             writing-mode: vertical-lr;
             text-orientation: mixed;
             font-size: 14px;
@@ -121,25 +110,38 @@
             color: rgba(99, 102, 241, 0.6);
         }
 
-        .article-content {
-            background: rgba(21, 26, 35, 0.8);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
-            padding: 3rem 2rem;
+        .ad-horizontal {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border: 1px dashed rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+            font-size: 14px;
+            font-weight: bold;
+            color: rgba(99, 102, 241, 0.6);
         }
 
-        @media (max-width: 768px) {
-            .article-content {
-                padding: 2rem 1.5rem;
-            }
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            min-width: 0;
         }
+
     </style>
 </head>
 
-<body>
-    <!-- 3-Column Layout Container -->
-    <div class="blog-container">
+<body class="min-h-screen flex flex-col">
+<div class="page-wrapper">
+
+    <!-- Left Ad Sidebar -->
+    <aside class="ad-sidebar">
+        <div class="ad-vertical">PUB VERTICALE (160x600)</div>
+    </aside>
+
+    <div class="main-content">
     <nav class="sticky top-0 z-50 glass-panel border-b border-white/5 bg-[#0B0E14]/80">
         <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
             <a href="/blog.html" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">←
@@ -147,14 +149,8 @@
             <a href="/dashboard.html" class="text-sm font-bold text-indigo-400 hover:text-indigo-300">My Account</a>
         </div>
     </nav>
-        <!-- LEFT AD COLUMN (Skyscraper) -->
-        <aside class="ad-left ad-vertical">
-            <div class="ad-placeholder">PUB ICI (160x600)</div>
-        </aside>
 
-        <!-- CENTER - Article Content -->
-        <main class="article-content">
-            <header class="py-16 px-6 text-center max-w-4xl mx-auto">
+    <header class="py-16 px-6 text-center max-w-4xl mx-auto">
         <span
             class="px-3 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-6 inline-block">Fortnite</span>
         <h1 class="font-display font-bold text-4xl md:text-5xl text-white mb-6 leading-tight">Level Up Your Fortnite Locker for FREE!</h1>
@@ -176,7 +172,11 @@
 
 <p>Using these generators can lead to your account being hacked, banned, or infected with malware. Stick to legitimate methods to earn your V-Bucks, like the ones we're about to share!</p>
 
-<h2>LootQuest: Your V-Bucks Shortcut</h2>
+
+            <!-- Horizontal Ad Banner -->
+            <div class="ad-horizontal">BANNIÈRE PUBLICITAIRE (728x90)</div>
+
+            <h2>LootQuest: Your V-Bucks Shortcut</h2>
 <p><strong>LootQuest</strong> is a legit rewards platform that lets you earn gift cards by completing simple offers and tasks. Think of it as leveling up your real-life rewards while you game! These gift cards can then be used to purchase V-Bucks for Fortnite, effectively getting them for FREE.</p>
 
 <p>Here’s how it works:</p>
@@ -210,18 +210,18 @@
                 </a>
             </div>
         </article>
-        </main>
-        </main>
-
-        <!-- RIGHT AD COLUMN (Skyscraper) -->
-        <aside class="ad-right ad-vertical">
-            <div class="ad-placeholder">PUB ICI (160x600)</div>
-        </aside>
-    </div>
-
+    </main>
     <footer class="text-center py-8 text-gray-600 text-sm">
         <p>&copy; 2025 LootQuest.</p>
     </footer>
+    </div>
+
+    <!-- Right Ad Sidebar -->
+    <aside class="ad-sidebar">
+        <div class="ad-vertical">PUB VERTICALE (160x600)</div>
+    </aside>
+
+</div>
 </body>
 
 </html>
