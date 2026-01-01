@@ -3078,16 +3078,26 @@
         }
 
         // ════════════════ AUTO-OPEN AUTH MODAL FROM URL ════════════════
-        // Check if redirected from blog with ?auth=1 parameter
+        // Check if redirected from blog with ?auth=1 or ?auth=google parameter
         (function checkAuthParam() {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('auth') === '1') {
+            const authParam = urlParams.get('auth');
+
+            if (authParam) {
                 // Remove param from URL to avoid reopening on refresh
                 window.history.replaceState({}, '', '/');
-                // Open auth modal after short delay
-                setTimeout(() => {
-                    openAuthModal();
-                }, 500);
+
+                if (authParam === 'google') {
+                    // Direct Google sign-in
+                    setTimeout(() => {
+                        handleGoogleSignIn();
+                    }, 800);
+                } else {
+                    // Open auth modal (for auth=1 or any other value)
+                    setTimeout(() => {
+                        openAuthModal();
+                    }, 500);
+                }
             }
         })();
 
