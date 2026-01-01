@@ -254,6 +254,28 @@ class Database {
         this.db.run('CREATE INDEX IF NOT EXISTS idx_analytics_blog_slug ON analytics_visits(blog_slug)');
         this.db.run('CREATE INDEX IF NOT EXISTS idx_analytics_device_type ON analytics_visits(device_type)');
 
+        // ═══════════════════════════════════════════════════════════════
+        // SEO TRACKING TABLE (visits_logs)
+        // Detailed referrer source tracking for Admin Panel
+        // ═══════════════════════════════════════════════════════════════
+        this.db.run(`
+            CREATE TABLE IF NOT EXISTS visits_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                page_url TEXT NOT NULL,
+                referrer_source TEXT NOT NULL DEFAULT 'Direct / Inconnu',
+                ip_hash TEXT NOT NULL,
+                device_type TEXT NOT NULL DEFAULT 'Desktop',
+                user_agent TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Performance indexes for SEO stats
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_visits_logs_page_url ON visits_logs(page_url)');
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_visits_logs_referrer_source ON visits_logs(referrer_source)');
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_visits_logs_timestamp ON visits_logs(timestamp)');
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_visits_logs_device_type ON visits_logs(device_type)');
+
         this.save();
     }
 
@@ -519,6 +541,136 @@ app.use((req, res, next) => {
     req.lang = lang;
     next();
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MIDDLEWARE: SEO Traffic Tracking (trackTraffic)
+// Logs visits to public pages with intelligent referrer source detection
+// ═══════════════════════════════════════════════════════════════════════════
+
+const crypto = require('crypto');
+
+/**
+ * Analyze referrer header to determine traffic source
+ * @param {string} referer - The referer header
+ * @returns {string} - Categorized source
+ */
+function detectReferrerSource(referer) {
+    if (!referer) return 'Direct / Inconnu';
+
+    const ref = referer.toLowerCase();
+
+    // Search Engines
+    if (ref.includes('google.')) return 'SEO / Google';
+    if (ref.includes('bing.')) return 'SEO / Bing';
+    if (ref.includes('yahoo.')) return 'SEO / Yahoo';
+    if (ref.includes('duckduckgo.')) return 'SEO / DuckDuckGo';
+    if (ref.includes('baidu.')) return 'SEO / Baidu';
+    if (ref.includes('yandex.')) return 'SEO / Yandex';
+
+    // Social Networks
+    if (ref.includes('t.co') || ref.includes('twitter.') || ref.includes('x.com')) return 'Twitter';
+    if (ref.includes('facebook.') || ref.includes('fb.com')) return 'Facebook';
+    if (ref.includes('instagram.')) return 'Instagram';
+    if (ref.includes('linkedin.')) return 'LinkedIn';
+    if (ref.includes('tiktok.')) return 'TikTok';
+    if (ref.includes('reddit.')) return 'Reddit';
+    if (ref.includes('discord.')) return 'Discord';
+    if (ref.includes('youtube.')) return 'YouTube';
+    if (ref.includes('twitch.')) return 'Twitch';
+
+    // Messaging
+    if (ref.includes('whatsapp.')) return 'WhatsApp';
+    if (ref.includes('telegram.')) return 'Telegram';
+
+    // Check if it's internal navigation
+    if (ref.includes('loot-quest.fr') || ref.includes('localhost')) return 'Internal';
+
+    return 'Autre Site';
+}
+
+/**
+ * Detect device type from User-Agent
+ * @param {string} userAgent - The user-agent header
+ * @returns {string} - Device type
+ */
+function detectDeviceType(userAgent) {
+    if (!userAgent) return 'Desktop';
+
+    const ua = userAgent.toLowerCase();
+
+    if (/bot|crawler|spider|slurp|googlebot|bingbot/i.test(ua)) return 'Bot';
+    if (/mobile|android|iphone|ipad|ipod|blackberry|opera mini|iemobile/i.test(ua)) return 'Mobile';
+    if (/tablet|ipad/i.test(ua)) return 'Tablet';
+
+    return 'Desktop';
+}
+
+/**
+ * Hash IP address for privacy (GDPR compliant)
+ * @param {string} ip - The IP address
+ * @returns {string} - SHA256 hashed IP
+ */
+function hashIP(ip) {
+    return crypto.createHash('sha256').update(ip || 'unknown').digest('hex').substring(0, 16);
+}
+
+/**
+ * Traffic Tracking Middleware
+ * Only tracks public page visits (/, /blog/*, etc)
+ * Skips API calls, static files, and bot traffic
+ */
+function trackTraffic(req, res, next) {
+    // Skip API requests
+    if (req.path.startsWith('/api/')) return next();
+
+    // Skip static files (CSS, JS, images, fonts, etc)
+    if (/\.(css|js|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot|map)$/i.test(req.path)) return next();
+
+    // Only track HTML page requests (GET)
+    if (req.method !== 'GET') return next();
+
+    // Only track specific pages: home, blog, dashboard
+    const trackablePaths = ['/', '/index.html', '/blog.html', '/dashboard.html', '/shop.html', '/profile.html'];
+    const isBlogPost = req.path.startsWith('/blog/') && req.path.endsWith('.html');
+    const isTrackable = trackablePaths.includes(req.path) || isBlogPost;
+
+    if (!isTrackable) return next();
+
+    try {
+        const ip = requestIp.getClientIp(req);
+        const userAgent = req.headers['user-agent'] || '';
+        const referer = req.headers.referer || req.headers.referrer || '';
+
+        const deviceType = detectDeviceType(userAgent);
+
+        // Skip bots from main tracking
+        if (deviceType === 'Bot') return next();
+
+        const referrerSource = detectReferrerSource(referer);
+        const ipHash = hashIP(ip);
+
+        // Insert into visits_logs (async, don't block response)
+        setImmediate(() => {
+            try {
+                db.run(`
+                    INSERT INTO visits_logs (page_url, referrer_source, ip_hash, device_type, user_agent)
+                    VALUES (?, ?, ?, ?, ?)
+                `, [req.path, referrerSource, ipHash, deviceType, userAgent.substring(0, 500)]);
+
+                // console.log(`📊 [TRACK] ${req.path} | ${referrerSource} | ${deviceType}`);
+            } catch (err) {
+                console.error('❌ Traffic tracking error:', err.message);
+            }
+        });
+    } catch (err) {
+        console.error('❌ Traffic tracking error:', err.message);
+    }
+
+    next();
+}
+
+// Apply tracking middleware to all requests
+app.use(trackTraffic);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE: Firebase JWT Verification
@@ -3487,6 +3639,152 @@ app.get('/api/admin/analytics/devices', isAuthenticated, requireAdmin, (req, res
         res.json({ success: true, devices });
     } catch (error) {
         console.error('Analytics devices error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADMIN API: SEO STATS (from visits_logs table)
+// Detailed referrer source analytics for Admin Panel
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/seo-stats
+ * Returns aggregated SEO data: top sources and top pages
+ * Uses the visits_logs table populated by trackTraffic middleware
+ */
+app.get('/api/admin/seo-stats', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        // Time range filter (default: last 7 days)
+        const days = parseInt(req.query.days) || 7;
+
+        // Top Sources (grouped by referrer_source)
+        const topSources = db.all(`
+            SELECT 
+                referrer_source as source,
+                COUNT(*) as visits,
+                COUNT(DISTINCT ip_hash) as unique_visitors,
+                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM visits_logs WHERE timestamp >= datetime('now', '-' || ? || ' days')), 2) as percentage
+            FROM visits_logs
+            WHERE timestamp >= datetime('now', '-' || ? || ' days')
+            GROUP BY referrer_source
+            ORDER BY visits DESC
+            LIMIT 20
+        `, [days, days]);
+
+        // Top Pages (most visited)
+        const topPages = db.all(`
+            SELECT 
+                page_url,
+                COUNT(*) as views,
+                COUNT(DISTINCT ip_hash) as unique_visitors
+            FROM visits_logs
+            WHERE timestamp >= datetime('now', '-' || ? || ' days')
+            GROUP BY page_url
+            ORDER BY views DESC
+            LIMIT 20
+        `, [days]);
+
+        // Device breakdown
+        const deviceStats = db.all(`
+            SELECT 
+                device_type,
+                COUNT(*) as visits,
+                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM visits_logs WHERE timestamp >= datetime('now', '-' || ? || ' days')), 2) as percentage
+            FROM visits_logs
+            WHERE timestamp >= datetime('now', '-' || ? || ' days')
+            GROUP BY device_type
+            ORDER BY visits DESC
+        `, [days, days]);
+
+        // Daily visits trend (last 7 days)
+        const dailyTrend = db.all(`
+            SELECT 
+                DATE(timestamp) as date,
+                COUNT(*) as visits,
+                COUNT(DISTINCT ip_hash) as unique_visitors
+            FROM visits_logs
+            WHERE timestamp >= datetime('now', '-7 days')
+            GROUP BY DATE(timestamp)
+            ORDER BY date ASC
+        `);
+
+        // Total stats
+        const totalStats = db.get(`
+            SELECT 
+                COUNT(*) as total_visits,
+                COUNT(DISTINCT ip_hash) as unique_visitors,
+                COUNT(DISTINCT page_url) as pages_tracked
+            FROM visits_logs
+            WHERE timestamp >= datetime('now', '-' || ? || ' days')
+        `, [days]);
+
+        // SEO vs Social vs Direct breakdown
+        const channelBreakdown = db.all(`
+            SELECT 
+                CASE 
+                    WHEN referrer_source LIKE 'SEO%' THEN 'SEO'
+                    WHEN referrer_source IN ('Twitter', 'Facebook', 'Instagram', 'LinkedIn', 'TikTok', 'Reddit', 'Discord', 'YouTube', 'Twitch') THEN 'Social'
+                    WHEN referrer_source = 'Direct / Inconnu' THEN 'Direct'
+                    WHEN referrer_source = 'Internal' THEN 'Internal'
+                    ELSE 'Other'
+                END as channel,
+                COUNT(*) as visits,
+                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM visits_logs WHERE timestamp >= datetime('now', '-' || ? || ' days')), 2) as percentage
+            FROM visits_logs
+            WHERE timestamp >= datetime('now', '-' || ? || ' days')
+            GROUP BY channel
+            ORDER BY visits DESC
+        `, [days, days]);
+
+        res.json({
+            success: true,
+            period: `${days} days`,
+            stats: totalStats,
+            topSources,
+            topPages,
+            deviceStats,
+            dailyTrend,
+            channelBreakdown
+        });
+
+    } catch (error) {
+        console.error('SEO Stats error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/seo-stats/realtime
+ * Real-time stats: last hour activity
+ */
+app.get('/api/admin/seo-stats/realtime', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const lastHour = db.all(`
+            SELECT 
+                page_url,
+                referrer_source,
+                device_type,
+                timestamp
+            FROM visits_logs
+            WHERE timestamp >= datetime('now', '-1 hour')
+            ORDER BY timestamp DESC
+            LIMIT 50
+        `);
+
+        const hourlyCount = db.get(`
+            SELECT COUNT(*) as visits_last_hour
+            FROM visits_logs
+            WHERE timestamp >= datetime('now', '-1 hour')
+        `);
+
+        res.json({
+            success: true,
+            visits_last_hour: hourlyCount?.visits_last_hour || 0,
+            recent_visits: lastHour
+        });
+    } catch (error) {
+        console.error('SEO Realtime stats error:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
