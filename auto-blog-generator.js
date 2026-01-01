@@ -504,76 +504,77 @@ CONTENT FORMATTING RULES:
 
 async function generateSingleBlog() {
     const topic = topicPool[currentTopicIndex % topicPool.length];
-    const lang = currentLanguage;
 
-    console.log(`\n🔄 [${new Date().toLocaleTimeString()}] Generating ${lang.toUpperCase()}: ${topic.keyword}...`);
+    console.log(`\n🔄 [${new Date().toLocaleTimeString()}] Generating FR + EN: ${topic.keyword}...`);
 
     try {
-        const content = await generateBlogContent(topic.keyword, lang);
+        // Generate both FR and EN in parallel
+        const [contentFR, contentEN] = await Promise.all([
+            generateBlogContent(topic.keyword, 'fr'),
+            generateBlogContent(topic.keyword, 'en')
+        ]);
 
-        // Generate timestamps
-        const now = new Date();
-        const isoDate = now.toISOString(); // "2026-01-01T21:45:00.000Z"
+        // Process both languages
+        for (const { content, lang } of [{ content: contentFR, lang: 'fr' }, { content: contentEN, lang: 'en' }]) {
+            // Generate timestamps
+            const now = new Date();
+            const isoDate = now.toISOString();
 
-        // Time display (HH:MM)
-        const hours = now.getHours().toString().padStart(2, '0');
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        const timeDisplay = `${hours}:${minutes}`;
+            // Time display (HH:MM)
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const timeDisplay = `${hours}:${minutes}`;
 
-        // Date formatting
-        const date = lang === 'fr'
-            ? now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
-            : now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            // Date formatting
+            const date = lang === 'fr'
+                ? now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+                : now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-        const slug = slugify(content.title) + `-${lang}`;
+            const slug = slugify(content.title) + `-${lang}`;
 
-        const html = htmlTemplate(
-            lang,
-            content.title,
-            content.metaDescription,
-            topic.category,
-            content.h1,
-            date,
-            content.leadIntro,
-            content.content,
-            content.ctaTitle,
-            content.ctaText,
-            content.ctaButton,
-            isoDate,        // NEW: ISO datetime for <time>
-            timeDisplay     // NEW: Time (21:45)
-        );
+            const html = htmlTemplate(
+                lang,
+                content.title,
+                content.metaDescription,
+                topic.category,
+                content.h1,
+                date,
+                content.leadIntro,
+                content.content,
+                content.ctaTitle,
+                content.ctaText,
+                content.ctaButton,
+                isoDate,
+                timeDisplay
+            );
 
-        const filePath = path.join(__dirname, 'public', 'blog', `${slug}.html`);
-        fs.writeFileSync(filePath, html);
-        console.log(`   ✅ Created: ${slug}.html`);
+            const filePath = path.join(__dirname, 'public', 'blog', `${slug}.html`);
+            fs.writeFileSync(filePath, html);
+            console.log(`   ✅ Created: ${slug}.html`);
 
-        // Update blog-data.js
-        const blogEntry = {
-            id: nextBlogId++,
-            title: content.title,
-            excerpt: content.metaDescription,
-            category: topic.category,
-            readTime: lang === 'fr' ? '5 min' : 'English',
-            date,
-            timestamp: isoDate, // NEW: add ISO timestamp to blog-data
-            image: null,
-            gradient: topic.gradient,
-            icon: topic.icon,
-            lang
-        };
+            // Update blog-data.js
+            const blogEntry = {
+                id: nextBlogId++,
+                title: content.title,
+                excerpt: content.metaDescription,
+                category: topic.category,
+                readTime: lang === 'fr' ? '5 min' : '5 min',
+                date,
+                timestamp: isoDate,
+                image: null,
+                gradient: topic.gradient,
+                icon: topic.icon,
+                lang
+            };
 
-        updateBlogData(blogEntry);
+            updateBlogData(blogEntry);
+        }
 
-        generatedCount++;
+        generatedCount += 2; // 2 blogs (FR + EN)
         console.log(`   📊 Total generated: ${generatedCount}`);
 
-        // Alternate language
-        currentLanguage = lang === 'fr' ? 'en' : 'fr';
-
-        // Move to next topic after both languages
-        if (currentLanguage === 'fr') {
-            currentTopicIndex++;
-        }
+        // Move to next topic
+        currentTopicIndex++;
 
     } catch (error) {
         console.error(`   ❌ Error: ${error.message}`);
