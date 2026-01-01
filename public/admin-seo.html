@@ -157,7 +157,8 @@
 <body class="flex h-screen">
 
     <!-- 1. SIDEBAR -->
-    <aside class="hidden md:flex flex-col w-64 glass-header border-r border-white/5 z-20 h-full">
+    <aside id="sidebar"
+        class="hidden md:flex flex-col w-64 glass-header border-r border-white/5 z-20 h-full transition-all duration-300">
         <!-- Logo -->
         <div class="h-16 flex items-center px-6 border-b border-white/5">
             <div class="flex items-center gap-2 font-bold text-xl tracking-wider">
@@ -220,7 +221,7 @@
         <header class="h-16 glass-header flex items-center justify-between px-6 z-10 shrink-0">
             <!-- Mobile Menu Button & Breadcrumbs -->
             <div class="flex items-center gap-4">
-                <button class="md:hidden p-2 text-gray-400 hover:text-white">
+                <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-400 hover:text-white">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
                 <div class="hidden sm:flex items-center gap-2 text-sm text-gray-400">
@@ -739,6 +740,23 @@
 
         // Init Globe after delay to ensure dimensions
         setTimeout(initGlobe, 500);
+
+        // --- 3. MOBILE MENU TOGGLE ---
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            // When open on mobile, make it fixed/absolute if needed, 
+            // but simple toggle 'hidden' works with current flex layout (pushes content)
+            // or add specific mobile styling class
+            if (!sidebar.classList.contains('hidden')) {
+                sidebar.classList.add('absolute', 'inset-y-0', 'left-0', 'bg-dark-900', 'z-50', 'w-64');
+            } else {
+                sidebar.classList.remove('absolute', 'inset-y-0', 'left-0', 'bg-dark-900', 'z-50', 'w-64');
+            }
+        });
+
 
     </script>
 </body>
