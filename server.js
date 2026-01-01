@@ -418,13 +418,13 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://www.gstatic.com", "https://apis.google.com", "https://*.firebaseapp.com", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://www.gstatic.com", "https://apis.google.com", "https://*.firebaseapp.com", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://*.highperformanceformat.com", "https://*.effectivegatecpm.com"],
             scriptSrcAttr: ["'unsafe-inline'"], // Allow onclick handlers
             styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:"],
-            connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://*.firebaseapp.com", "wss://*.firebaseio.com", "https://lootably.com", "https://unpkg.com", "https://www.gstatic.com"],
-            frameSrc: ["'self'", "https://*.firebaseapp.com", "https://lootably.com"],
+            connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://*.firebaseapp.com", "wss://*.firebaseio.com", "https://lootably.com", "https://unpkg.com", "https://www.gstatic.com", "https://*.highperformanceformat.com", "https://*.effectivegatecpm.com"],
+            frameSrc: ["'self'", "https://*.firebaseapp.com", "https://lootably.com", "https://*.highperformanceformat.com", "https://*.effectivegatecpm.com"],
         },
     },
 }));
