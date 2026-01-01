@@ -1504,6 +1504,7 @@ app.get('/api/user/me', isAuthenticated, (req, res) => {
                 totalEarned: user.total_earned,
                 totalWithdrawn: user.total_withdrawn,
                 provider: user.provider || 'email',
+                role: user.role || 'user',
                 createdAt: user.created_at
             }
         });
