@@ -370,9 +370,20 @@ const htmlTemplate = (lang, title, metaDesc, category, h1, date, leadIntro, cont
 <body class="min-h-screen flex flex-col">
 <div class="page-wrapper">
 
-    <!-- Left Ad Sidebar -->
-    <aside class="ad-sidebar">
-        <div class="ad-vertical">PUB VERTICALE (160x600)</div>
+    <!-- Left Ad Sidebar (Desktop Only) -->
+    <aside class="ad-sidebar hidden lg:block" style="width:160px;flex-shrink:0;">
+        <div class="ad-container sticky top-24">
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : '04fd781b0eb1941ea4c90137e7a213bc',
+                    'format' : 'iframe',
+                    'height' : 600,
+                    'width' : 160,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="https://www.highperformanceformat.com/04fd781b0eb1941ea4c90137e7a213bc/invoke.js"></script>
+        </div>
     </aside>
 
     <div class="main-content">
@@ -427,9 +438,20 @@ ${content}
     </main>
     </div>
 
-    <!-- Right Ad Sidebar -->
-    <aside class="ad-sidebar">
-        <div class="ad-vertical">PUB VERTICALE (160x600)</div>
+    <!-- Right Ad Sidebar (Desktop Only) -->
+    <aside class="ad-sidebar hidden lg:block" style="width:160px;flex-shrink:0;">
+        <div class="ad-container sticky top-24">
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : '04fd781b0eb1941ea4c90137e7a213bc',
+                    'format' : 'iframe',
+                    'height' : 600,
+                    'width' : 160,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="https://www.highperformanceformat.com/04fd781b0eb1941ea4c90137e7a213bc/invoke.js"></script>
+        </div>
     </aside>
 
 </div>

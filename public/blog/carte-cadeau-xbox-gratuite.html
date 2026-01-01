@@ -73,55 +73,27 @@
         }
     
 
+        
         /* === AD STYLES === */
         .page-wrapper {
             display: flex;
             justify-content: center;
-            gap: 1rem;
+            gap: 1.5rem;
+            padding: 0 1rem;
         }
 
         .ad-sidebar {
             width: 160px;
             flex-shrink: 0;
-            display: none;
-        }
-
-        /* Show sidebars only on large screens */
-        @media (min-width: 1200px) {
-            .ad-sidebar {
-                display: block;
-            }
-        }
-
-        .ad-vertical {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
-            border: 1px dashed rgba(99, 102, 241, 0.3);
-            border-radius: 12px;
-            min-height: 600px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             position: sticky;
-            top: 100px;
-            writing-mode: vertical-lr;
-            text-orientation: mixed;
-            font-size: 14px;
-            font-weight: bold;
-            color: rgba(99, 102, 241, 0.6);
+            top: 80px;
+            height: fit-content;
         }
 
-        .ad-horizontal {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
-            border: 1px dashed rgba(99, 102, 241, 0.3);
-            border-radius: 12px;
-            min-height: 90px;
+        .ad-container {
             display: flex;
-            align-items: center;
             justify-content: center;
-            margin: 2rem 0;
-            font-size: 14px;
-            font-weight: bold;
-            color: rgba(99, 102, 241, 0.6);
+            margin: 1rem 0;
         }
 
         .main-content {
@@ -137,8 +109,19 @@
 <div class="page-wrapper">
 
     <!-- Left Ad Sidebar -->
-    <aside class="ad-sidebar">
-        <div class="ad-vertical">PUB VERTICALE (160x600)</div>
+    <aside class="ad-sidebar hidden lg:block">
+        <div class="ad-container">
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : '04fd781b0eb1941ea4c90137e7a213bc',
+                    'format' : 'iframe',
+                    'height' : 600,
+                    'width' : 160,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="https://www.highperformanceformat.com/04fd781b0eb1941ea4c90137e7a213bc/invoke.js"></script>
+        </div>
     </aside>
 
     <div class="main-content">
@@ -185,8 +168,19 @@
             <p>Total : ~15 000 points. Votre abonnement est financé.</p>
 
             
-            <!-- Horizontal Ad Banner -->
-            <div class="ad-horizontal">BANNIÈRE PUBLICITAIRE (728x90)</div>
+            <!-- Horizontal Ad Banner (In-Article) -->
+            <div class="ad-container my-8">
+                <script type="text/javascript">
+                    atOptions = {
+                        'key' : '04fd781b0eb1941ea4c90137e7a213bc',
+                        'format' : 'iframe',
+                        'height' : 600,
+                        'width' : 160,
+                        'params' : {}
+                    };
+                </script>
+                <script type="text/javascript" src="https://www.highperformanceformat.com/04fd781b0eb1941ea4c90137e7a213bc/invoke.js"></script>
+            </div>
 
             <h2>Pourquoi utiliser LootQuest et pas Microsoft Rewards ?</h2>
             <p>Microsoft Rewards est excellent, mais il est limité. Une fois vos recherches quotidiennes terminées, vous
@@ -216,8 +210,19 @@
     </div>
 
     <!-- Right Ad Sidebar -->
-    <aside class="ad-sidebar">
-        <div class="ad-vertical">PUB VERTICALE (160x600)</div>
+    <aside class="ad-sidebar hidden lg:block">
+        <div class="ad-container">
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : '04fd781b0eb1941ea4c90137e7a213bc',
+                    'format' : 'iframe',
+                    'height' : 600,
+                    'width' : 160,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="https://www.highperformanceformat.com/04fd781b0eb1941ea4c90137e7a213bc/invoke.js"></script>
+        </div>
     </aside>
 
 </div>
