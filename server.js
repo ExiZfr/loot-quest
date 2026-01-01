@@ -71,6 +71,7 @@ const REFERRAL_COMMISSION_RATE = 0.05; // 5% lifetime commission on referred use
 // Discord Webhook for Support Notifications
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 
+
 // ═══════════════════════════════════════════════════════════════════════════
 // DATABASE WRAPPER CLASS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -228,6 +229,30 @@ class Database {
         `);
         this.db.run('CREATE INDEX IF NOT EXISTS idx_support_tickets_type ON support_tickets(type)');
         this.db.run('CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status)');
+
+        // ═══════════════════════════════════════════════════════════════
+        // SEO ANALYTICS TABLE
+        // Native analytics tracking without Google Analytics
+        // ═══════════════════════════════════════════════════════════════
+        this.db.run(`
+            CREATE TABLE IF NOT EXISTS analytics_visits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                page_url TEXT NOT NULL,
+                blog_slug TEXT,
+                visitor_ip_hash TEXT NOT NULL,
+                user_agent TEXT,
+                device_type TEXT CHECK(device_type IN ('mobile', 'desktop', 'tablet', 'bot')),
+                referer TEXT,
+                referer_category TEXT CHECK(referer_category IN ('direct', 'google', 'social', 'other')),
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Performance indexes for analytics queries
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_analytics_page_url ON analytics_visits(page_url)');
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_analytics_timestamp ON analytics_visits(timestamp)');
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_analytics_blog_slug ON analytics_visits(blog_slug)');
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_analytics_device_type ON analytics_visits(device_type)');
 
         this.save();
     }
@@ -398,6 +423,10 @@ app.locals.db = db;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// SEO Analytics tracking (non-blocking, runs in background)
+app.use(trackVisit);
+
+
 // ═══════════════════════════════════════════════════════════════════════════
 // FIREBASE AUTH HANDLER PROXY
 // Proxy Firebase auth endpoints to avoid cross-origin storage partitioning
@@ -546,6 +575,86 @@ function getClientIP(req) {
         || req.headers['x-real-ip']
         || req.socket?.remoteAddress
         || 'unknown';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MIDDLEWARE: Analytics Tracking (SEO Module)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Track page visits for SEO analytics
+ * - Non-blocking (continues request immediately, tracks in background)
+ * - GDPR compliant (IPs are hashed with SHA-256)
+ * - Detects bots, device types, referer sources
+ * - Ignores static files and API calls
+ */
+function trackVisit(req, res, next) {
+    // Continue request immediately (non-blocking)
+    next();
+
+    // Exclude static files, API routes, and assets
+    if (req.path.includes('.css') ||
+        req.path.includes('.js') ||
+        req.path.includes('.png') ||
+        req.path.includes('.jpg') ||
+        req.path.includes('.jpeg') ||
+        req.path.includes('.webp') ||
+        req.path.includes('.svg') ||
+        req.path.includes('.ico') ||
+        req.path.includes('/api/')) {
+        return;
+    }
+
+    // Track asynchronously to avoid blocking
+    setImmediate(() => {
+        try {
+            // Get and hash IP address (GDPR compliant)
+            const ip = getClientIP(req);
+            const ipHash = crypto.createHash('sha256')
+                .update(ip + 'LOOTQUEST_ANALYTICS_SALT')
+                .digest('hex');
+
+            // User agent
+            const userAgent = req.headers['user-agent'] || '';
+
+            // Bot detection
+            const botPatterns = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|whatsapp|telegram/i;
+            const isBot = botPatterns.test(userAgent);
+
+            // Device type detection
+            const isMobile = /mobile|android|iphone|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+            const isTablet = /ipad|android(?!.*mobile)|tablet/i.test(userAgent);
+            let deviceType = 'desktop';
+            if (isBot) deviceType = 'bot';
+            else if (isTablet) deviceType = 'tablet';
+            else if (isMobile) deviceType = 'mobile';
+
+            // Referer analysis
+            const referer = req.headers['referer'] || req.headers['referrer'] || '';
+            let refererCategory = 'direct';
+            if (referer) {
+                if (/google\./i.test(referer)) refererCategory = 'google';
+                else if (/facebook|twitter|instagram|tiktok|linkedin|reddit|pinterest|youtube/i.test(referer)) refererCategory = 'social';
+                else refererCategory = 'other';
+            }
+
+            // Extract blog slug from URL
+            let blogSlug = null;
+            if (req.path.startsWith('/blog/') && req.path.endsWith('.html')) {
+                blogSlug = req.path.replace('/blog/', '').replace('.html', '');
+            }
+
+            // Insert visit record (async, non-blocking)
+            db.run(`
+                INSERT INTO analytics_visits (page_url, blog_slug, visitor_ip_hash, user_agent, device_type, referer, referer_category)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `, [req.path, blogSlug, ipHash, userAgent, deviceType, referer, refererCategory]);
+
+        } catch (error) {
+            // Silent fail - don't break user experience for analytics
+            console.error('Analytics tracking error:', error.message);
+        }
+    });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2600,6 +2709,11 @@ app.get('/api/user/profile', verifyAuth, (req, res) => {
             LIMIT 50
         `, [userId]);
 
+        console.log(`[PROFILE_DEBUG] UserID: ${userId}, Withdrawals found: ${withdrawals ? withdrawals.length : 0}`);
+        if (withdrawals && withdrawals.length > 0) {
+            console.log(`[PROFILE_DEBUG] First withdrawal:`, withdrawals[0]);
+        }
+
         // Calculate account stats
         const stats = {
             accountAge: Math.floor((Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24)), // days
@@ -3339,6 +3453,177 @@ app.get('/api/admin/stats', verifyAdmin, (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to fetch stats' });
     }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SEO ANALYTICS API ROUTES (Admin Only)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/analytics/stats
+ * Global analytics statistics
+ */
+app.get('/api/admin/analytics/stats', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const totalVisits = db.get('SELECT COUNT(*) as count FROM analytics_visits WHERE device_type != "bot"');
+        const totalVisitsToday = db.get(`
+            SELECT COUNT(*) as count 
+            FROM analytics_visits 
+            WHERE device_type != 'bot' 
+            AND DATE(timestamp) = DATE('now')
+        `);
+
+        const uniqueVisitors = db.get(`
+            SELECT COUNT(DISTINCT visitor_ip_hash) as count 
+            FROM analytics_visits 
+            WHERE device_type != 'bot'
+        `);
+
+        const topPage = db.get(`
+            SELECT page_url, COUNT(*) as visits
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            GROUP BY page_url
+            ORDER BY visits DESC
+            LIMIT 1
+        `);
+
+        res.json({
+            success: true,
+            stats: {
+                totalVisits: totalVisits?.count || 0,
+                totalVisitsToday: totalVisitsToday?.count || 0,
+                uniqueVisitors: uniqueVisitors?.count || 0,
+                topPage: topPage || null
+            }
+        });
+    } catch (error) {
+        console.error('Analytics stats error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/analytics/timeline
+ * Daily visits over last 30 days
+ */
+app.get('/api/admin/analytics/timeline', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const timeline = db.all(`
+            SELECT DATE(timestamp) as date, COUNT(*) as visits
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            AND timestamp >= datetime('now', '-30 days')
+            GROUP BY DATE(timestamp)
+            ORDER BY date ASC
+        `);
+
+        res.json({ success: true, timeline });
+    } catch (error) {
+        console.error('Analytics timeline error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/analytics/peak-hours
+ * Hourly traffic distribution (last 7 days)
+ */
+app.get('/api/admin/analytics/peak-hours', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const peakHours = db.all(`
+            SELECT 
+                CAST(strftime('%H', timestamp) AS INTEGER) as hour,
+                COUNT(*) as visits
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            AND timestamp >= datetime('now', '-7 days')
+            GROUP BY hour
+            ORDER BY hour ASC
+        `);
+
+        res.json({ success: true, peakHours });
+    } catch (error) {
+        console.error('Analytics peak hours error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/analytics/top-blogs
+ * Top 10 most visited blog articles (last 7 days)
+ */
+app.get('/api/admin/analytics/top-blogs', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const topBlogs = db.all(`
+            SELECT 
+                blog_slug,
+                page_url,
+                COUNT(*) as total_views,
+                COUNT(DISTINCT visitor_ip_hash) as unique_views
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            AND blog_slug IS NOT NULL
+            AND timestamp >= datetime('now', '-7 days')
+            GROUP BY blog_slug
+            ORDER BY total_views DESC
+            LIMIT 10
+        `);
+
+        res.json({ success: true, topBlogs });
+    } catch (error) {
+        console.error('Analytics top blogs error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/analytics/traffic-sources
+ * Traffic source breakdown (direct, google, social, other)
+ */
+app.get('/api/admin/analytics/traffic-sources', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const sources = db.all(`
+            SELECT 
+                referer_category,
+                COUNT(*) as visits,
+                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM analytics_visits WHERE device_type != 'bot'), 2) as percentage
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            GROUP BY referer_category
+            ORDER BY visits DESC
+        `);
+
+        res.json({ success: true, sources });
+    } catch (error) {
+        console.error('Analytics traffic sources error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/analytics/devices
+ * Device type breakdown (mobile, desktop, tablet)
+ */
+app.get('/api/admin/analytics/devices', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const devices = db.all(`
+            SELECT 
+                device_type,
+                COUNT(*) as visits,
+                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM analytics_visits WHERE device_type != 'bot'), 2) as percentage
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            GROUP BY device_type
+            ORDER BY visits DESC
+        `);
+
+        res.json({ success: true, devices });
+    } catch (error) {
+        console.error('Analytics devices error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 
 // SPA fallback - serve index.html for all other routes
 app.get('*', (req, res) => {
