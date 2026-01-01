@@ -3077,6 +3077,20 @@
             }
         }
 
+        // ════════════════ AUTO-OPEN AUTH MODAL FROM URL ════════════════
+        // Check if redirected from blog with ?auth=1 parameter
+        (function checkAuthParam() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('auth') === '1') {
+                // Remove param from URL to avoid reopening on refresh
+                window.history.replaceState({}, '', '/');
+                // Open auth modal after short delay
+                setTimeout(() => {
+                    openAuthModal();
+                }, 500);
+            }
+        })();
+
     </script>
 
     <!-- Shop Logic -->

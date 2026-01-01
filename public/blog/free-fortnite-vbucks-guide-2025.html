@@ -224,6 +224,35 @@
     </aside>
 
 </div>
+
+    <script>
+        // Check if user is logged in and handle CTA clicks
+        async function handleCTA(event) {
+            event.preventDefault();
+            try {
+                const res = await fetch('/api/user/me', { credentials: 'include' });
+                if (res.ok) {
+                    // User is logged in, go to dashboard
+                    window.location.href = '/dashboard.html';
+                } else {
+                    // Not logged in, go to index with auth modal
+                    window.location.href = '/?auth=1';
+                }
+            } catch (e) {
+                // Error, redirect to index with auth
+                window.location.href = '/?auth=1';
+            }
+        }
+
+        // Apply to all CTA buttons on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // CTA buttons in articles
+            document.querySelectorAll('a[href="/dashboard.html"]').forEach(btn => {
+                btn.addEventListener('click', handleCTA);
+            });
+        });
+    </script>
+
 </body>
 
 </html>

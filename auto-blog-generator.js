@@ -11,7 +11,7 @@ require('dotenv').config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
-const GENERATION_INTERVAL = 300000; // 5 minutes in milliseconds
+const GENERATION_INTERVAL = 180000; // 3 minutes in milliseconds
 
 if (!OPENAI_API_KEY) {
     console.error('❌ ERROR: OPENAI_API_KEY not found in environment variables');
@@ -249,37 +249,85 @@ const htmlTemplate = (lang, title, metaDesc, category, h1, date, leadIntro, cont
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Outfit', 'sans-serif'] }, colors: { background: '#0B0E14', surface: '#151A23', primary: '#6366f1', accent: '#10b981' } } } }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght=700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700&display=swap" rel="stylesheet">
     <style>
         body {
             background-color: #0B0E14;
             color: #E2E8F0;
         }
 
-        /* 3-Column Layout (Desktop) */
-        .blog-container {
-            display: grid;
-            grid-template-columns: 160px 1fr 160px;
-            gap: 2rem;
-            max-width: 1400px;
+        .prose {
+            max-width: 65ch;
             margin: 0 auto;
-            padding: 2rem 1rem;
+            line-height: 1.7;
         }
 
-        /* Mobile: Stack vertically, pubs visibles */
-        @media (max-width: 768px) {
-            .blog-container {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
+        .prose h2 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            color: #fff;
+        }
+
+        .prose h3 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.4rem;
+            color: #e0e7ff;
+        }
+
+        .prose p {
+            margin-bottom: 1.5rem;
+            color: #94a3b8;
+        }
+
+        .prose ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #94a3b8;
+        }
+
+        .prose strong {
+            color: #818cf8;
+            font-weight: 600;
+        }
+
+        .prose a {
+            color: #818cf8;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+
+        .glass-panel {
+            background: rgba(21, 26, 35, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* === AD STYLES === */
+        .page-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .ad-sidebar {
+            width: 160px;
+            flex-shrink: 0;
+            display: none;
+        }
+
+        @media (min-width: 1200px) {
+            .ad-sidebar {
+                display: block;
             }
-            
-            /* Order: Pub Top → Article → Pub Bottom */
-            .ad-left { order: 1; }
-            .article-content { order: 2; }
-            .ad-right { order: 3; }
         }
 
-        /* Pub Skyscraper Style */
         .ad-vertical {
             background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
             border: 1px dashed rgba(99, 102, 241, 0.3);
@@ -289,18 +337,7 @@ const htmlTemplate = (lang, title, metaDesc, category, h1, date, leadIntro, cont
             align-items: center;
             justify-content: center;
             position: sticky;
-            top: 2rem;
-        }
-
-        /* Mobile: smaller but visible */
-        @media (max-width: 768px) {
-            .ad-vertical {
-                min-height: 250px;
-                position: static;
-            }
-        }
-
-        .ad-placeholder {
+            top: 100px;
             writing-mode: vertical-lr;
             text-orientation: mixed;
             font-size: 14px;
@@ -308,112 +345,121 @@ const htmlTemplate = (lang, title, metaDesc, category, h1, date, leadIntro, cont
             color: rgba(99, 102, 241, 0.6);
         }
 
-        /* Article Center */
-        .article-content {
-            background: rgba(21, 26, 35, 0.8);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
-            padding: 3rem 2rem;
+        .ad-horizontal {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border: 1px dashed rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+            font-size: 14px;
+            font-weight: bold;
+            color: rgba(99, 102, 241, 0.6);
         }
 
-        @media (max-width: 768px) {
-            .article-content {
-                padding: 2rem 1.5rem;
-            }
-        }
-
-        /* Prose styling */
-        .prose h2 {
-            color: #fff;
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .prose p {
-            margin-bottom: 1rem;
-            line-height: 1.8;
-            color: #CBD5E1;
-        }
-
-        .prose ul,
-        .prose ol {
-            margin-left: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .prose li {
-            margin-bottom: 0.5rem;
-            color: #CBD5E1;
-        }
-
-        .prose strong {
-            color: #A5B4FC;
-            font-weight: 600;
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            min-width: 0;
         }
     </style>
 </head>
 
-<body>
-    <!-- Navigation minimale -->
-    <nav class="sticky top-0 z-50 bg-[#0B0E14]/95 backdrop-blur-xl border-b border-white/5">
-        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <a href="/blog.html" class="text-gray-400 hover:text-white transition-colors">← ${lang === 'fr' ? 'Retour au Blog' : 'Back to Blog'}</a>
-            <a href="/dashboard.html" class="text-indigo-400 font-bold hover:text-indigo-300 transition-colors">${lang === 'fr' ? 'Mon Compte' : 'My Account'}</a>
+<body class="min-h-screen flex flex-col">
+<div class="page-wrapper">
+
+    <!-- Left Ad Sidebar -->
+    <aside class="ad-sidebar">
+        <div class="ad-vertical">PUB VERTICALE (160x600)</div>
+    </aside>
+
+    <div class="main-content">
+    <!-- Nav -->
+    <nav class="sticky top-0 z-50 glass-panel border-b border-white/5 bg-[#0B0E14]/80">
+        <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/blog.html" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                ${lang === 'fr' ? 'Retour' : 'Back'}
+            </a>
+            <a href="/dashboard.html" class="text-sm font-bold text-indigo-400 hover:text-indigo-300">${lang === 'fr' ? 'Mon Compte' : 'My Account'}</a>
         </div>
     </nav>
 
-    <!-- 3-Column Layout Container -->
-    <div class="blog-container">
+    <!-- Article Header -->
+    <header class="py-16 px-6 text-center max-w-4xl mx-auto">
+        <span class="px-3 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-6 inline-block">${category}</span>
+        <h1 class="font-display font-bold text-4xl md:text-5xl text-white mb-6 leading-tight">${h1}</h1>
+        <div class="flex items-center justify-center gap-4 text-sm text-gray-500">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs">LQ</div>
+                <span>${lang === 'fr' ? 'Équipe LootQuest' : 'LootQuest Team'}</span>
+            </div>
+            <span>•</span>
+            <time datetime="${isoDate}">${date} • ${timeDisplay}</time>
+        </div>
+    </header>
 
-        <!-- LEFT AD COLUMN (Skyscraper) -->
-        <aside class="ad-left ad-vertical">
-            <div class="ad-placeholder">PUB ICI (160x600)</div>
-        </aside>
+    <!-- Content -->
+    <main class="flex-1 px-6 pb-20">
+        <article class="prose glass-panel p-8 md:p-12 rounded-3xl">
 
-        <!-- CENTER - Article Content -->
-        <main class="article-content">
-            <header class="text-center mb-12">
-                <span class="px-3 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase tracking-wider inline-block mb-6">${category}</span>
-                <h1 class="font-bold text-4xl md:text-5xl text-white mb-4 leading-tight">${h1}</h1>
-                <div class="flex items-center justify-center gap-4 text-sm text-gray-500">
-                    <span>${lang === 'fr' ? "Par L'équipe LootQuest" : 'By LootQuest Team'}</span>
-                    <span>•</span>
-                    <span>${date}</span>
-                    <span>•</span>
-                    <time datetime="${isoDate}">${timeDisplay}</time>
-                </div>
-            </header>
+            <p class="lead text-xl text-gray-300 mb-8 border-l-4 border-indigo-500 pl-4 italic">
+                ${leadIntro}
+            </p>
 
-            <article class="prose max-w-none">
-                <p class="text-xl text-gray-300 mb-8 border-l-4 border-indigo-500 pl-4 italic">
-                    ${leadIntro}
-                </p>
+${content}
 
-                ${content}
+            <!-- Horizontal Ad Banner -->
+            <div class="ad-horizontal">BANNIÈRE PUBLICITAIRE (728x90)</div>
 
-                <div class="bg-indigo-600/20 border border-indigo-500 rounded-2xl p-8 text-center mt-12">
-                    <h3 class="text-indigo-300 text-2xl mb-4 font-bold">${ctaTitle}</h3>
-                    <p class="text-white mb-6">${ctaText}</p>
-                    <a href="/dashboard.html" class="inline-block px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all hover:scale-105">
-                        ${ctaButton} →
-                    </a>
-                </div>
-            </article>
-        </main>
-
-        <!-- RIGHT AD COLUMN (Skyscraper) -->
-        <aside class="ad-right ad-vertical">
-            <div class="ad-placeholder">PUB ICI (160x600)</div>
-        </aside>
-
+            <div class="bg-indigo-600/20 border border-indigo-500 rounded-2xl p-8 text-center mt-12">
+                <h3 class="!mt-0 !text-indigo-300">${ctaTitle}</h3>
+                <p class="text-white">${ctaText}</p>
+                <a href="/dashboard.html" class="inline-block mt-4 px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl no-underline transition-transform hover:scale-105">
+                    ${ctaButton} →
+                </a>
+            </div>
+        </article>
+    </main>
     </div>
 
-    <footer class="text-center py-8 text-gray-600 text-sm border-t border-white/5">
+    <!-- Right Ad Sidebar -->
+    <aside class="ad-sidebar">
+        <div class="ad-vertical">PUB VERTICALE (160x600)</div>
+    </aside>
+
+</div>
+
+    <footer class="text-center py-8 text-gray-600 text-sm">
         <p>&copy; 2025 LootQuest.</p>
     </footer>
+
+    <script>
+        // Check if user is logged in and handle CTA clicks
+        async function handleCTA(event) {
+            event.preventDefault();
+            try {
+                const res = await fetch('/api/user/me', { credentials: 'include' });
+                if (res.ok) {
+                    window.location.href = '/dashboard.html';
+                } else {
+                    window.location.href = '/?auth=1';
+                }
+            } catch (e) {
+                window.location.href = '/?auth=1';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('a[href="/dashboard.html"]').forEach(btn => {
+                btn.addEventListener('click', handleCTA);
+            });
+        });
+    </script>
 </body>
 
 </html>`;
