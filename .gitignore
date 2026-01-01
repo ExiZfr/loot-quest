@@ -7,6 +7,16 @@ package-lock.json
 *.log
 .DS_Store
 
-# Secrets
+# Secrets - Firebase
 loot-quest-5fe77-firebase-adminsdk-fbsvc-5837f39868.json
 firebase-service-account.json
+
+# SSH Keys
+*.pem
+*.key
+id_rsa*
+*.ppk
+
+# Additional secrets
+*.p12
+*.pfx
