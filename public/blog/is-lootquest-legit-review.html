@@ -72,10 +72,75 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
+    
+        /* 3-Column Layout (Desktop) */
+        .blog-container {
+            display: grid;
+            grid-template-columns: 160px 1fr 160px;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Mobile: Stack vertically, pubs visibles */
+        @media (max-width: 768px) {
+            .blog-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .ad-left { order: 1; }
+            .article-content { order: 2; }
+            .ad-right { order: 3; }
+        }
+
+        /* Pub Skyscraper Style */
+        .ad-vertical {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border: 1px dashed rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: sticky;
+            top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .ad-vertical {
+                min-height: 250px;
+                position: static;
+            }
+        }
+
+        .ad-placeholder {
+            writing-mode: vertical-lr;
+            text-orientation: mixed;
+            font-size: 14px;
+            font-weight: bold;
+            color: rgba(99, 102, 241, 0.6);
+        }
+
+        .article-content {
+            background: rgba(21, 26, 35, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .article-content {
+                padding: 2rem 1.5rem;
+            }
+        }
     </style>
 </head>
 
-<body class="min-h-screen flex flex-col">
+<body>
+    <!-- 3-Column Layout Container -->
+    <div class="blog-container">
     <nav class="sticky top-0 z-50 glass-panel border-b border-white/5 bg-[#0B0E14]/80">
         <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
             <a href="/blog.html" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">← Back
@@ -83,8 +148,14 @@
             <a href="/dashboard.html" class="text-sm font-bold text-indigo-400 hover:text-indigo-300">My Account</a>
         </div>
     </nav>
+        <!-- LEFT AD COLUMN (Skyscraper) -->
+        <aside class="ad-left ad-vertical">
+            <div class="ad-placeholder">PUB ICI (160x600)</div>
+        </aside>
 
-    <header class="py-16 px-6 text-center max-w-4xl mx-auto">
+        <!-- CENTER - Article Content -->
+        <main class="article-content">
+            <header class="py-16 px-6 text-center max-w-4xl mx-auto">
         <span
             class="px-3 py-1 rounded bg-red-500/10 text-red-400 text-xs font-bold uppercase tracking-wider mb-6 inline-block">Safety
             & Trust</span>
@@ -140,7 +211,15 @@
                 </a>
             </div>
         </article>
-    </main>
+        </main>
+        </main>
+
+        <!-- RIGHT AD COLUMN (Skyscraper) -->
+        <aside class="ad-right ad-vertical">
+            <div class="ad-placeholder">PUB ICI (160x600)</div>
+        </aside>
+    </div>
+
     <footer class="text-center py-8 text-gray-600 text-sm">
         <p>&copy; 2025 LootQuest.</p>
     </footer>
