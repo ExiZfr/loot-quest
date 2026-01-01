@@ -6,39 +6,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LootQuest | Admin Panel</title>
     <link rel="icon" href="/favicon.png?v=2" type="image/png">
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
         rel="stylesheet">
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    colors: {
-                        loot: { black: '#050505', card: '#121212', purple: '#8b5cf6', neon: '#06b6d4', gold: '#fbbf24', danger: '#ef4444' }
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif']
                     },
-                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Space Grotesk', 'sans-serif'] }
+                    colors: {
+                        dark: {
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            card: 'rgba(15, 23, 42, 0.6)'
+                        },
+                        brand: {
+                            purple: '#8b5cf6',
+                            cyan: '#06b6d4',
+                            accent: '#22d3ee'
+                        }
+                    },
+                    boxShadow: {
+                        'neon': '0 0 10px rgba(139, 92, 246, 0.3), 0 0 20px rgba(6, 182, 212, 0.2)',
+                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+                    }
                 }
             }
         }
     </script>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/relativeTime.js"></script>
     <script>dayjs.extend(window.dayjs_plugin_relativeTime)</script>
+
     <style>
         body {
-            background-color: #050505;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             color: #e0e0e0;
+            min-height: 100vh;
         }
 
-        .glass {
-            background: rgba(18, 18, 18, 0.6);
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.3);
         }
 
         .sidebar-link {
@@ -47,319 +79,444 @@
 
         .sidebar-link:hover,
         .sidebar-link.active {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
+            background: rgba(139, 92, 246, 0.1);
+            border-left: 3px solid #8b5cf6;
+        }
+
+        .stat-icon {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid rgba(139, 92, 246, 0.1);
+            border-top: 3px solid #8b5cf6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
 
-<body class="flex h-screen overflow-hidden text-gray-300 antialiased">
+<body class="antialiased">
 
-    <!-- Auth Overlay -->
-    <div id="auth-check" class="fixed inset-0 z-50 bg-loot-black flex items-center justify-center">
-        <div class="animate-spin w-12 h-12 border-4 border-loot-purple border-t-transparent rounded-full"></div>
-    </div>
-
-    <!-- Sidebar -->
-    <aside class="w-64 glass border-r border-white/5 flex flex-col">
-        <div class="p-6 border-b border-white/5">
-            <h1 class="font-display font-bold text-xl text-white">LOOT<span class="text-loot-neon">ADMIN</span></h1>
-            <div class="text-xs text-gray-500 mt-1">Fraud Detection v2.0</div>
-        </div>
-        <nav class="flex-1 p-4 space-y-2">
-            <button onclick="switchTab('overview')" id="nav-overview"
-                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 text-sm font-medium active">
-                <i data-lucide="activity" class="w-5 h-5"></i> Live Monitor
-            </button>
-            <a href="/admin-seo.html"
-                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 text-sm font-medium">
-                <i data-lucide="bar-chart-2" class="w-5 h-5"></i> SEO 3D
-            </a>
-            <button onclick="switchTab('killzone')" id="nav-killzone"
-                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 text-sm font-medium">
-                <i data-lucide="skull" class="w-5 h-5"></i> Kill Zone
-                <span id="badge-killzone"
-                    class="ml-auto bg-red-500/20 text-red-500 text-xs px-2 py-0.5 rounded-full hidden">0</span>
-            </button>
-            <button onclick="switchTab('orders')" id="nav-orders"
-                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 text-sm font-medium">
-                <i data-lucide="shopping-cart" class="w-5 h-5"></i> Orders
-            </button>
-            <button onclick="switchTab('reports')" id="nav-reports"
-                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 text-sm font-medium">
-                <i data-lucide="alert-triangle" class="w-5 h-5"></i> Reports
-            </button>
-            <button onclick="switchTab('messages')" id="nav-messages"
-                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 text-sm font-medium">
-                <i data-lucide="mail" class="w-5 h-5"></i> Messages
-            </button>
-        </nav>
-        <div class="p-4 border-t border-white/5">
-            <a href="/"
-                class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white text-sm">
-                <i data-lucide="log-out" class="w-5 h-5"></i> Back to Site
-            </a>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto p-8">
-        <!-- LIVE MONITOR TAB -->
-        <div id="tab-overview" class="space-y-8">
-            <div class="flex justify-between items-center">
-                <h2 class="text-3xl font-bold text-white flex items-center gap-3">
-                    <span class="relative flex h-3 w-3"><span
-                            class="animate-ping absolute h-full w-full rounded-full bg-red-400 opacity-75"></span><span
-                            class="relative rounded-full h-3 w-3 bg-red-500"></span></span>
-                    Live Monitor
-                </h2>
-                <button onclick="loadStats()" class="px-4 py-2 bg-white/5 rounded-lg text-sm hover:bg-white/10"><i
-                        data-lucide="refresh-cw" class="w-4 h-4 inline mr-2"></i>Sync</button>
-            </div>
-
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="glass p-6 rounded-xl border-l-4 border-loot-purple">
-                    <div class="text-gray-400 text-xs uppercase font-bold mb-2">Total Users</div>
-                    <div class="text-3xl font-bold text-white" id="stat-users">...</div>
-                </div>
-                <div class="glass p-6 rounded-xl border-l-4 border-loot-neon">
-                    <div class="text-gray-400 text-xs uppercase font-bold mb-2">Online Now</div>
-                    <div class="text-3xl font-bold text-loot-neon" id="stat-online">...</div>
-                </div>
-                <div class="glass p-6 rounded-xl border-l-4 border-loot-danger">
-                    <div class="text-gray-400 text-xs uppercase font-bold mb-2">Pending Requests</div>
-                    <div class="text-3xl font-bold text-loot-danger" id="stat-pending">...</div>
-                </div>
-                <div class="glass p-6 rounded-xl border-l-4 border-loot-gold">
-                    <div class="text-gray-400 text-xs uppercase font-bold mb-2">Daily Revenue</div>
-                    <div class="text-3xl font-bold text-loot-gold" id="stat-revenue">$...</div>
-                </div>
-            </div>
-
-            <!-- Extended Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="glass p-6 rounded-xl">
-                    <div class="text-gray-400 text-sm mb-2">Points Distributed Today</div>
-                    <div class="text-2xl font-bold text-loot-neon" id="stat-daily-points">...</div>
-                </div>
-                <div class="glass p-6 rounded-xl">
-                    <div class="text-gray-400 text-sm mb-2">Total Points All Time</div>
-                    <div class="text-2xl font-bold text-white" id="stat-total-points">...</div>
-                </div>
-                <div class="glass p-6 rounded-xl">
-                    <div class="text-gray-400 text-sm mb-2">Open Tickets</div>
-                    <div class="text-2xl font-bold text-loot-purple" id="stat-tickets">...</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- KILL ZONE TAB -->
-        <div id="tab-killzone" class="hidden space-y-6">
-            <h2 class="text-2xl font-bold text-white flex items-center gap-2"><i data-lucide="skull"
-                    class="text-red-500"></i> The Kill Zone</h2>
-            <div class="glass rounded-xl overflow-hidden">
-                <table class="w-full text-left">
-                    <thead class="bg-white/5 text-gray-400 text-xs uppercase">
-                        <tr>
-                            <th class="p-4">User</th>
-                            <th class="p-4">Reward</th>
-                            <th class="p-4">Risk</th>
-                            <th class="p-4">Time</th>
-                            <th class="p-4 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="withdrawals-list" class="divide-y divide-white/5 text-sm"></tbody>
-                </table>
-                <div id="empty-state" class="hidden text-center py-16 text-gray-500"><i data-lucide="shield-check"
-                        class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
-                    <p>No pending threats.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ORDERS TAB -->
-        <div id="tab-orders" class="hidden">
-            <h2 class="text-2xl font-bold text-white mb-6">Orders</h2>
-            <div id="orders-list" class="glass rounded-xl p-6 text-gray-500">Loading...</div>
-        </div>
-
-        <!-- REPORTS TAB -->
-        <div id="tab-reports" class="hidden">
-            <h2 class="text-2xl font-bold text-white mb-6">Reports</h2>
-            <div id="reports-list" class="space-y-4 text-gray-500">Loading...</div>
-        </div>
-
-        <!-- MESSAGES TAB -->
-        <div id="tab-messages" class="hidden">
-            <h2 class="text-2xl font-bold text-white mb-6">Messages</h2>
-            <div id="messages-list" class="space-y-4 text-gray-500">Loading...</div>
-        </div>
-    </main>
-
-    <!-- Inspection Modal -->
-    <div id="inspection-modal"
-        class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center">
-        <div class="glass w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10">
-            <div class="p-6 border-b border-white/5 flex justify-between items-center">
-                <h3 class="text-xl font-bold text-white" id="modal-username">User</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-black/40 p-3 rounded-lg"><span class="text-xs text-gray-500">IP</span>
-                        <div class="text-white font-mono" id="modal-ip">...</div>
-                    </div>
-                    <div class="bg-black/40 p-3 rounded-lg"><span class="text-xs text-gray-500">Age</span>
-                        <div class="text-white" id="modal-age">...</div>
-                    </div>
-                    <div class="bg-black/40 p-3 rounded-lg"><span class="text-xs text-gray-500">Earned</span>
-                        <div class="text-loot-gold font-bold" id="modal-earned">...</div>
-                    </div>
-                    <div class="bg-black/40 p-3 rounded-lg"><span class="text-xs text-gray-500">Request</span>
-                        <div class="text-white" id="modal-request">...</div>
-                    </div>
-                </div>
-                <div class="flex gap-4 pt-4 border-t border-white/5">
-                    <button id="btn-reject"
-                        class="flex-1 py-3 bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-xl font-bold transition">REJECT</button>
-                    <button id="btn-approve"
-                        class="flex-1 py-3 bg-loot-neon text-black hover:bg-white rounded-xl font-bold transition">APPROVE</button>
-                </div>
-            </div>
+    <!-- Auth Check Overlay -->
+    <div id="auth-check" class="fixed inset-0 z-50 bg-dark-900 flex items-center justify-center">
+        <div class="text-center">
+            <div class="spinner mx-auto mb-4"></div>
+            <p class="text-gray-400">Vérification des permissions...</p>
         </div>
     </div>
 
-    <!-- Toast -->
-    <div id="toast"
-        class="fixed bottom-6 right-6 bg-white text-black px-6 py-4 rounded-xl shadow-2xl transform translate-y-24 transition-transform z-50">
-        <span id="toast-msg">Notification</span>
+    <!-- Main Container -->
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar -->
+        <aside class="w-64 bg-dark-900/95 backdrop-blur-md border-r border-white/5 flex flex-col">
+            <!-- Logo -->
+            <div class="p-6 border-b border-white/5">
+                <h1 class="text-2xl font-bold font-display">
+                    LOOT<span class="text-brand-cyan">ADMIN</span>
+                </h1>
+                <p class="text-xs text-gray-500 mt-1">Fraud Detection v2.8</p>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-6 space-y-2">
+                <a href="#live-monitor" onclick="showSection('live-monitor')"
+                    class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300">
+                    <i data-lucide="activity" class="w-5 h-5"></i>
+                    <span>Live Monitor</span>
+                </a>
+                <a href="#kill-zone" onclick="showSection('kill-zone')"
+                    class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300">
+                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                    <span>Kill Zone</span>
+                </a>
+                <a href="/admin-seo.html"
+                    class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300">
+                    <i data-lucide="trending-up" class="w-5 h-5"></i>
+                    <span>SEO Analytics</span>
+                </a>
+            </nav>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-white/5">
+                <button onclick="window.location.href='/'"
+                    class="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-gray-400 hover:bg-white/5 transition">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span class="text-sm">Back to Site</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+
+            <!-- Live Monitor Section -->
+            <section id="live-monitor" class="p-8">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-white mb-2">Live Monitor</h2>
+                    <p class="text-gray-400">Real-time platform health and fraud detection metrics.</p>
+                </div>
+
+                <!-- Stat Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+                    <!-- Total Users -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm text-gray-400 mb-1">Total Users</p>
+                                <h3 class="text-3xl font-bold text-white" id="stat-users">0</h3>
+                                <p class="text-xs text-green-400 mt-2">↑ +12% vs yesterday</p>
+                            </div>
+                            <div class="stat-icon p-3 rounded-xl">
+                                <i data-lucide="users" class="w-6 h-6 text-brand-purple"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Online Now -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm text-gray-400 mb-1">Online Now</p>
+                                <h3 class="text-3xl font-bold text-white" id="stat-online">0</h3>
+                                <p class="text-xs text-gray-500 mt-2">Last 15 min</p>
+                            </div>
+                            <div class="stat-icon p-3 rounded-xl">
+                                <i data-lucide="radio" class="w-6 h-6 text-brand-cyan"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pending Requests -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm text-gray-400 mb-1">Pending Requests</p>
+                                <h3 class="text-3xl font-bold text-white" id="stat-pending">0</h3>
+                                <p class="text-xs text-yellow-400 mt-2">Needs review</p>
+                            </div>
+                            <div class="stat-icon p-3 rounded-xl">
+                                <i data-lucide="alert-circle" class="w-6 h-6 text-yellow-500"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Daily Revenue -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm text-gray-400 mb-1">Daily Revenue</p>
+                                <h3 class="text-3xl font-bold text-white" id="stat-revenue">$0.00</h3>
+                                <p class="text-xs text-green-400 mt-2">Platform profit (40%)</p>
+                            </div>
+                            <div class="stat-icon p-3 rounded-xl">
+                                <i data-lucide="dollar-sign" class="w-6 h-6 text-green-500"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Additional Stats Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <!-- Points Today -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="stat-icon p-4 rounded-xl">
+                                <i data-lucide="zap" class="w-8 h-8 text-brand-cyan"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400">Points Distributed Today</p>
+                                <h3 class="text-2xl font-bold text-white" id="stat-points-today">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Points -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="stat-icon p-4 rounded-xl">
+                                <i data-lucide="trending-up" class="w-8 h-8 text-brand-purple"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400">Total Points All Time</p>
+                                <h3 class="text-2xl font-bold text-white" id="stat-points-total">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estimated Revenue -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="stat-icon p-4 rounded-xl">
+                                <i data-lucide="pie-chart" class="w-8 h-8 text-green-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400">Est. Revenue (All Time)</p>
+                                <h3 class="text-2xl font-bold text-white" id="stat-revenue-total">$0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Kill Zone Section -->
+            <section id="kill-zone" class="p-8 hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-white mb-2">🔴 Kill Zone</h2>
+                    <p class="text-gray-400">Fraud detection and withdrawal inspection.</p>
+                </div>
+
+                <!-- Pending Withdrawals Table -->
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-4">Pending Withdrawals</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b border-white/10">
+                                    <th class="pb-3 text-sm text-gray-400 font-medium">User</th>
+                                    <th class="pb-3 text-sm text-gray-400 font-medium">Reward</th>
+                                    <th class="pb-3 text-sm text-gray-400 font-medium">Points</th>
+                                    <th class="pb-3 text-sm text-gray-400 font-medium">Flags</th>
+                                    <th class="pb-3 text-sm text-gray-400 font-medium">Date</th>
+                                    <th class="pb-3 text-sm text-gray-400 font-medium">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="withdrawals-tbody">
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-gray-500">
+                                        <div class="spinner mx-auto mb-2"></div>
+                                        Loading withdrawals...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
     </div>
 
+    <!-- Scripts -->
     <script>
         lucide.createIcons();
-        let currentWithdrawal = null;
 
-        // Tab Switching
-        function switchTab(tabId) {
-            ['overview', 'killzone', 'orders', 'reports', 'messages'].forEach(id => {
-                document.getElementById('tab-' + id).classList.add('hidden');
-                const btn = document.getElementById('nav-' + id);
-                if (btn) btn.classList.remove('active');
+        // Section Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${sectionId}`) {
+                    link.classList.add('active');
+                }
             });
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
-            const activeBtn = document.getElementById('nav-' + tabId);
-            if (activeBtn) activeBtn.classList.add('active');
+        }
 
-            if (tabId === 'overview') loadStats();
-            if (tabId === 'killzone') loadKillZone();
-            if (tabId === 'orders') loadOrders();
-            if (tabId === 'reports') loadReports();
-            if (tabId === 'messages') loadMessages();
+        // Auth Check & Init
+        async function init() {
+            try {
+                const res = await fetch('/api/user', { credentials: 'include' });
+
+                if (res.status === 401) {
+                    window.location.href = '/?login=required';
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (!data.success || !data.user) {
+                    throw new Error('Invalid response');
+                }
+
+                if (data.user.role !== 'admin') {
+                    document.getElementById('auth-check').innerHTML = `
+                        <div class="text-center">
+                            <i data-lucide="shield-x" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
+                            <h2 class="text-2xl font-bold text-white mb-2">ACCESS DENIED</h2>
+                            <p class="text-gray-400">Admin privileges required</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                // Hide auth overlay
+                document.getElementById('auth-check').classList.add('hidden');
+
+                // Load data
+                await loadStats();
+                loadWithdrawals();
+
+                // Auto-refresh every 5 seconds
+                setInterval(loadStats, 5000);
+                setInterval(loadWithdrawals, 10000);
+
+            } catch (error) {
+                console.error('Init error:', error);
+                document.getElementById('auth-check').innerHTML = `
+                    <div class="text-center">
+                        <p class="text-red-500 text-2xl font-bold">ERROR</p>
+                        <p class="text-gray-400 mt-2">${error.message}</p>
+                    </div>
+                `;
+            }
         }
 
         // Load Stats
         async function loadStats() {
             try {
-                const res = await fetch('/api/admin/stats');
-                const data = await res.json();
-                document.getElementById('stat-users').innerText = data.totalUsers?.toLocaleString() || '0';
-                document.getElementById('stat-online').innerText = data.onlineUsers || '0';
-                document.getElementById('stat-pending').innerText = data.pendingWithdrawals || '0';
-                document.getElementById('stat-revenue').innerText = '$' + (data.dailyRevenue || '0.00');
-                document.getElementById('stat-daily-points').innerText = (data.dailyPoints || 0).toLocaleString();
-                document.getElementById('stat-total-points').innerText = (data.totalPoints || 0).toLocaleString();
-                document.getElementById('stat-tickets').innerText = data.openTickets || '0';
+                const res = await fetch('/api/admin/stats', { credentials: 'include' });
+                const { stats } = await res.json();
 
-                // Update badge
-                const badge = document.getElementById('badge-killzone');
-                if (data.pendingWithdrawals > 0) { badge.innerText = data.pendingWithdrawals; badge.classList.remove('hidden'); }
-                else { badge.classList.add('hidden'); }
-            } catch (e) { console.error('Stats error:', e); }
-        }
+                document.getElementById('stat-users').textContent = (stats.users || 0).toLocaleString();
+                document.getElementById('stat-online').textContent = (stats.onlineUsers || 0).toLocaleString();
+                document.getElementById('stat-pending').textContent = (stats.pendingWithdrawals || 0).toLocaleString();
+                document.getElementById('stat-revenue').textContent = `$${(stats.dailyRevenue || 0).toFixed(2)}`;
+                document.getElementById('stat-points-today').textContent = (stats.dailyPointsDistributed || 0).toLocaleString();
+                document.getElementById('stat-points-total').textContent = (stats.totalPointsDistributed || 0).toLocaleString();
+                document.getElementById('stat-revenue-total').textContent = `$${(stats.estimatedRevenue || 0).toFixed(2)}`;
 
-        // Load Kill Zone
-        async function loadKillZone() {
-            const list = document.getElementById('withdrawals-list');
-            list.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-500">Loading...</td></tr>';
-            try {
-                const res = await fetch('/api/admin/withdrawals/pending');
-                const data = await res.json();
-                if (!data || data.length === 0) {
-                    list.innerHTML = '';
-                    document.getElementById('empty-state').classList.remove('hidden');
-                    return;
-                }
-                document.getElementById('empty-state').classList.add('hidden');
-                list.innerHTML = data.map(w => `
-                    <tr class="hover:bg-white/5">
-                        <td class="p-4"><div class="font-bold text-white">${w.user_name || 'Unknown'}</div><div class="text-xs text-gray-500">${w.user_email || ''}</div></td>
-                        <td class="p-4 text-loot-purple">${w.amount || 0} PTS</td>
-                        <td class="p-4"><span class="px-2 py-1 rounded text-xs ${w.risk_score > 50 ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}">${w.risk_score || 0}%</span></td>
-                        <td class="p-4 text-gray-400 text-xs">${dayjs(w.created_at).fromNow()}</td>
-                        <td class="p-4 text-right"><button onclick='inspect(${JSON.stringify(w).replace(/'/g, "&#39;")})' class="px-3 py-1 bg-white/10 rounded text-xs hover:bg-white/20">INSPECT</button></td>
-                    </tr>
-                `).join('');
-            } catch (e) { console.error(e); }
-        }
-
-        function inspect(w) {
-            currentWithdrawal = w;
-            document.getElementById('inspection-modal').classList.remove('hidden');
-            document.getElementById('modal-username').innerText = w.user_name || 'User';
-            document.getElementById('modal-ip').innerText = w.ip_address || 'N/A';
-            document.getElementById('modal-age').innerText = w.user_joined_at ? dayjs(w.user_joined_at).fromNow(true) : 'N/A';
-            document.getElementById('modal-earned').innerText = (w.total_earned || 0).toLocaleString() + ' PTS';
-            document.getElementById('modal-request').innerText = (w.amount || 0) + ' PTS';
-            document.getElementById('btn-approve').onclick = () => handleAction('approve');
-            document.getElementById('btn-reject').onclick = () => handleAction('reject');
-        }
-
-        function closeModal() { document.getElementById('inspection-modal').classList.add('hidden'); }
-
-        async function handleAction(action) {
-            if (!confirm(action.toUpperCase() + ' this withdrawal?')) return;
-            try {
-                const res = await fetch(`/api/admin/withdrawals/${currentWithdrawal.id}/action`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action, notes: 'Admin action' })
-                });
-                const data = await res.json();
-                if (data.success) { showToast('Success'); closeModal(); loadKillZone(); loadStats(); }
-                else { alert(data.error); }
-            } catch (e) { alert(e.message); }
-        }
-
-        async function loadOrders() { document.getElementById('orders-list').innerText = 'No pending orders.'; }
-        async function loadReports() { document.getElementById('reports-list').innerText = 'No reports.'; }
-        async function loadMessages() { document.getElementById('messages-list').innerText = 'No messages.'; }
-
-        function showToast(msg) {
-            document.getElementById('toast-msg').innerText = msg;
-            document.getElementById('toast').classList.remove('translate-y-24');
-            setTimeout(() => document.getElementById('toast').classList.add('translate-y-24'), 3000);
-        }
-
-        // Init with Auth Check
-        async function init() {
-            const overlay = document.getElementById('auth-check');
-            try {
-                const res = await fetch('/api/user');
-                if (!res.ok) { window.location.href = '/login.html'; return; }
-                const data = await res.json();
-                if (!data.user || data.user.role !== 'admin') {
-                    overlay.innerHTML = '<div class="text-red-500 text-center"><p class="text-xl font-bold">ACCESS DENIED</p><p class="text-sm mt-2">Admin required.</p></div>';
-                    return;
-                }
-                overlay.style.display = 'none';
-                loadStats();
-                setInterval(loadStats, 30000);
-            } catch (e) {
-                overlay.innerHTML = '<div class="text-red-500 text-center"><p class="text-xl font-bold">ERROR</p></div>';
+            } catch (error) {
+                console.error('Load stats error:', error);
             }
         }
-        window.addEventListener('load', init);
+
+        // Load Withdrawals
+        async function loadWithdrawals() {
+            try {
+                const res = await fetch('/api/admin/withdrawals/pending', { credentials: 'include' });
+                const { withdrawals } = await res.json();
+
+                const tbody = document.getElementById('withdrawals-tbody');
+
+                if (!withdrawals || withdrawals.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="py-8 text-center text-gray-500">
+                                <i data-lucide="check-circle" class="w-12 h-12 mx-auto mb-2 text-green-500"></i>
+                                <p>No pending withdrawals</p>
+                            </td>
+                        </tr>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                tbody.innerHTML = withdrawals.map(w => `
+                    <tr class="border-b border-white/5 hover:bg-white/5">
+                        <td class="py-4">
+                            <div class="text-sm text-white">${w.email}</div>
+                            <div class="text-xs text-gray-500">${w.user_id.substring(0, 8)}...</div>
+                        </td>
+                        <td class="py-4 text-sm text-gray-300">${w.reward_name}</td>
+                        <td class="py-4 text-sm font-mono text-brand-cyan">${w.points_spent.toLocaleString()}</td>
+                        <td class="py-4">
+                            <div class="flex gap-1">
+                                ${(w.security?.flags || []).map(flag => `
+                                    <span class="px-2 py-1 text-xs rounded-full ${flag === 'NEW_ACCOUNT' ? 'bg-yellow-500/20 text-yellow-400' :
+                        flag === 'HIGH_VALUE' ? 'bg-red-500/20 text-red-400' :
+                            flag === 'IP_CHANGE' ? 'bg-orange-500/20 text-orange-400' :
+                                'bg-gray-500/20 text-gray-400'
+                    }">
+                                        ${flag}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </td>
+                        <td class="py-4 text-sm text-gray-400">${dayjs(w.request_date).fromNow()}</td>
+                        <td class="py-4">
+                            <button onclick="approveWithdrawal('${w.id}')" class="px-3 py-1 text-xs rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 mr-2">
+                                Approve
+                            </button>
+                            <button onclick="rejectWithdrawal('${w.id}')" class="px-3 py-1 text-xs rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30">
+                                Reject
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                lucide.createIcons();
+
+            } catch (error) {
+                console.error('Load withdrawals error:', error);
+            }
+        }
+
+        // Approve Withdrawal
+        async function approveWithdrawal(id) {
+            if (!confirm('Approve this withdrawal?')) return;
+
+            try {
+                const res = await fetch(`/api/admin/withdrawals/${id}/action`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ action: 'approve', reason: 'Approved by admin' })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('✅ Withdrawal approved!');
+                    loadWithdrawals();
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        // Reject Withdrawal
+        async function rejectWithdrawal(id) {
+            const reason = prompt('Rejection reason:');
+            if (!reason) return;
+
+            try {
+                const res = await fetch(`/api/admin/withdrawals/${id}/action`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ action: 'reject', reason })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('✅ Withdrawal rejected and refunded!');
+                    loadWithdrawals();
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', init);
     </script>
+
 </body>
 
 </html>
