@@ -1199,6 +1199,156 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// DISCORD OAUTH ROUTES
+// ═══════════════════════════════════════════════════════════════════════════
+
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || 'https://loot-quest.fr/api/auth/discord/callback';
+
+/**
+ * GET /api/auth/discord
+ * Initiates Discord OAuth2 flow
+ */
+app.get('/api/auth/discord', (req, res) => {
+    if (!DISCORD_CLIENT_ID) {
+        console.error('❌ Discord OAuth: DISCORD_CLIENT_ID not configured');
+        return res.status(500).json({ success: false, error: 'Discord oauth not configured' });
+    }
+
+    const scope = encodeURIComponent('identify email');
+    const redirectUri = encodeURIComponent(DISCORD_REDIRECT_URI);
+    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+
+    console.log('🔵 [Discord OAuth] Redirecting to Discord authorization...');
+    res.redirect(authUrl);
+});
+
+/**
+ * GET /api/auth/discord/callback
+ * Handles Discord OAuth2 callback
+ */
+app.get('/api/auth/discord/callback', async (req, res) => {
+    const { code, error: discordError } = req.query;
+
+    if (discordError) {
+        console.error('❌ Discord OAuth error:', discordError);
+        return res.redirect('/?error=discord_denied');
+    }
+
+    if (!code) {
+        console.error('❌ Discord OAuth: No code received');
+        return res.redirect('/?error=no_code');
+    }
+
+    if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET) {
+        console.error('❌ Discord OAuth: Credentials not configured');
+        return res.redirect('/?error=config_error');
+    }
+
+    try {
+        // Exchange code for access token
+        const tokenResponse = await axios.post('https://discord.com/api/oauth2/token',
+            new URLSearchParams({
+                client_id: DISCORD_CLIENT_ID,
+                client_secret: DISCORD_CLIENT_SECRET,
+                grant_type: 'authorization_code',
+                code: code,
+                redirect_uri: DISCORD_REDIRECT_URI
+            }).toString(),
+            {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }
+        );
+
+        const { access_token } = tokenResponse.data;
+
+        // Get user info from Discord
+        const userResponse = await axios.get('https://discord.com/api/users/@me', {
+            headers: { Authorization: `Bearer ${access_token}` }
+        });
+
+        const discordUser = userResponse.data;
+        const email = discordUser.email;
+        const discordId = discordUser.id;
+        const username = discordUser.username;
+        const avatar = discordUser.avatar
+            ? `https://cdn.discordapp.com/avatars/${discordId}/${discordUser.avatar}.png`
+            : null;
+
+        if (!email) {
+            console.error('❌ Discord OAuth: No email returned (user may have denied email scope)');
+            return res.redirect('/?error=no_email');
+        }
+
+        const emailLower = email.toLowerCase();
+
+        console.log(`🔵 [Discord OAuth] User: ${username} (${email})`);
+
+        // Check if user exists
+        let user = db.get('SELECT * FROM users WHERE email = ?', [emailLower]);
+        const isNewUser = !user;
+
+        if (isNewUser) {
+            // Create new user
+            const userId = uuidv4();
+            const referralCode = generateReferralCode(userId);
+            const clientIp = requestIp.getClientIp(req);
+
+            db.run(`
+                INSERT INTO users (
+                    id, email, display_name, avatar_url, provider,
+                    discord_id, discord_username, discord_avatar,
+                    balance, referral_code, ip_address, created_at
+                ) VALUES (?, ?, ?, ?, 'discord', ?, ?, ?, ?, ?, ?, datetime('now'))
+            `, [
+                userId, emailLower, username, avatar,
+                discordId, username, avatar,
+                SIGNUP_BONUS, referralCode, clientIp
+            ]);
+
+            // Add signup bonus transaction
+            db.run(`
+                INSERT INTO transactions (id, user_id, amount, type, source, description)
+                VALUES (?, ?, ?, 'credit', 'signup_bonus', 'Bonus de bienvenue Discord')
+            `, [uuidv4(), userId, SIGNUP_BONUS]);
+
+            user = db.get('SELECT * FROM users WHERE id = ?', [userId]);
+            console.log(`✅ [Discord OAuth] New user created: ${email}`);
+        } else {
+            // Update existing user with Discord info
+            db.run(`
+                UPDATE users SET 
+                    discord_id = ?, discord_username = ?, discord_avatar = ?,
+                    last_login_at = datetime('now')
+                WHERE email = ?
+            `, [discordId, username, avatar, emailLower]);
+
+            console.log(`✅ [Discord OAuth] Existing user logged in: ${email}`);
+        }
+
+        // Create session
+        createUserSession(req, {
+            id: user.id,
+            email: user.email,
+            username: user.display_name,
+            picture: user.avatar_url,
+            provider: 'discord'
+        });
+
+        console.log(`🔐 [Discord OAuth] Session created for: ${email}`);
+
+        // Redirect to dashboard
+        const redirectUrl = isNewUser ? '/dashboard.html?welcome=1' : '/dashboard.html';
+        res.redirect(redirectUrl);
+
+    } catch (error) {
+        console.error('❌ Discord OAuth callback error:', error.response?.data || error.message);
+        res.redirect('/?error=discord_failed');
+    }
+});
+
 /**
  * POST /api/auth/lookup-email
  * 
