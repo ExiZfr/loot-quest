@@ -94,6 +94,20 @@ function createSessionMiddleware(isProduction = false) {
 function isAuthenticated(req, res, next) {
     if (req.session && req.session.user) {
         req.user = req.session.user;
+
+        // Update last_activity_at for online user tracking (async, don't block)
+        // We need to use the db from the parent module, so we'll emit an event or use a global
+        if (req.app && req.app.locals && req.app.locals.db && req.user.id) {
+            try {
+                req.app.locals.db.run(
+                    "UPDATE users SET last_activity_at = datetime('now') WHERE id = ?",
+                    [req.user.id]
+                );
+            } catch (e) {
+                // Silently fail - don't block auth for activity tracking
+            }
+        }
+
         return next();
     }
 

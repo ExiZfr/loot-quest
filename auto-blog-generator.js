@@ -10,68 +10,216 @@ const GEMINI_API_KEY = 'AIzaSyALSN3YDhg7JUZLLc_maWzNzyvXs63VZe0';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 const GENERATION_INTERVAL = 60000; // 1 minute in milliseconds
 
-// Massive topic pool for infinite generation
+// Massive topic pool for infinite generation (200+ topics)
 const topicPool = [
     // Gaming Platforms
     { keyword: "PlayStation Plus", category: "PlayStation", icon: "🎮", gradient: "from-blue-900/50 to-indigo-900/50" },
     { keyword: "Xbox Live Gold", category: "Xbox", icon: "🟢", gradient: "from-green-900/50 to-black/50" },
     { keyword: "Nintendo Switch Online", category: "Nintendo", icon: "🍄", gradient: "from-red-900/50 to-white/50" },
+    { keyword: "PS5 Games", category: "PlayStation", icon: "🎮", gradient: "from-blue-900/50 to-purple-900/50" },
+    { keyword: "Xbox Game Pass", category: "Xbox", icon: "🎮", gradient: "from-green-900/50 to-lime-900/50" },
+    { keyword: "Nintendo eShop Cards", category: "Nintendo", icon: "🎮", gradient: "from-red-900/50 to-pink-900/50" },
 
-    // Popular Games
-    { keyword: "Rocket League Credits", category: "Gaming", icon: "🚗", gradient: "from-orange-900/50 to-blue-900/50" },
-    { keyword: "Brawl Stars Gems", category: "Mobile", icon: "⭐", gradient: "from-yellow-900/50 to-orange-900/50" },
-    { keyword: "Clash of Clans Gems", category: "Mobile", icon: "👑", gradient: "from-purple-900/50 to-yellow-900/50" },
-    { keyword: "Free Fire Diamonds", category: "Mobile", icon: "💎", gradient: "from-red-900/50 to-purple-900/50" },
+    // Battle Royale Games
+    { keyword: "Fortnite V-Bucks", category: "Gaming", icon: "🔫", gradient: "from-purple-900/50 to-blue-900/50" },
+    { keyword: "Apex Legends Coins", category: "Gaming", icon: "🔥", gradient: "from-red-900/50 to-orange-900/50" },
     { keyword: "PUBG UC", category: "Mobile", icon: "🎯", gradient: "from-orange-900/50 to-black/50" },
-    { keyword: "Mobile Legends Diamonds", category: "Mobile", icon: "🛡️", gradient: "from-blue-900/50 to-purple-900/50" },
-    { keyword: "CS:GO Skins", category: "Gaming", icon: "🔫", gradient: "from-orange-900/50 to-black/50" },
-    { keyword: "Dota 2 Items", category: "Gaming", icon: "⚔️", gradient: "from-red-900/50 to-black/50" },
-    { keyword: "Overwatch 2 Coins", category: "Gaming", icon: "🦸", gradient: "from-orange-900/50 to-blue-900/50" },
-    { keyword: "Destiny 2 Silver", category: "Gaming", icon: "🌟", gradient: "from-purple-900/50 to-white/50" },
     { keyword: "Warzone CP", category: "Gaming", icon: "💣", gradient: "from-green-900/50 to-black/50" },
-
-    // Gift Cards
-    { keyword: "Amazon Gift Cards", category: "Shopping", icon: "📦", gradient: "from-yellow-700/50 to-orange-900/50" },
-    { keyword: "iTunes Gift Cards", category: "Apple", icon: "🍎", gradient: "from-purple-900/50 to-pink-900/50" },
-    { keyword: "Google Play Cards", category: "Android", icon: "🤖", gradient: "from-blue-900/50 to-green-900/50" },
-    { keyword: "Netflix Gift Cards", category: "Streaming", icon: "🎬", gradient: "from-red-900/50 to-black/50" },
-    { keyword: "Spotify Premium", category: "Music", icon: "🎵", gradient: "from-green-900/50 to-black/50" },
-    { keyword: "Discord Nitro", category: "Social", icon: "💬", gradient: "from-purple-900/50 to-blue-900/50" },
-
-    // More Gaming
-    { keyword: "Hearthstone Packs", category: "Gaming", icon: "🃏", gradient: "from-blue-900/50 to-gold-900/50" },
-    { keyword: "FIFA Points", category: "Sports", icon: "⚽", gradient: "from-green-900/50 to-white/50" },
-    { keyword: "NBA 2K VC", category: "Sports", icon: "🏀", gradient: "from-orange-900/50 to-black/50" },
-    { keyword: "Madden Points", category: "Sports", icon: "🏈", gradient: "from-blue-900/50 to-orange-900/50" },
-    { keyword: "Rocket League Items", category: "Gaming", icon: "🏎️", gradient: "from-blue-900/50 to-orange-900/50" },
-    { keyword: "Rainbow Six Credits", category: "Gaming", icon: "🎯", gradient: "from-blue-900/50 to-yellow-900/50" },
     { keyword: "Fall Guys Kudos", category: "Gaming", icon: "👾", gradient: "from-pink-900/50 to-purple-900/50" },
+
+    // MOBA & Competitive
+    { keyword: "League of Legends RP", category: "Gaming", icon: "⚔️", gradient: "from-blue-900/50 to-gold-900/50" },
+    { keyword: "Dota 2 Items", category: "Gaming", icon: "🗡️", gradient: "from-red-900/50 to-black/50" },
+    { keyword: "Mobile Legends Diamonds", category: "Mobile", icon: "🛡️", gradient: "from-blue-900/50 to-purple-900/50" },
     { keyword: "Smite Gems", category: "Gaming", icon: "⚡", gradient: "from-blue-900/50 to-gold-900/50" },
-    { keyword: "War Thunder Golden Eagles", category: "Gaming", icon: "✈️", gradient: "from-green-900/50 to-yellow-900/50" },
-    { keyword: "World of Tanks Gold", category: "Gaming", icon: "🚜", gradient: "from-green-900/50 to-gold-900/50" },
+    { keyword: "Heroes of the Storm Gems", category: "Gaming", icon: "⚔️", gradient: "from-blue-900/50 to-purple-900/50" },
 
-    // Subscriptions
-    { keyword: "Crunchyroll Premium", category: "Anime", icon: "🍜", gradient: "from-orange-900/50 to-black/50" },
-    { keyword: "YouTube Premium", category: "Streaming", icon: "📺", gradient: "from-red-900/50 to-white/50" },
-    { keyword: "Disney Plus", category: "Streaming", icon: "🏰", gradient: "from-blue-900/50 to-purple-900/50" },
-    { keyword: "HBO Max", category: "Streaming", icon: "🎭", gradient: "from-purple-900/50 to-black/50" },
+    // Shooters
+    { keyword: "Valorant Points VP", category: "Gaming", icon: "🎯", gradient: "from-red-900/50 to-black/50" },
+    { keyword: "CS:GO Skins", category: "Gaming", icon: "🔫", gradient: "from-orange-900/50 to-black/50" },
+    { keyword: "Rainbow Six Credits", category: "Gaming", icon: "🎯", gradient: "from-blue-900/50 to-yellow-900/50" },
+    { keyword: "Overwatch 2 Coins", category: "Gaming", icon: "🦸", gradient: "from-orange-900/50 to-blue-900/50" },
+    { keyword: "Call of Duty Points", category: "Gaming", icon: "💣", gradient: "from-green-900/50 to-black/50" },
 
-    // Crypto & Finance
-    { keyword: "PayPal Money", category: "Money", icon: "💰", gradient: "from-blue-900/50 to-cyan-900/50" },
-    { keyword: "Cash App Money", category: "Money", icon: "💵", gradient: "from-green-900/50 to-black/50" },
-    { keyword: "Venmo Credits", category: "Money", icon: "💳", gradient: "from-blue-900/50 to-white/50" },
-
-    // More Popular Games
+    // Gacha Games
+    { keyword: "Genshin Impact Primogems", category: "Gacha", icon: "💎", gradient: "from-purple-900/50 to-cyan-900/50" },
     { keyword: "Honkai Star Rail Stellar Jade", category: "Gacha", icon: "🌟", gradient: "from-purple-900/50 to-gold-900/50" },
     { keyword: "Tower of Fantasy Tanium", category: "Gacha", icon: "🗼", gradient: "from-blue-900/50 to-purple-900/50" },
     { keyword: "Blue Archive Pyroxene", category: "Gacha", icon: "💙", gradient: "from-blue-900/50 to-pink-900/50" },
     { keyword: "Arknights Originite Prime", category: "Gacha", icon: "🛡️", gradient: "from-blue-900/50 to-black/50" },
     { keyword: "Azur Lane Gems", category: "Gacha", icon: "⚓", gradient: "from-blue-900/50 to-red-900/50" },
     { keyword: "Fate Grand Order Saint Quartz", category: "Gacha", icon: "✨", gradient: "from-purple-900/50 to-gold-900/50" },
+    { keyword: "Nikke Gold", category: "Gacha", icon: "💰", gradient: "from-red-900/50 to-gold-900/50" },
+    { keyword: "Punishing Gray Raven BC", category: "Gacha", icon: "⚡", gradient: "from-gray-900/50 to-red-900/50" },
+    { keyword: "Guardian Tales Gems", category: "Gacha", icon: "🗡️", gradient: "from-blue-900/50 to-orange-900/50" },
+
+    // Mobile Games
+    { keyword: "Roblox Robux", category: "Mobile", icon: "🎲", gradient: "from-red-900/50 to-gray-900/50" },
+    { keyword: "Brawl Stars Gems", category: "Mobile", icon: "⭐", gradient: "from-yellow-900/50 to-orange-900/50" },
+    { keyword: "Clash of Clans Gems", category: "Mobile", icon: "👑", gradient: "from-purple-900/50 to-yellow-900/50" },
+    { keyword: "Clash Royale Gems", category: "Mobile", icon: "🏆", gradient: "from-blue-900/50 to-purple-900/50" },
+    { keyword: "Free Fire Diamonds", category: "Mobile", icon: "💎", gradient: "from-red-900/50 to-purple-900/50" },
     { keyword: "Garena Free Fire Diamonds", category: "Mobile", icon: "🔥", gradient: "from-orange-900/50 to-red-900/50" },
     { keyword: "Lords Mobile Gems", category: "Mobile", icon: "🏰", gradient: "from-purple-900/50 to-blue-900/50" },
     { keyword: "Raid Shadow Legends Gems", category: "Mobile", icon: "⚔️", gradient: "from-blue-900/50 to-purple-900/50" },
-    { keyword: "AFK Arena Diamonds", category: "Mobile", icon: "🛡️", gradient: "from-purple-900/50 to-gold-900/50" }
+    { keyword: "AFK Arena Diamonds", category: "Mobile", icon: "🛡️", gradient: "from-purple-900/50 to-gold-900/50" },
+    { keyword: "Pokemon GO PokeCoins", category: "Mobile", icon: "🔴", gradient: "from-red-900/50 to-yellow-900/50" },
+    { keyword: "Candy Crush Gold Bars", category: "Mobile", icon: "🍬", gradient: "from-pink-900/50 to-orange-900/50" },
+    { keyword: "8 Ball Pool Cash", category: "Mobile", icon: "🎱", gradient: "from-blue-900/50 to-green-900/50" },
+    { keyword: "Subway Surfers Coins", category: "Mobile", icon: "🚇", gradient: "from-orange-900/50 to-green-900/50" },
+
+    // RPG & MMO
+    { keyword: "World of Warcraft Gold", category: "MMO", icon: "⚔️", gradient: "from-gold-900/50 to-black/50" },
+    { keyword: "Final Fantasy XIV Gil", category: "MMO", icon: "🎮", gradient: "from-blue-900/50 to-purple-900/50" },
+    { keyword: "RuneScape Membership", category: "MMO", icon: "🗡️", gradient: "from-green-900/50 to-brown-900/50" },
+    { keyword: "Elder Scrolls Online Crowns", category: "MMO", icon: "👑", gradient: "from-purple-900/50 to-gold-900/50" },
+    { keyword: "Black Desert Pearls", category: "MMO", icon: "💎", gradient: "from-black/50 to-purple-900/50" },
+
+    // Sandbox & Crafting
+    { keyword: "Minecraft Minecoins", category: "Gaming", icon: "⛏️", gradient: "from-green-800/50 to-brown-900/50" },
+    { keyword: "Terraria Items", category: "Gaming", icon: "🌍", gradient: "from-green-900/50 to-blue-900/50" },
+    { keyword: "Roblox Premium", category: "Gaming", icon: "🎮", gradient: "from-red-900/50 to-black/50" },
+
+    // Sports Games
+    { keyword: "FIFA Points", category: "Sports", icon: "⚽", gradient: "from-green-900/50 to-white/50" },
+    { keyword: "NBA 2K VC", category: "Sports", icon: "🏀", gradient: "from-orange-900/50 to-black/50" },
+    { keyword: "Madden Points", category: "Sports", icon: "🏈", gradient: "from-blue-900/50 to-orange-900/50" },
+    { keyword: "NHL Points", category: "Sports", icon: "🏒", gradient: "from-blue-900/50 to-red-900/50" },
+    { keyword: "UFC Points", category: "Sports", icon: "🥊", gradient: "from-red-900/50 to-black/50" },
+
+    // Racing Games
+    { keyword: "Rocket League Credits", category: "Racing", icon: "🚗", gradient: "from-orange-900/50 to-blue-900/50" },
+    { keyword: "Rocket League Items", category: "Racing", icon: "🏎️", gradient: "from-blue-900/50 to-orange-900/50" },
+    { keyword: "Forza Horizon Credits", category: "Racing", icon: "🏁", gradient: "from-blue-900/50 to-yellow-900/50" },
+    { keyword: "Gran Turismo Credits", category: "Racing", icon: "🏎️", gradient: "from-blue-900/50 to-red-900/50" },
+
+    // Card Games
+    { keyword: "Hearthstone Packs", category: "Gaming", icon: "🃏", gradient: "from-blue-900/50 to-gold-900/50" },
+    { keyword: "Magic Arena Gems", category: "Gaming", icon: "🎴", gradient: "from-black/50 to-purple-900/50" },
+    { keyword: "Marvel Snap Gold", category: "Gaming", icon: "🦸", gradient: "from-red-900/50 to-gold-900/50" },
+    { keyword: "Yu-Gi-Oh Master Duel Gems", category: "Gaming", icon: "🎴", gradient: "from-purple-900/50 to-blue-900/50" },
+
+    // Strategy Games
+    { keyword: "War Thunder Golden Eagles", category: "Gaming", icon: "✈️", gradient: "from-green-900/50 to-yellow-900/50" },
+    { keyword: "World of Tanks Gold", category: "Gaming", icon: "🚜", gradient: "from-green-900/50 to-gold-900/50" },
+    { keyword: "Age of Empires Points", category: "Gaming", icon: "🏰", gradient: "from-brown-900/50 to-gold-900/50" },
+
+    // Action/Adventure
+    { keyword: "Destiny 2 Silver", category: "Gaming", icon: "🌟", gradient: "from-purple-900/50 to-white/50" },
+    { keyword: "GTA Online Shark Cards", category: "Gaming", icon: "💰", gradient: "from-green-900/50 to-black/50" },
+    { keyword: "Red Dead Online Gold", category: "Gaming", icon: "🤠", gradient: "from-gold-900/50 to-brown-900/50" },
+    { keyword: "Sea of Thieves Ancient Coins", category: "Gaming", icon: "🏴‍☠️", gradient: "from-blue-900/50 to-gold-900/50" },
+
+    // Gift Cards - Retail
+    { keyword: "Amazon Gift Cards", category: "Shopping", icon: "📦", gradient: "from-yellow-700/50 to-orange-900/50" },
+    { keyword: "Target Gift Cards", category: "Shopping", icon: "🎯", gradient: "from-red-900/50 to-white/50" },
+    { keyword: "Walmart Gift Cards", category: "Shopping", icon: "🛒", gradient: "from-blue-900/50 to-yellow-900/50" },
+    { keyword: "Best Buy Gift Cards", category: "Shopping", icon: "🖥️", gradient: "from-blue-900/50 to-yellow-900/50" },
+    { keyword: "eBay Gift Cards", category: "Shopping", icon: "🛍️", gradient: "from-red-900/50 to-blue-900/50" },
+
+    // Gift Cards - Gaming
+    { keyword: "Steam Gift Cards", category: "Gaming", icon: "🎮", gradient: "from-blue-900/50 to-gray-900/50" },
+    { keyword: "PlayStation Store Cards", category: "PlayStation", icon: "🎮", gradient: "from-blue-900/50 to-black/50" },
+    { keyword: "Xbox Gift Cards", category: "Xbox", icon: "🎮", gradient: "from-green-900/50 to-black/50" },
+    { keyword: "Nintendo eShop Gift Cards", category: "Nintendo", icon: "🎮", gradient: "from-red-900/50 to-white/50" },
+    { keyword: "Epic Games Store Cards", category: "Gaming", icon: "🎮", gradient: "from-black/50 to-white/50" },
+
+    // Gift Cards - Mobile
+    { keyword: "iTunes Gift Cards", category: "Apple", icon: "🍎", gradient: "from-purple-900/50 to-pink-900/50" },
+    { keyword: "Apple Gift Cards", category: "Apple", icon: "🍎", gradient: "from-gray-900/50 to-white/50" },
+    { keyword: "Google Play Cards", category: "Android", icon: "🤖", gradient: "from-blue-900/50 to-green-900/50" },
+    { keyword: "App Store Cards", category: "Apple", icon: "📱", gradient: "from-blue-900/50 to-purple-900/50" },
+
+    // Streaming - Video
+    { keyword: "Netflix Gift Cards", category: "Streaming", icon: "🎬", gradient: "from-red-900/50 to-black/50" },
+    { keyword: "Disney Plus", category: "Streaming", icon: "🏰", gradient: "from-blue-900/50 to-purple-900/50" },
+    { keyword: "HBO Max", category: "Streaming", icon: "🎭", gradient: "from-purple-900/50 to-black/50" },
+    { keyword: "Hulu Gift Cards", category: "Streaming", icon: "📺", gradient: "from-green-900/50 to-black/50" },
+    { keyword: "YouTube Premium", category: "Streaming", icon: "📺", gradient: "from-red-900/50 to-white/50" },
+    { keyword: "Twitch Bits", category: "Streaming", icon: "🎮", gradient: "from-purple-900/50 to-black/50" },
+    { keyword: "Prime Video", category: "Streaming", icon: "📺", gradient: "from-blue-900/50 to-black/50" },
+    { keyword: "Paramount Plus", category: "Streaming", icon: "⭐", gradient: "from-blue-900/50 to-white/50" },
+
+    // Streaming - Music
+    { keyword: "Spotify Premium", category: "Music", icon: "🎵", gradient: "from-green-900/50 to-black/50" },
+    { keyword: "Apple Music", category: "Music", icon: "🎵", gradient: "from-red-900/50 to-pink-900/50" },
+    { keyword: "Amazon Music", category: "Music", icon: "🎵", gradient: "from-blue-900/50 to-orange-900/50" },
+    { keyword: "YouTube Music", category: "Music", icon: "🎵", gradient: "from-red-900/50 to-black/50" },
+    { keyword: "Tidal Premium", category: "Music", icon: "🎵", gradient: "from-blue-900/50 to-black/50" },
+
+    // Streaming - Anime
+    { keyword: "Crunchyroll Premium", category: "Anime", icon: "🍜", gradient: "from-orange-900/50 to-black/50" },
+    { keyword: "Funimation Premium", category: "Anime", icon: "🎌", gradient: "from-purple-900/50 to-orange-900/50" },
+    { keyword: "VRV Premium", category: "Anime", icon: "📺", gradient: "from-orange-900/50 to-purple-900/50" },
+
+    // Social & Communication
+    { keyword: "Discord Nitro", category: "Social", icon: "💬", gradient: "from-purple-900/50 to-blue-900/50" },
+    { keyword: "Telegram Premium", category: "Social", icon: "✈️", gradient: "from-blue-900/50 to-white/50" },
+    { keyword: "Snapchat Plus", category: "Social", icon: "👻", gradient: "from-yellow-900/50 to-black/50" },
+
+    // Finance & Payment
+    { keyword: "PayPal Money", category: "Money", icon: "💰", gradient: "from-blue-900/50 to-cyan-900/50" },
+    { keyword: "Cash App Money", category: "Money", icon: "💵", gradient: "from-green-900/50 to-black/50" },
+    { keyword: "Venmo Credits", category: "Money", icon: "💳", gradient: "from-blue-900/50 to-white/50" },
+    { keyword: "Visa Gift Cards", category: "Money", icon: "💳", gradient: "from-blue-900/50 to-gold-900/50" },
+    { keyword: "Mastercard Gift Cards", category: "Money", icon: "💳", gradient: "from-red-900/50 to-orange-900/50" },
+    { keyword: "American Express Cards", category: "Money", icon: "💳", gradient: "from-blue-900/50 to-white/50" },
+
+    // Food & Delivery
+    { keyword: "Uber Eats Gift Cards", category: "Food", icon: "🍕", gradient: "from-green-900/50 to-black/50" },
+    { keyword: "DoorDash Gift Cards", category: "Food", icon: "🥡", gradient: "from-red-900/50 to-white/50" },
+    { keyword: "Grubhub Gift Cards", category: "Food", icon: "🍔", gradient: "from-orange-900/50 to-red-900/50" },
+    { keyword: "Starbucks Gift Cards", category: "Food", icon: "☕", gradient: "from-green-900/50 to-white/50" },
+    { keyword: "Subway Gift Cards", category: "Food", icon: "🥪", gradient: "from-green-900/50 to-yellow-900/50" },
+
+    // Travel & Transportation
+    { keyword: "Uber Gift Cards", category: "Travel", icon: "🚗", gradient: "from-black/50 to-white/50" },
+    { keyword: "Lyft Gift Cards", category: "Travel", icon: "🚕", gradient: "from-pink-900/50 to-purple-900/50" },
+    { keyword: "Airbnb Gift Cards", category: "Travel", icon: "🏠", gradient: "from-red-900/50 to-pink-900/50" },
+
+    // Productivity & Software
+    { keyword: "Microsoft Points", category: "Software", icon: "🪟", gradient: "from-blue-900/50 to-green-900/50" },
+    { keyword: "Adobe Credits", category: "Software", icon: "🎨", gradient: "from-red-900/50 to-purple-900/50" },
+    { keyword: "Canva Pro", category: "Software", icon: "🎨", gradient: "from-purple-900/50 to-cyan-900/50" },
+
+    // Fashion & Lifestyle
+    { keyword: "Nike Gift Cards", category: "Fashion", icon: "👟", gradient: "from-black/50 to-orange-900/50" },
+    { keyword: "Adidas Gift Cards", category: "Fashion", icon: "👟", gradient: "from-black/50 to-white/50" },
+    { keyword: "Sephora Gift Cards", category: "Beauty", icon: "💄", gradient: "from-black/50 to-white/50" },
+    { keyword: "Ulta Gift Cards", category: "Beauty", icon: "💅", gradient: "from-orange-900/50 to-pink-900/50" },
+
+    // More Mobile Games
+    { keyword: "Call of Duty Mobile CP", category: "Mobile", icon: "🎯", gradient: "from-orange-900/50 to-black/50" },
+    { keyword: "Among Us Stars", category: "Mobile", icon: "🚀", gradient: "from-red-900/50 to-blue-900/50" },
+    { keyword: "Township Cash", category: "Mobile", icon: "🏘️", gradient: "from-green-900/50 to-orange-900/50" },
+    { keyword: "Hay Day Diamonds", category: "Mobile", icon: "🌾", gradient: "from-green-900/50 to-yellow-900/50" },
+    { keyword: "Coin Master Spins", category: "Mobile", icon: "🎰", gradient: "from-gold-900/50 to-purple-900/50" },
+    { keyword: "Dragon City Gems", category: "Mobile", icon: "🐉", gradient: "from-red-900/50 to-purple-900/50" },
+    { keyword: "State of Survival Biocaps", category: "Mobile", icon: "🧟", gradient: "from-green-900/50 to-black/50" },
+    { keyword: "Rise of Kingdoms Gems", category: "Mobile", icon: "⚔️", gradient: "from-blue-900/50 to-gold-900/50" },
+    { keyword: "Empires and Puzzles Gems", category: "Mobile", icon: "💎", gradient: "from-purple-900/50 to-orange-900/50" },
+    { keyword: "Merge Dragons Gems", category: "Mobile", icon: "🐲", gradient: "from-purple-900/50 to-green-900/50" },
+
+    // More PC/Console Games
+    { keyword: "Apex Legends Packs", category: "Gaming", icon: "📦", gradient: "from-orange-900/50 to-red-900/50" },
+    { keyword: "Dead by Daylight Auric Cells", category: "Gaming", icon: "🔦", gradient: "from-red-900/50 to-black/50" },
+    { keyword: "The Sims 4 SimPoints", category: "Gaming", icon: "🏠", gradient: "from-green-900/50 to-blue-900/50" },
+    { keyword: "FIFA Ultimate Team Coins", category: "Sports", icon: "⚽", gradient: "from-green-900/50 to-gold-900/50" },
+    { keyword: "Battlefield Points", category: "Gaming", icon: "💣", gradient: "from-green-900/50 to-black/50" },
+    { keyword: "Star Wars Battlefront Credits", category: "Gaming", icon: "⭐", gradient: "from-black/50 to-blue-900/50" },
+    { keyword: "Assassins Creed Credits", category: "Gaming", icon: "🗡️", gradient: "from-red-900/50 to-white/50" },
+    { keyword: "Watch Dogs Credits", category: "Gaming", icon: "📱", gradient: "from-blue-900/50 to-black/50" },
+
+    // Subscription Services
+    { keyword: "Xbox Game Pass Ultimate", category: "Gaming", icon: "🎮", gradient: "from-green-900/50 to-gold-900/50" },
+    { keyword: "PS Plus Premium", category: "PlayStation", icon: "⭐", gradient: "from-blue-900/50 to-purple-900/50" },
+    { keyword: "EA Play", category: "Gaming", icon: "🎮", gradient: "from-red-900/50 to-orange-900/50" },
+    { keyword: "Ubisoft Plus", category: "Gaming", icon: "🎮", gradient: "from-blue-900/50 to-white/50" },
+
+    // Crypto & NFT
+    { keyword: "Bitcoin Rewards", category: "Crypto", icon: "₿", gradient: "from-orange-900/50 to-gold-900/50" },
+    { keyword: "Ethereum Rewards", category: "Crypto", icon: "Ξ", gradient: "from-purple-900/50 to-blue-900/50" },
+    { keyword: "Cryptocurrency Gift Cards", category: "Crypto", icon: "💎", gradient: "from-gold-900/50 to-purple-900/50" }
 ];
 
 let currentTopicIndex = 0;

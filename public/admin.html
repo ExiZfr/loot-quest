@@ -67,190 +67,996 @@
                 box-shadow: 0 0 0 0 rgba(255, 51, 51, 0);
             }
         }
+
+        .risk-low {
+            color: #22c55e;
+        }
+
+        .risk-medium {
+            color: #f59e0b;
+        }
+
+        .risk-high {
+            color: #ef4444;
+        }
+
+        .risk-badge-low {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .risk-badge-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .risk-badge-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .glow-green {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .glow-red {
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+        }
     </style>
 </head>
 
 <body class="antialiased h-screen overflow-hidden flex">
 
-    <!-- Auth Overlay -->
-    <div id="auth-overlay" class="fixed inset-0 z-50 bg-loot-black flex flex-col items-center justify-center">
-        <div class="animate-spin w-12 h-12 border-4 border-loot-purple border-t-transparent rounded-full mb-4"></div>
-        <p class="text-gray-500 font-mono text-sm">VERIFYING ADMIN ACCESS...</p>
+    <!-- Auth Check Overlay -->
+    <div id="auth-check" class="fixed inset-0 z-50 bg-loot-black flex items-center justify-center">
+        <div class="animate-spin w-12 h-12 border-4 border-loot-purple border-t-transparent rounded-full"></div>
     </div>
 
-    <!-- 1. SIDEBAR -->
-    <aside class="w-20 lg:w-64 bg-loot-card border-r border-white/5 flex flex-col shrink-0">
-        <div class="h-20 flex items-center justify-center lg:justify-start lg:px-6 border-b border-white/5">
-            <span class="font-display font-bold text-xl tracking-tight text-white hidden lg:block">LOOT<span
-                    class="text-loot-danger">GOD</span></span>
-            <span class="lg:hidden font-bold text-2xl text-loot-danger">L</span>
-        </div>
-
-        <nav class="flex-1 p-4 space-y-2">
-            <button
-                class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-loot-danger/10 text-loot-danger border border-loot-danger/20">
-                <i data-lucide="shield-alert" class="w-5 h-5"></i>
-                <span class="hidden lg:block font-bold">Fraud Control</span>
-            </button>
-            <a href="/dashboard.html"
-                class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-all">
-                <i data-lucide="log-out" class="w-5 h-5"></i>
-                <span class="hidden lg:block">Exit to Site</span>
-            </a>
-        </nav>
-    </aside>
-
-    <!-- 2. MAIN CONTENT -->
-    <main class="flex-1 overflow-y-auto relative p-6 lg:p-10">
-
-        <!-- Live Monitor -->
-        <div class="mb-10">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold font-display text-white flex items-center gap-2">
-                    <i data-lucide="activity" class="text-loot-neon"></i> Live Monitor
-                </h2>
-                <button onclick="refreshData()"
-                    class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded text-gray-300 flex items-center gap-2 transition-colors">
-                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> Sync
-                </button>
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-loot-card border-r border-white/5 flex flex-col">
+            <div class="p-6 border-b border-white/5">
+                <h1 class="font-display font-bold text-xl tracking-tight text-white">LOOT<span
+                        class="text-loot-neon">ADMIN</span></h1>
+                <div class="text-xs text-gray-500 mt-1">Fraud Detection v2.0</div>
             </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="switchTab('overview')" id="nav-overview" </nav>
+        </aside>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Stat Cards -->
-                <div class="glass p-5 rounded-xl border-l-2 border-loot-purple">
-                    <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Total Users</div>
-                    <div class="text-3xl font-display font-bold" id="stat-users">...</div>
+        <!-- 2. MAIN CONTENT -->
+        <main class="flex-1 overflow-y-auto relative p-6 lg:p-10">
+
+            <!-- Live Monitor -->
+            <div class="mb-10">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold font-display text-white flex items-center gap-2">
+                        <i data-lucide="activity" class="text-loot-neon"></i> Live Monitor
+                    </h2>
+                    <button onclick="refreshData()"
+                        class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded text-gray-300 flex items-center gap-2 transition-colors">
+                        <i data-lucide="refresh-cw" class="w-3 h-3"></i> Sync
+                        =======
+                        <div class="flex h-screen overflow-hidden">
+                            <!-- Sidebar -->
+                            <aside class="w-64 bg-loot-card border-r border-white/5 flex flex-col">
+                                <div class="p-6 border-b border-white/5">
+                                    <h1 class="font-display font-bold text-xl tracking-tight text-white">LOOT<span
+                                            class="text-loot-neon">ADMIN</span></h1>
+                                    <div class="text-xs text-gray-500 mt-1">Fraud Detection v2.0</div>
+                                </div>
+                                <nav class="flex-1 p-4 space-y-2">
+                                    <button onclick="switchTab('overview')" id="nav-overview"
+                                        class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium active">
+                                        <i data-lucide="activity" class="w-5 h-5"></i> Live Monitor
+                                    </button>
+                                    <button onclick="window.location.href='/admin-analytics.html'" id="nav-analytics"
+                                        class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
+                                        <i data-lucide="bar-chart-2" class="w-5 h-5"></i> Analytics
+                                    </button>
+
+                                    <button onclick="switchTab('killzone')" id="nav-killzone"
+                                        class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
+                                        <i data-lucide="shield-alert" class="w-5 h-5"></i> Kill Zone <span
+                                            id="badge-killzone"
+                                            class="ml-auto bg-red-500/10 text-red-500 text-xs px-2 py-0.5 rounded-full hidden">0</span>
+                                    </button>
+                                    <button onclick="switchTab('orders')" id="nav-orders"
+                                        class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
+                                        <i data-lucide="shopping-cart" class="w-5 h-5"></i> Orders <span
+                                            id="badge-orders"
+                                            class="ml-auto bg-loot-neon/10 text-loot-neon text-xs px-2 py-0.5 rounded-full hidden">0</span>
+                                    </button>
+                                    <button onclick="switchTab('reports')" id="nav-reports"
+                                        class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
+                                        <i data-lucide="alert-triangle" class="w-5 h-5"></i> Reports <span
+                                            id="badge-reports"
+                                            class="ml-auto bg-red-500/10 text-red-500 text-xs px-2 py-0.5 rounded-full hidden">0</span>
+                                    </button>
+                                    <button onclick="switchTab('messages')" id="nav-messages"
+                                        class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
+                                        <i data-lucide="mail" class="w-5 h-5"></i> Messages <span id="badge-messages"
+                                            class="ml-auto bg-blue-500/10 text-blue-500 text-xs px-2 py-0.5 rounded-full hidden">0</span>
+                                    </button>
+                                </nav>
+                                <div class="p-4 border-t border-white/5">
+                                    <div class="text-xs text-gray-600 mb-2">Auto-refresh: <span
+                                            id="refresh-countdown">30s</span></div>
+                                    <button onclick="window.location.href='/dashboard.html'"
+                                        class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-medium">
+                                        <i data-lucide="log-out" class="w-5 h-5"></i> Back to Site
+                                        >>>>>>> admin-panel-fraud-detection
+                                    </button>
+                                </div>
+
+                                <<<<<<< HEAD <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <!-- Stat Cards -->
+                                    <div class="glass p-5 rounded-xl border-l-2 border-loot-purple">
+                                        <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Total
+                                            Users</div>
+                                        <div class="text-3xl font-display font-bold" id="stat-users">...</div>
+                                    </div>
+                                    <div class="glass p-5 rounded-xl border-l-2 border-loot-neon">
+                                        <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">
+                                            Online Now</div>
+                                        <div class="text-3xl font-display font-bold text-loot-neon" id="stat-online">...
+                                        </div>
+                                    </div>
+                                    <div class="glass p-5 rounded-xl border-l-2 border-loot-danger">
+                                        <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">
+                                            Pending Requests</div>
+                                        <div class="text-3xl font-display font-bold text-loot-danger" id="stat-pending">
+                                            ...</div>
+                                    </div>
+                                    <div class="glass p-5 rounded-xl border-l-2 border-loot-gold">
+                                        <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Daily
+                                            Rev (Est.)</div>
+                                        <div class="text-3xl font-display font-bold text-loot-gold" id="stat-revenue">
+                                            ...</div>
+                                        =======
+                                        <!-- Main Content -->
+                                        <main class="flex-1 overflow-y-auto bg-loot-black relative">
+
+                                            <!-- LIVE MONITOR TAB -->
+                                            <div id="tab-overview" class="p-8 space-y-8">
+                                                <div class="flex justify-between items-center">
+                                                    <h2 class="text-2xl font-bold font-display text-white">🔴 Live
+                                                        Monitor</h2>
+                                                    <div class="flex items-center gap-2 text-sm text-gray-500">
+                                                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse">
+                                                        </div>
+                                                        Real-time
+                                                    </div>
+                                                </div>
+
+                                                <!-- Stats Cards -->
+                                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                                    <div class="glass p-6 rounded-xl">
+                                                        <div class="flex items-center gap-3 mb-3">
+                                                            <div
+                                                                class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                                                <i data-lucide="users"
+                                                                    class="w-5 h-5 text-purple-400"></i>
+                                                            </div>
+                                                            <div class="text-gray-400 text-sm">Total Users</div>
+                                                        </div>
+                                                        <div class="text-3xl font-bold text-white" id="stat-users">-
+                                                        </div>
+                                                    </div>
+                                                    <div class="glass p-6 rounded-xl" id="card-online">
+                                                        <div class="flex items-center gap-3 mb-3">
+                                                            <div
+                                                                class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                                                <i data-lucide="activity"
+                                                                    class="w-5 h-5 text-green-400"></i>
+                                                            </div>
+                                                            <div class="text-gray-400 text-sm">Online Now</div>
+                                                        </div>
+                                                        <div class="text-3xl font-bold text-green-400" id="stat-online">
+                                                            -</div>
+                                                    </div>
+                                                    <div class="glass p-6 rounded-xl" id="card-pending">
+                                                        <div class="flex items-center gap-3 mb-3">
+                                                            <div
+                                                                class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                                                <i data-lucide="alert-circle"
+                                                                    class="w-5 h-5 text-red-400"></i>
+                                                            </div>
+                                                            <div class="text-gray-400 text-sm">Pending Requests</div>
+                                                        </div>
+                                                        <div class="text-3xl font-bold text-red-400" id="stat-pending">-
+                                                        </div>
+                                                    </div>
+                                                    <div class="glass p-6 rounded-xl">
+                                                        <div class="flex items-center gap-3 mb-3">
+                                                            <div
+                                                                class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                                                                <i data-lucide="dollar-sign"
+                                                                    class="w-5 h-5 text-yellow-400"></i>
+                                                            </div>
+                                                            <div class="text-gray-400 text-sm">Daily Revenue</div>
+                                                        </div>
+                                                        <div class="text-3xl font-bold text-loot-gold"
+                                                            id="stat-revenue">$-</div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Extended Stats -->
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                    <div class="glass p-6 rounded-xl">
+                                                        <div class="text-gray-400 text-sm mb-2">Points Distributed Today
+                                                        </div>
+                                                        <div class="text-2xl font-bold text-loot-neon"
+                                                            id="stat-daily-points">-</div>
+                                                    </div>
+                                                    <div class="glass p-6 rounded-xl">
+                                                        <div class="text-gray-400 text-sm mb-2">Total Points All Time
+                                                        </div>
+                                                        <div class="text-2xl font-bold text-white"
+                                                            id="stat-total-points">-</div>
+                                                    </div>
+                                                    <div class="glass p-6 rounded-xl">
+                                                        <div class="text-gray-400 text-sm mb-2">Open Tickets</div>
+                                                        <div class="text-2xl font-bold text-loot-purple"
+                                                            id="stat-tickets">-</div>
+                                                    </div>
+                                                    >>>>>>> admin-panel-fraud-detection
+                                                </div>
+                                            </div>
+                                    </div>
+
+                                    <<<<<<< HEAD <!-- The Kill Zone -->
+                                        <div class="mb-10">
+                                            <h2
+                                                class="text-2xl font-bold font-display text-white mb-6 flex items-center gap-2">
+                                                <i data-lucide="skull" class="text-loot-danger"></i> The Kill Zone
+                                                <span class="text-sm font-sans font-normal text-gray-500 ml-2">(Pending
+                                                    Withdrawals)</span>
+                                            </h2>
+
+                                            <!-- Table -->
+                                            <div class="glass rounded-xl overflow-hidden min-h-[300px]">
+                                                <table class="w-full text-left border-collapse">
+                                                    <thead
+                                                        class="bg-white/5 text-gray-400 text-xs uppercase font-bold tracking-wider">
+                                                        <tr>
+                                                            <th class="p-4">Risk</th>
+                                                            <th class="p-4">User</th>
+                                                            <th class="p-4">Request</th>
+                                                            <th class="p-4">Wait Time</th>
+                                                            <th class="p-4 text-right">Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="withdrawals-list"
+                                                        class="divide-y divide-white/5 text-sm">
+                                                        <!-- Injected via JS -->
+                                                    </tbody>
+                                                </table>
+                                                <div id="empty-state"
+                                                    class="hidden flex flex-col items-center justify-center py-20 text-gray-500">
+                                                    <i data-lucide="check-circle"
+                                                        class="w-12 h-12 text-gray-600 mb-4"></i>
+                                                    <p>All clean. No pending requests.</p>
+                                                    =======
+                                                    <!-- KILL ZONE TAB (Fraud Detection) -->
+                                                    <div id="tab-killzone" class="p-8 space-y-8 hidden">
+                                                        <div class="flex justify-between items-center">
+                                                            <h2 class="text-2xl font-bold font-display text-white">⚔️
+                                                                Kill Zone - Fraud Detection</h2>
+                                                            <button onclick="loadKillZone()"
+                                                                class="px-4 py-2 bg-white/5 rounded-lg text-sm hover:bg-white/10 transition">
+                                                                <i data-lucide="refresh-cw"
+                                                                    class="w-4 h-4 inline mr-2"></i>Refresh
+                                                            </button>
+                                                        </div>
+
+                                                        <div class="glass rounded-xl overflow-hidden">
+                                                            <table class="w-full text-left border-collapse">
+                                                                <thead
+                                                                    class="bg-white/5 text-gray-400 text-sm uppercase">
+                                                                    <tr>
+                                                                        <th class="p-4">User</th>
+                                                                        <th class="p-4">Reward</th>
+                                                                        <th class="p-4">Account Age</th>
+                                                                        <th class="p-4">Risk</th>
+                                                                        <th class="p-4">Request Time</th>
+                                                                        <th class="p-4 text-right">Actions</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="killzone-list"
+                                                                    class="divide-y divide-white/5 text-sm">
+                                                                    <!-- JS Injected -->
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- ORDERS TAB (Legacy) -->
+                                                    <div id="tab-orders" class="p-8 space-y-8 hidden">
+                                                        <h2 class="text-2xl font-bold font-display text-white">Gift Card
+                                                            Orders</h2>
+                                                        <div class="glass rounded-xl overflow-hidden">
+                                                            <table class="w-full text-left border-collapse">
+                                                                <thead
+                                                                    class="bg-white/5 text-gray-400 text-sm uppercase">
+                                                                    <tr>
+                                                                        <th class="p-4">User</th>
+                                                                        <th class="p-4">Reward</th>
+                                                                        <th class="p-4">Cost</th>
+                                                                        <th class="p-4">Date</th>
+                                                                        <th class="p-4 text-right">Actions</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="orders-list"
+                                                                    class="divide-y divide-white/5 text-sm">
+                                                                    <!-- JS Injected -->
+                                                                </tbody>
+                                                            </table>
+                                                            >>>>>>> admin-panel-fraud-detection
+                                                        </div>
+                                                    </div>
+                                                </div>
+        </main>
+
+        <!-- 3. INSPECTION MODAL -->
+        <div id="inspect-modal"
+            class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
+            <div class="glass w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border border-white/10 transform scale-95 transition-transform duration-200"
+                id="modal-content">
+
+                <!-- Header -->
+                <div class="p-6 border-b border-white/5 flex justify-between items-start bg-loot-card">
+                    <div>
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i data-lucide="scan-face" class="text-loot-neon"></i> Security Profile
+                        </h3>
+                        <p class="text-sm text-gray-400" id="modal-user-id">ID: ...</p>
+                    </div>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i
+                            data-lucide="x"></i></button>
                 </div>
-                <div class="glass p-5 rounded-xl border-l-2 border-loot-neon">
-                    <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Online Now</div>
-                    <div class="text-3xl font-display font-bold text-loot-neon" id="stat-online">...</div>
-                </div>
-                <div class="glass p-5 rounded-xl border-l-2 border-loot-danger">
-                    <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Pending Requests</div>
-                    <div class="text-3xl font-display font-bold text-loot-danger" id="stat-pending">...</div>
-                </div>
-                <div class="glass p-5 rounded-xl border-l-2 border-loot-gold">
-                    <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Daily Rev (Est.)</div>
-                    <div class="text-3xl font-display font-bold text-loot-gold" id="stat-revenue">...</div>
-                </div>
-            </div>
-        </div>
 
-        <!-- The Kill Zone -->
-        <div class="mb-10">
-            <h2 class="text-2xl font-bold font-display text-white mb-6 flex items-center gap-2">
-                <i data-lucide="skull" class="text-loot-danger"></i> The Kill Zone
-                <span class="text-sm font-sans font-normal text-gray-500 ml-2">(Pending Withdrawals)</span>
-            </h2>
+                <!-- Body -->
+                <div class="p-6 space-y-6">
 
-            <!-- Table -->
-            <div class="glass rounded-xl overflow-hidden min-h-[300px]">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-white/5 text-gray-400 text-xs uppercase font-bold tracking-wider">
-                        <tr>
-                            <th class="p-4">Risk</th>
-                            <th class="p-4">User</th>
-                            <th class="p-4">Request</th>
-                            <th class="p-4">Wait Time</th>
-                            <th class="p-4 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="withdrawals-list" class="divide-y divide-white/5 text-sm">
-                        <!-- Injected via JS -->
-                    </tbody>
-                </table>
-                <div id="empty-state" class="hidden flex flex-col items-center justify-center py-20 text-gray-500">
-                    <i data-lucide="check-circle" class="w-12 h-12 text-gray-600 mb-4"></i>
-                    <p>All clean. No pending requests.</p>
-                </div>
-            </div>
-        </div>
-    </main>
+                    <!-- Flags Section -->
+                    <div id="modal-flags-container" class="hidden">
+                        <h4 class="text-xs uppercase font-bold text-gray-500 mb-2">Detected Flags</h4>
+                        <div id="modal-flags" class="flex flex-wrap gap-2"></div>
+                    </div>
 
-    <!-- 3. INSPECTION MODAL -->
-    <div id="inspect-modal"
-        class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
-        <div class="glass w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border border-white/10 transform scale-95 transition-transform duration-200"
-            id="modal-content">
-
-            <!-- Header -->
-            <div class="p-6 border-b border-white/5 flex justify-between items-start bg-loot-card">
-                <div>
-                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                        <i data-lucide="scan-face" class="text-loot-neon"></i> Security Profile
-                    </h3>
-                    <p class="text-sm text-gray-400" id="modal-user-id">ID: ...</p>
-                </div>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
-            </div>
-
-            <!-- Body -->
-            <div class="p-6 space-y-6">
-
-                <!-- Flags Section -->
-                <div id="modal-flags-container" class="hidden">
-                    <h4 class="text-xs uppercase font-bold text-gray-500 mb-2">Detected Flags</h4>
-                    <div id="modal-flags" class="flex flex-wrap gap-2"></div>
-                </div>
-
-                <!-- User Grid -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-black/40 p-3 rounded-lg">
-                        <span class="text-xs text-gray-500 block">IP Address</span>
-                        <div class="text-white font-mono" id="modal-ip">...</div>
-                        <div class="text-xs text-loot-danger mt-1 hidden" id="ip-warning">⚠️ DIFFERENT FROM REGISTRATION
+                    <!-- User Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-black/40 p-3 rounded-lg">
+                            <span class="text-xs text-gray-500 block">IP Address</span>
+                            <div class="text-white font-mono" id="modal-ip">...</div>
+                            <div class="text-xs text-loot-danger mt-1 hidden" id="ip-warning">⚠️ DIFFERENT FROM
+                                REGISTRATION
+                            </div>
+                        </div>
+                        <div class="bg-black/40 p-3 rounded-lg">
+                            <span class="text-xs text-gray-500 block">Account Age</span>
+                            <div class="text-white" id="modal-age">...</div>
+                        </div>
+                        <div class="bg-black/40 p-3 rounded-lg">
+                            <span class="text-xs text-gray-500 block">Total Earned</span>
+                            <div class="text-white text-loot-gold font-bold" id="modal-earned">...</div>
+                        </div>
+                        <div class="bg-black/40 p-3 rounded-lg">
+                            <span class="text-xs text-gray-500 block">Current Request</span>
+                            <div class="text-white" id="modal-request">...</div>
                         </div>
                     </div>
-                    <div class="bg-black/40 p-3 rounded-lg">
-                        <span class="text-xs text-gray-500 block">Account Age</span>
-                        <div class="text-white" id="modal-age">...</div>
+
+                    <!-- Task History -->
+                    <div>
+                        <h4 class="text-xs uppercase font-bold text-gray-500 mb-2">Last Activities (Speed Check)</h4>
+                        <div class="bg-black/40 rounded-lg overflow-hidden border border-white/5">
+                            <table class="w-full text-xs">
+                                <thead class="bg-white/5 text-gray-500 text-left">
+                                    <tr>
+                                        <th class="p-2">Task</th>
+                                        <th class="p-2">Reward</th>
+                                        <th class="p-2">Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modal-history" class="text-gray-300">
+                                    <!-- Tasks -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="bg-black/40 p-3 rounded-lg">
-                        <span class="text-xs text-gray-500 block">Total Earned</span>
-                        <div class="text-white text-loot-gold font-bold" id="modal-earned">...</div>
+
+                    <!-- Action Bar -->
+                    <div class="flex gap-4 pt-4 border-t border-white/5">
+                        <button id="btn-reject"
+                            class="flex-1 py-3 bg-white/5 hover:bg-red-500/20 text-red-500 border border-transparent hover:border-red-500 rounded-xl font-bold transition-all flex justify-center items-center gap-2">
+                            <i data-lucide="ban"></i> REJECT & REFUND
+                        </button>
+                        <button id="btn-approve"
+                            class="flex-1 py-3 bg-loot-neon text-black hover:bg-cyan-400 rounded-xl font-bold shadow-lg shadow-loot-neon/20 transition-all flex justify-center items-center gap-2">
+                            <i data-lucide="check"></i> APPROVE PAYOUT
+                        </button>
                     </div>
-                    <div class="bg-black/40 p-3 rounded-lg">
-                        <span class="text-xs text-gray-500 block">Current Request</span>
-                        <div class="text-white" id="modal-request">...</div>
+                </div>
+                <<<<<<< HEAD </div>
+            </div>
+
+            <!-- Scripts -->
+            <script src="/js/admin.js"></script>
+            =======
+
+            </main>
+        </div>
+
+        <!-- INSPECTION MODAL -->
+        <div id="inspection-modal" class="fixed inset-0 z-50 hidden">
+            <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
+            <div
+                class="absolute inset-4 md:inset-8 lg:inset-16 bg-loot-card rounded-2xl overflow-hidden flex flex-col z-10 border border-white/10">
+                <!-- Modal Header -->
+                <div class="p-6 border-b border-white/10 flex justify-between items-center bg-loot-dark">
+                    <div class="flex items-center gap-4">
+                        <div id="modal-avatar"
+                            class="w-12 h-12 rounded-full bg-loot-purple flex items-center justify-center text-white font-bold text-xl">
+                            ?</div>
+                        <div>
+                            <h3 id="modal-username" class="text-xl font-bold text-white">Loading...</h3>
+                            <div id="modal-email" class="text-sm text-gray-400"></div>
+                        </div>
+                    </div>
+                    <button onclick="closeModal()" class="p-2 hover:bg-white/10 rounded-lg transition">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Content -->
+                <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                    <!-- User Stats Row -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="glass p-4 rounded-lg">
+                            <div class="text-xs text-gray-500 uppercase">Account Age</div>
+                            <div id="modal-account-age" class="text-lg font-bold text-white">-</div>
+                        </div>
+                        <div class="glass p-4 rounded-lg">
+                            <div class="text-xs text-gray-500 uppercase">Total Earned</div>
+                            <div id="modal-total-earned" class="text-lg font-bold text-loot-gold">-</div>
+                        </div>
+                        <div class="glass p-4 rounded-lg">
+                            <div class="text-xs text-gray-500 uppercase">Total Withdrawn</div>
+                            <div id="modal-total-withdrawn" class="text-lg font-bold text-white">-</div>
+                        </div>
+                        <div class="glass p-4 rounded-lg">
+                            <div class="text-xs text-gray-500 uppercase">Current Balance</div>
+                            <div id="modal-balance" class="text-lg font-bold text-loot-neon">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Security Alerts -->
+                    <div id="security-alerts" class="space-y-2">
+                        <!-- JS Injected -->
+                    </div>
+
+                    <!-- Two Column Layout -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Security Panel -->
+                        <div class="glass p-6 rounded-xl">
+                            <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <i data-lucide="shield" class="w-5 h-5 text-loot-neon"></i>
+                                Security Profile
+                            </h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase mb-1">Registration IP</div>
+                                    <div id="modal-reg-ip" class="font-mono text-sm text-white">-</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase mb-1">Current/Request IP</div>
+                                    <div id="modal-req-ip" class="font-mono text-sm text-white">-</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase mb-1">IP Match Status</div>
+                                    <div id="modal-ip-status" class="text-sm">-</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase mb-1">User Agent</div>
+                                    <div id="modal-user-agent" class="text-xs text-gray-400 font-mono break-all">-</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase mb-1">Unique IPs Used</div>
+                                    <div id="modal-unique-ips" class="text-sm text-white">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Task History -->
+                        <div class="glass p-6 rounded-xl">
+                            <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <i data-lucide="list" class="w-5 h-5 text-loot-gold"></i>
+                                Task History (Last 10)
+                            </h4>
+                            <div id="modal-task-history" class="space-y-2 max-h-64 overflow-y-auto">
+                                <!-- JS Injected -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction History -->
+                    <div class="glass p-6 rounded-xl">
+                        <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i data-lucide="credit-card" class="w-5 h-5 text-loot-purple"></i>
+                            Recent Transactions
+                        </h4>
+                        <div id="modal-transactions" class="space-y-2 max-h-48 overflow-y-auto">
+                            <!-- JS Injected -->
+                        </div>
                     </div>
                 </div>
 
-                <!-- Task History -->
-                <div>
-                    <h4 class="text-xs uppercase font-bold text-gray-500 mb-2">Last Activities (Speed Check)</h4>
-                    <div class="bg-black/40 rounded-lg overflow-hidden border border-white/5">
-                        <table class="w-full text-xs">
-                            <thead class="bg-white/5 text-gray-500 text-left">
-                                <tr>
-                                    <th class="p-2">Task</th>
-                                    <th class="p-2">Reward</th>
-                                    <th class="p-2">Time</th>
-                                </tr>
-                            </thead>
-                            <tbody id="modal-history" class="text-gray-300">
-                                <!-- Tasks -->
-                            </tbody>
-                        </table>
+                <!-- Modal Footer (Actions) -->
+                <div class="p-6 border-t border-white/10 bg-loot-dark flex justify-between items-center">
+                    <div id="modal-withdrawal-info" class="text-sm text-gray-400">
+                        <!-- Withdrawal details -->
                     </div>
-                </div>
-
-                <!-- Action Bar -->
-                <div class="flex gap-4 pt-4 border-t border-white/5">
-                    <button id="btn-reject"
-                        class="flex-1 py-3 bg-white/5 hover:bg-red-500/20 text-red-500 border border-transparent hover:border-red-500 rounded-xl font-bold transition-all flex justify-center items-center gap-2">
-                        <i data-lucide="ban"></i> REJECT & REFUND
-                    </button>
-                    <button id="btn-approve"
-                        class="flex-1 py-3 bg-loot-neon text-black hover:bg-cyan-400 rounded-xl font-bold shadow-lg shadow-loot-neon/20 transition-all flex justify-center items-center gap-2">
-                        <i data-lucide="check"></i> APPROVE PAYOUT
-                    </button>
+                    <div class="flex gap-3">
+                        <button onclick="closeModal()"
+                            class="px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition font-medium">
+                            Cancel
+                        </button>
+                        <button onclick="handleWithdrawalAction('reject')"
+                            class="px-6 py-3 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition font-bold">
+                            ❌ Reject & Refund
+                        </button>
+                        <button onclick="handleWithdrawalAction('ban')"
+                            class="px-6 py-3 bg-red-900 text-red-300 rounded-lg hover:bg-red-800 transition font-bold">
+                            🚫 Ban User
+                        </button>
+                        <button onclick="handleWithdrawalAction('approve')"
+                            class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-bold">
+                            ✅ Approve & Pay
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Scripts -->
-    <script src="/js/admin.js"></script>
+        <!-- Notification Toast -->
+        <div id="toast" class="fixed bottom-6 right-6 z-50 translate-y-24 transition-transform duration-300">
+            <div
+                class="bg-loot-card border border-loot-neon text-white px-6 py-4 rounded-xl shadow-neon flex items-center gap-3">
+                <i data-lucide="check-circle" class="text-loot-neon"></i>
+                <span id="toast-msg">Action completed</span>
+            </div>
+        </div>
+
+        <script>
+            lucide.createIcons();
+
+            let currentUser = null;
+            let currentWithdrawal = null;
+            let refreshInterval = null;
+            let countdownInterval = null;
+
+            async function init() {
+                try {
+                    const res = await fetch('/api/user/me');
+                    const data = await res.json();
+
+                    if (!data.success) {
+                        window.location.href = '/?login=admin';
+                        return;
+                    }
+
+                    loadStats();
+                    document.getElementById('auth-check').classList.add('hidden');
+
+                    // Start auto-refresh
+                    startAutoRefresh();
+                } catch (e) {
+                    console.error(e);
+                    window.location.href = '/';
+                }
+            }
+
+            function startAutoRefresh() {
+                let countdown = 30;
+
+                countdownInterval = setInterval(() => {
+                    countdown--;
+                    document.getElementById('refresh-countdown').innerText = countdown + 's';
+                    if (countdown <= 0) {
+                        loadStats();
+                        countdown = 30;
+                    }
+                }, 1000);
+            }
+
+            function switchTab(tabId) {
+                document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+                document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+                document.getElementById(`nav-${tabId}`).classList.add('active');
+
+                if (tabId === 'killzone') loadKillZone();
+                if (tabId === 'orders') loadOrders();
+                if (tabId === 'reports') loadReports();
+                if (tabId === 'messages') loadMessages();
+                if (tabId === 'overview') loadStats();
+            }
+
+            async function loadStats() {
+                try {
+                    const res = await fetch('/api/admin/stats');
+                    const data = await res.json();
+                    if (!data.success) {
+                        if (res.status === 403) alert("Access Denied");
+                        return;
+                    }
+
+                    const s = data.stats;
+                    document.getElementById('stat-users').innerText = s.users.toLocaleString();
+                    document.getElementById('stat-online').innerText = s.onlineUsers || 0;
+                    document.getElementById('stat-pending').innerText = s.pendingWithdrawals;
+                    document.getElementById('stat-revenue').innerText = '$' + (s.dailyRevenue || 0).toFixed(2);
+                    document.getElementById('stat-daily-points').innerText = (s.dailyPointsDistributed || 0).toLocaleString();
+                    document.getElementById('stat-total-points').innerText = s.totalPointsDistributed.toLocaleString();
+                    document.getElementById('stat-tickets').innerText = s.openReports + s.unreadMessages;
+
+                    // Update badges
+                    if (s.pendingWithdrawals > 0) {
+                        const badge = document.getElementById('badge-killzone');
+                        badge.innerText = s.pendingWithdrawals;
+                        badge.classList.remove('hidden');
+                        document.getElementById('card-pending').classList.add('glow-red');
+                    } else {
+                        document.getElementById('badge-killzone').classList.add('hidden');
+                        document.getElementById('card-pending').classList.remove('glow-red');
+                    }
+
+                    if (s.onlineUsers > 0) {
+                        document.getElementById('card-online').classList.add('glow-green');
+                    } else {
+                        document.getElementById('card-online').classList.remove('glow-green');
+                    }
+
+                    if (s.pendingWithdrawals > 0) {
+                        document.getElementById('badge-orders').innerText = s.pendingWithdrawals;
+                        document.getElementById('badge-orders').classList.remove('hidden');
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            async function loadKillZone() {
+                const list = document.getElementById('killzone-list');
+                list.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Loading...</td></tr>';
+
+                try {
+                    const res = await fetch('/api/admin/withdrawals/pending');
+                    const data = await res.json();
+                    if (!data.success) return;
+
+                    if (data.withdrawals.length === 0) {
+                        list.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500">✅ No pending withdrawals. All clear!</td></tr>';
+                        return;
+                    }
+
+                    list.innerHTML = data.withdrawals.map(w => `
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="p-4">
+                            <div class="font-bold text-white">${w.user.displayName}</div>
+                            <div class="text-xs text-gray-500">${w.user.email}</div>
+                        </td>
+                        <td class="p-4">
+                            <div class="text-loot-neon">${w.rewardName}</div>
+                            <div class="text-xs text-gray-500">${w.pointsSpent.toLocaleString()} PTS</div>
+                        </td>
+                        <td class="p-4 text-gray-400">${w.user.accountAge} days</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded text-xs font-bold risk-badge-${w.riskLevel}">
+                                ${w.riskLevel.toUpperCase()}
+                            </span>
+                            ${w.riskFlags.length > 0 ? `<div class="text-xs text-gray-500 mt-1">${w.riskFlags.length} flag(s)</div>` : ''}
+                        </td>
+                        <td class="p-4 text-gray-400">${dayjs(w.requestDate).fromNow()}</td>
+                        <td class="p-4 text-right">
+                            <button onclick="openInspection('${w.id}', '${w.userId}')" class="px-4 py-2 bg-loot-purple/20 text-loot-purple rounded hover:bg-loot-purple/30 text-xs font-bold">
+                                🔍 INSPECT
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                } catch (e) { console.error(e); }
+            }
+
+            async function openInspection(withdrawalId, userId) {
+                currentWithdrawal = { id: withdrawalId, userId };
+                document.getElementById('inspection-modal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+
+                // Load user security data
+                try {
+                    const res = await fetch(`/api/admin/user/${userId}/security`);
+                    const data = await res.json();
+
+                    if (!data.success) {
+                        showToast('Failed to load user data');
+                        return;
+                    }
+
+                    const u = data.user;
+                    const sec = data.security;
+
+                    // Populate modal
+                    document.getElementById('modal-avatar').innerText = u.displayName[0].toUpperCase();
+                    document.getElementById('modal-username').innerText = u.displayName;
+                    document.getElementById('modal-email').innerText = u.email;
+                    document.getElementById('modal-account-age').innerText = u.accountAge + ' days';
+                    document.getElementById('modal-total-earned').innerText = u.totalEarned.toLocaleString() + ' PTS';
+                    document.getElementById('modal-total-withdrawn').innerText = u.totalWithdrawn.toLocaleString() + ' PTS';
+                    document.getElementById('modal-balance').innerText = u.balance.toLocaleString() + ' PTS';
+
+                    // Security info
+                    document.getElementById('modal-reg-ip').innerText = sec.registrationIp || 'N/A';
+                    document.getElementById('modal-req-ip').innerText = sec.uniqueIps[0]?.ip_address || 'N/A';
+                    document.getElementById('modal-user-agent').innerText = sec.registrationUserAgent || 'N/A';
+                    document.getElementById('modal-unique-ips').innerText = sec.uniqueIps.length + ' unique IP(s)';
+
+                    // IP Status
+                    const ipStatus = document.getElementById('modal-ip-status');
+                    if (sec.uniqueIps.length > 3) {
+                        ipStatus.innerHTML = '<span class="text-red-400">⚠️ Multiple IPs detected</span>';
+                    } else {
+                        ipStatus.innerHTML = '<span class="text-green-400">✓ IP consistent</span>';
+                    }
+
+                    // Security Alerts
+                    const alertsDiv = document.getElementById('security-alerts');
+                    if (sec.suspiciousFlags.length > 0) {
+                        alertsDiv.innerHTML = sec.suspiciousFlags.map(f => `
+                        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-center gap-3">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-400"></i>
+                            <span class="text-red-400 text-sm">${f.message}</span>
+                        </div>
+                    `).join('');
+                    } else {
+                        alertsDiv.innerHTML = `
+                        <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3 flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-400"></i>
+                            <span class="text-green-400 text-sm">No suspicious activity detected</span>
+                        </div>
+                    `;
+                    }
+
+                    // Task History
+                    const taskDiv = document.getElementById('modal-task-history');
+                    const creditTxs = data.transactions.filter(t => t.type === 'credit' && t.source === 'lootably').slice(0, 10);
+                    if (creditTxs.length > 0) {
+                        taskDiv.innerHTML = creditTxs.map(t => `
+                        <div class="flex justify-between items-center p-2 bg-white/5 rounded text-sm">
+                            <span class="text-gray-300">${t.offer_name || 'Offer'}</span>
+                            <div class="text-right">
+                                <span class="text-loot-gold">+${t.amount}</span>
+                                <div class="text-xs text-gray-500">${dayjs(t.created_at).fromNow()}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    } else {
+                        taskDiv.innerHTML = '<div class="text-gray-500 text-sm">No completed offers</div>';
+                    }
+
+                    // Recent Transactions
+                    const txDiv = document.getElementById('modal-transactions');
+                    txDiv.innerHTML = data.transactions.slice(0, 10).map(t => `
+                    <div class="flex justify-between items-center p-2 bg-white/5 rounded text-sm">
+                        <div>
+                            <span class="text-gray-300">${t.source}</span>
+                            <div class="text-xs text-gray-500">${t.description || ''}</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="${t.type === 'credit' ? 'text-green-400' : 'text-red-400'}">${t.type === 'credit' ? '+' : '-'}${t.amount}</span>
+                            <div class="text-xs text-gray-500">${dayjs(t.created_at).fromNow()}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                    // Withdrawal info
+                    document.getElementById('modal-withdrawal-info').innerHTML = `
+                    Withdrawal #${withdrawalId} • ${u.displayName}
+                `;
+
+                    lucide.createIcons();
+                } catch (e) {
+                    console.error(e);
+                    showToast('Error loading inspection data');
+                }
+            }
+
+            function closeModal() {
+                document.getElementById('inspection-modal').classList.add('hidden');
+                document.body.style.overflow = '';
+                currentWithdrawal = null;
+            }
+
+            async function handleWithdrawalAction(action) {
+                if (!currentWithdrawal) return;
+
+                const confirmMsg = {
+                    'approve': 'Approve this withdrawal and mark as completed?',
+                    'reject': 'Reject this withdrawal and refund points to the user?',
+                    'ban': '⚠️ BAN this user? This will reject all pending withdrawals and prevent future access.'
+                };
+
+                if (!confirm(confirmMsg[action])) return;
+
+                try {
+                    const res = await fetch(`/api/admin/withdrawals/${currentWithdrawal.id}/action`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action, notes: `Admin action: ${action}` })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast(`Withdrawal ${action}ed successfully`);
+                        closeModal();
+                        loadKillZone();
+                        loadStats();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                } catch (e) {
+                    alert('Error: ' + e.message);
+                }
+            }
+
+            async function loadOrders() {
+                const list = document.getElementById('orders-list');
+                list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Loading...</td></tr>';
+
+                try {
+                    const res = await fetch('/api/admin/orders');
+                    const data = await res.json();
+                    if (!data.success) return;
+
+                    if (data.orders.length === 0) {
+                        list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">No pending orders.</td></tr>';
+                        return;
+                    }
+
+                    list.innerHTML = data.orders.map(o => `
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="p-4">
+                            <div class="font-bold text-white">${o.display_name}</div>
+                            <div class="text-xs text-gray-500">${o.email}</div>
+                        </td>
+                        <td class="p-4 text-loot-neon">${o.reward_name}</td>
+                        <td class="p-4 text-loot-gold">${o.points_spent.toLocaleString()} PTS</td>
+                        <td class="p-4 text-gray-400">${dayjs(o.created_at).fromNow()}</td>
+                        <td class="p-4 text-right">
+                            <button onclick="processOrder(${o.id}, 'completed')" class="px-3 py-1 bg-green-500/20 text-green-500 rounded hover:bg-green-500/30 text-xs font-bold mr-2">APPROVE</button>
+                            <button onclick="processOrder(${o.id}, 'cancelled')" class="px-3 py-1 bg-red-500/20 text-red-500 rounded hover:bg-red-500/30 text-xs font-bold">REJECT</button>
+                        </td>
+                    </tr>
+                `).join('');
+                } catch (e) { console.error(e); }
+            }
+
+            async function loadReports() {
+                const list = document.getElementById('reports-list');
+                list.innerHTML = '<div class="text-center text-gray-500">Loading...</div>';
+
+                try {
+                    const res = await fetch('/api/admin/reports');
+                    const data = await res.json();
+
+                    if (data.reports.length === 0) {
+                        list.innerHTML = '<div class="text-center text-gray-500">No reports found.</div>';
+                        return;
+                    }
+
+                    list.innerHTML = data.reports.map(r => `
+                    <div class="glass p-6 rounded-xl border-l-4 ${r.status === 'new' ? 'border-red-500' : 'border-green-500'}">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-white text-lg">${r.subject}</h3>
+                            <span class="text-xs bg-white/10 px-2 py-1 rounded text-gray-400">${dayjs(r.created_at).fromNow()}</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4 bg-black/30 p-3 rounded font-mono">${r.content}</p>
+                        <div class="flex items-center justify-between">
+                             <div class="text-xs text-gray-500">USER ID: ${r.user_id || 'Anonymous'}</div>
+                             ${r.status === 'new' ?
+                            `<button onclick="resolveTicket(${r.id}, 'resolved')" class="text-xs bg-loot-neon/10 text-loot-neon px-3 py-1 rounded hover:bg-loot-neon/20">MARK RESOLVED</button>` :
+                            `<span class="text-xs text-green-500 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Resolved</span>`
+                        }
+                        </div>
+                    </div>
+                `).join('');
+                    lucide.createIcons();
+                } catch (e) { console.error(e); }
+            }
+
+            async function loadMessages() {
+                const list = document.getElementById('messages-list');
+                list.innerHTML = '<div class="text-center text-gray-500">Loading...</div>';
+                try {
+                    const res = await fetch('/api/admin/messages');
+                    const data = await res.json();
+
+                    if (data.messages.length === 0) {
+                        list.innerHTML = '<div class="text-center text-gray-500">No messages.</div>';
+                        return;
+                    }
+
+                    list.innerHTML = data.messages.map(m => `
+                   <div class="glass p-6 rounded-xl border-l-4 border-blue-500">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-white text-lg">${m.subject}</h3>
+                                <div class="text-xs text-blue-400">${m.email}</div>
+                            </div>
+                            <span class="text-xs bg-white/10 px-2 py-1 rounded text-gray-400">${dayjs(m.created_at).fromNow()}</span>
+                        </div>
+                        <p class="text-gray-300 text-sm mb-4">${m.content}</p>
+                        <div class="flex justify-end">
+                            <a href="mailto:${m.email}" class="text-xs bg-white/5 border border-white/10 px-3 py-1 rounded hover:bg-white/10 flex items-center gap-2">
+                                <i data-lucide="reply" class="w-3 h-3"></i> Reply via Email
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+                    lucide.createIcons();
+                } catch (e) { console.error(e); }
+            }
+
+            async function processOrder(id, status) {
+                if (!confirm(`Are you sure you want to mark this order as ${status.toUpperCase()}?`)) return;
+                try {
+                    const res = await fetch('/api/admin/process-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id, status, notes: `Processed by admin` })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast(`Order ${status}`);
+                        loadOrders();
+                        loadStats();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                } catch (e) { alert(e.message); }
+            }
+
+            async function resolveTicket(id, status) {
+                try {
+                    const res = await fetch('/api/admin/resolve-ticket', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id, status })
+                    });
+                    if (await res.json().then(d => d.success)) {
+                        showToast('Ticket updated');
+                        loadReports();
+                        loadStats();
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            function showToast(msg) {
+                const t = document.getElementById('toast');
+                document.getElementById('toast-msg').innerText = msg;
+                t.classList.remove('translate-y-24');
+                setTimeout(() => t.classList.add('translate-y-24'), 3000);
+            }
+
+            init();
+        </script>
+        >>>>>>> admin-panel-fraud-detection
 </body>
 
 </html>

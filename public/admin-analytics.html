@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Analytics - LootQuest Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif']
+                    },
+                    colors: {
+                        background: '#0B0E14',
+                        surface: '#151A23',
+                        primary: '#6366f1',
+                        accent: '#10b981'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            background-color: #0B0E14;
+            color: #E2E8F0;
+        }
+
+        .glass-panel {
+            background: rgba(21, 26, 35, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-card {
+            @apply glass-panel p-6 rounded-2xl;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen font-sans">
+    <!-- Navigation -->
+    <nav class="glass-panel border-b border-white/5 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/admin.html" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                ← Retour au Panel Admin
+            </a>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-400">📊 Analytics SEO</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="font-display text-3xl font-bold text-white mb-2">📊 SEO Analytics</h1>
+            <p class="text-gray-400">Analyse du trafic et des performances de votre contenu</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Visits -->
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400 text-sm">Visites Totales</span>
+                    <span class="text-2xl">👁️</span>
+                </div>
+                <div class="text-3xl font-bold text-white" id="stat-total-visits">-</div>
+            </div>
+
+            <!-- Today's Visits -->
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400 text-sm">Visites Aujourd'hui</span>
+                    <span class="text-2xl">📅</span>
+                </div>
+                <div class="text-3xl font-bold text-indigo-400" id="stat-today-visits">-</div>
+            </div>
+
+            <!-- Unique Visitors -->
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400 text-sm">Visiteurs Uniques</span>
+                    <span class="text-2xl">👤</span>
+                </div>
+                <div class="text-3xl font-bold text-green-400" id="stat-unique-visitors">-</div>
+            </div>
+
+            <!-- Top Page -->
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400 text-sm">Page la Plus Visitée</span>
+                    <span class="text-2xl">🏆</span>
+                </div>
+                <div class="text-sm font-medium text-yellow-400 truncate" id="stat-top-page">-</div>
+            </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Timeline Chart -->
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="font-display text-xl font-bold text-white mb-4">📈 Évolution du Trafic (30 jours)</h3>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Peak Hours Chart -->
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="font-display text-xl font-bold text-white mb-4">🕐 Heures de Pointe (7 jours)</h3>
+                <div class="chart-container">
+                    <canvas id="peakHoursChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Traffic Sources -->
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="font-display text-xl font-bold text-white mb-4">🌐 Sources de Trafic</h3>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="sourcesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Device Breakdown -->
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="font-display text-xl font-bold text-white mb-4">📱 Répartition des Appareils</h3>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="devicesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Blogs Table -->
+        <div class="glass-panel p-6 rounded-2xl">
+            <h3 class="font-display text-xl font-bold text-white mb-4">🏆 Top 10 Articles (7 jours)</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-white/10">
+                            <th class="text-left py-3 px-4 text-gray-400 font-medium">#</th>
+                            <th class="text-left py-3 px-4 text-gray-400 font-medium">Article</th>
+                            <th class="text-right py-3 px-4 text-gray-400 font-medium">Vues Totales</th>
+                            <th class="text-right py-3 px-4 text-gray-400 font-medium">Vues Uniques</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top-blogs-table">
+                        <tr>
+                            <td colspan="4" class="text-center py-8 text-gray-500">Chargement...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auth & Session Management
+        let authToken = null;
+
+        function getAuthToken() {
+            const token = sessionStorage.getItem('authToken') ||
+                localStorage.getItem('authToken') ||
+                document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1];
+            if (!token) {
+                window.location.href = '/';
+                return null;
+            }
+            return token;
+        }
+
+        async function fetchAnalytics(endpoint) {
+            const token = getAuthToken();
+            if (!token) return null;
+
+            const response = await fetch(`/api/admin/analytics/${endpoint}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                console.error(`Failed to fetch ${endpoint}:`, response.statusText);
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/';
+                }
+                return null;
+            }
+
+            return await response.json();
+        }
+
+        // Chart Instances
+        let timelineChart, peakHoursChart, sourcesChart, devicesChart;
+
+        // Load Global Stats
+        async function loadStats() {
+            const data = await fetchAnalytics('stats');
+            if (!data || !data.success) return;
+
+            const { stats } = data;
+            document.getElementById('stat-total-visits').textContent = stats.totalVisits.toLocaleString();
+            document.getElementById('stat-today-visits').textContent = stats.totalVisitsToday.toLocaleString();
+            document.getElementById('stat-unique-visitors').textContent = stats.uniqueVisitors.toLocaleString();
+            document.getElementById('stat-top-page').textContent = stats.topPage?.page_url || 'Aucune donnée';
+        }
+
+        // Load Timeline Chart
+        async function loadTimelineChart() {
+            const data = await fetchAnalytics('timeline');
+            if (!data || !data.success) return;
+
+            const labels = data.timeline.map(d => d.date);
+            const values = data.timeline.map(d => d.visits);
+
+            const ctx = document.getElementById('timelineChart');
+            timelineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Visites',
+                        data: values,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load Peak Hours Chart
+        async function loadPeakHoursChart() {
+            const data = await fetchAnalytics('peak-hours');
+            if (!data || !data.success) return;
+
+            // Fill missing hours with 0
+            const hours = Array.from({ length: 24 }, (_, i) => i);
+            const visitsMap = Object.fromEntries(data.peakHours.map(h => [h.hour, h.visits]));
+            const values = hours.map(h => visitsMap[h] || 0);
+            const labels = hours.map(h => `${h}h`);
+
+            const ctx = document.getElementById('peakHoursChart');
+            peakHoursChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Visites',
+                        data: values,
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load Traffic Sources Chart
+        async function loadSourcesChart() {
+            const data = await fetchAnalytics('traffic-sources');
+            if (!data || !data.success) return;
+
+            const labels = data.sources.map(s => {
+                const map = { direct: 'Direct', google: 'Google', social: 'Réseaux Sociaux', other: 'Autre' };
+                return map[s.referer_category] || s.referer_category;
+            });
+            const values = data.sources.map(s => s.visits);
+            const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444'];
+
+            const ctx = document.getElementById('sourcesChart');
+            sourcesChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#94a3b8', padding: 15 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load Devices Chart
+        async function loadDevicesChart() {
+            const data = await fetchAnalytics('devices');
+            if (!data || !data.success) return;
+
+            const labels = data.devices.map(d => {
+                const map = { mobile: 'Mobile', desktop: 'Desktop', tablet: 'Tablette' };
+                return map[d.device_type] || d.device_type;
+            });
+            const values = data.devices.map(d => d.visits);
+            const colors = ['#3b82f6', '#8b5cf6', '#ec4899'];
+
+            const ctx = document.getElementById('devicesChart');
+            devicesChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#94a3b8', padding: 15 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load Top Blogs Table
+        async function loadTopBlogs() {
+            const data = await fetchAnalytics('top-blogs');
+            if (!data || !data.success) return;
+
+            const tbody = document.getElementById('top-blogs-table');
+            if (data.topBlogs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-500">Aucune donnée disponible</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.topBlogs.map((blog, index) => `
+                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td class="py-3 px-4 text-gray-400">${index + 1}</td>
+                    <td class="py-3 px-4">
+                        <a href="/blog/${blog.blog_slug}.html" target="_blank" 
+                           class="text-indigo-400 hover:text-indigo-300 font-medium">
+                            ${blog.blog_slug}
+                        </a>
+                    </td>
+                    <td class="py-3 px-4 text-right font-medium text-white">${blog.total_views.toLocaleString()}</td>
+                    <td class="py-3 px-4 text-right font-medium text-green-400">${blog.unique_views.toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Initialize Dashboard
+        async function init() {
+            authToken = getAuthToken();
+            if (!authToken) return;
+
+            // Load all data
+            await Promise.all([
+                loadStats(),
+                loadTimelineChart(),
+                loadPeakHoursChart(),
+                loadSourcesChart(),
+                loadDevicesChart(),
+                loadTopBlogs()
+            ]);
+        }
+
+        // Start on page load
+        init();
+    </script>
+</body>
+
+</html>

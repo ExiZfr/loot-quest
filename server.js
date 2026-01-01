@@ -71,6 +71,7 @@ const REFERRAL_COMMISSION_RATE = 0.05; // 5% lifetime commission on referred use
 // Discord Webhook for Support Notifications
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 
+
 // ═══════════════════════════════════════════════════════════════════════════
 // DATABASE WRAPPER CLASS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -150,6 +151,20 @@ class Database {
         try { this.db.run('ALTER TABLE users ADD COLUMN lifetime_earnings INTEGER DEFAULT 0'); } catch (e) { }
         try { this.db.run('ALTER TABLE users ADD COLUMN referral_unlocked INTEGER DEFAULT 0'); } catch (e) { }
         try { this.db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"); } catch (e) { }
+
+        // Admin Panel & Fraud Detection Columns
+        try { this.db.run('ALTER TABLE users ADD COLUMN user_agent TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN last_activity_at DATETIME'); } catch (e) { }
+
+        // Personal Info for Withdrawals (KYC)
+        try { this.db.run('ALTER TABLE users ADD COLUMN first_name TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN last_name TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN address TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN city TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN postal_code TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN country TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE users ADD COLUMN personal_info_completed INTEGER DEFAULT 0'); } catch (e) { }
+
         this.db.run('CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code)');
 
         this.db.run(`
@@ -191,6 +206,10 @@ class Database {
         this.db.run('CREATE INDEX IF NOT EXISTS idx_withdrawals_status ON withdrawals(status)');
         this.db.run('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
 
+        // Withdrawals fraud tracking columns
+        try { this.db.run('ALTER TABLE withdrawals ADD COLUMN request_ip TEXT'); } catch (e) { }
+        try { this.db.run('ALTER TABLE withdrawals ADD COLUMN request_user_agent TEXT'); } catch (e) { }
+
         // Support tickets table (for bug reports & contact forms)
         this.db.run(`
             CREATE TABLE IF NOT EXISTS support_tickets (
@@ -210,6 +229,30 @@ class Database {
         `);
         this.db.run('CREATE INDEX IF NOT EXISTS idx_support_tickets_type ON support_tickets(type)');
         this.db.run('CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status)');
+
+        // ═══════════════════════════════════════════════════════════════
+        // SEO ANALYTICS TABLE
+        // Native analytics tracking without Google Analytics
+        // ═══════════════════════════════════════════════════════════════
+        this.db.run(`
+            CREATE TABLE IF NOT EXISTS analytics_visits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                page_url TEXT NOT NULL,
+                blog_slug TEXT,
+                visitor_ip_hash TEXT NOT NULL,
+                user_agent TEXT,
+                device_type TEXT CHECK(device_type IN ('mobile', 'desktop', 'tablet', 'bot')),
+                referer TEXT,
+                referer_category TEXT CHECK(referer_category IN ('direct', 'google', 'social', 'other')),
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Performance indexes for analytics queries
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_analytics_page_url ON analytics_visits(page_url)');
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_analytics_timestamp ON analytics_visits(timestamp)');
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_analytics_blog_slug ON analytics_visits(blog_slug)');
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_analytics_device_type ON analytics_visits(device_type)');
 
         this.save();
     }
@@ -375,7 +418,14 @@ app.set('trust proxy', 1);
 const isProduction = process.env.NODE_ENV === 'production';
 app.use(createSessionMiddleware(isProduction));
 
+// Expose db instance for middleware to use (activity tracking)
+app.locals.db = db;
+
 app.use(express.static(path.join(__dirname, 'public')));
+
+// SEO Analytics tracking (non-blocking, runs in background)
+app.use(trackVisit);
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FIREBASE AUTH HANDLER PROXY
@@ -525,6 +575,86 @@ function getClientIP(req) {
         || req.headers['x-real-ip']
         || req.socket?.remoteAddress
         || 'unknown';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MIDDLEWARE: Analytics Tracking (SEO Module)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Track page visits for SEO analytics
+ * - Non-blocking (continues request immediately, tracks in background)
+ * - GDPR compliant (IPs are hashed with SHA-256)
+ * - Detects bots, device types, referer sources
+ * - Ignores static files and API calls
+ */
+function trackVisit(req, res, next) {
+    // Continue request immediately (non-blocking)
+    next();
+
+    // Exclude static files, API routes, and assets
+    if (req.path.includes('.css') ||
+        req.path.includes('.js') ||
+        req.path.includes('.png') ||
+        req.path.includes('.jpg') ||
+        req.path.includes('.jpeg') ||
+        req.path.includes('.webp') ||
+        req.path.includes('.svg') ||
+        req.path.includes('.ico') ||
+        req.path.includes('/api/')) {
+        return;
+    }
+
+    // Track asynchronously to avoid blocking
+    setImmediate(() => {
+        try {
+            // Get and hash IP address (GDPR compliant)
+            const ip = getClientIP(req);
+            const ipHash = crypto.createHash('sha256')
+                .update(ip + 'LOOTQUEST_ANALYTICS_SALT')
+                .digest('hex');
+
+            // User agent
+            const userAgent = req.headers['user-agent'] || '';
+
+            // Bot detection
+            const botPatterns = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|whatsapp|telegram/i;
+            const isBot = botPatterns.test(userAgent);
+
+            // Device type detection
+            const isMobile = /mobile|android|iphone|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+            const isTablet = /ipad|android(?!.*mobile)|tablet/i.test(userAgent);
+            let deviceType = 'desktop';
+            if (isBot) deviceType = 'bot';
+            else if (isTablet) deviceType = 'tablet';
+            else if (isMobile) deviceType = 'mobile';
+
+            // Referer analysis
+            const referer = req.headers['referer'] || req.headers['referrer'] || '';
+            let refererCategory = 'direct';
+            if (referer) {
+                if (/google\./i.test(referer)) refererCategory = 'google';
+                else if (/facebook|twitter|instagram|tiktok|linkedin|reddit|pinterest|youtube/i.test(referer)) refererCategory = 'social';
+                else refererCategory = 'other';
+            }
+
+            // Extract blog slug from URL
+            let blogSlug = null;
+            if (req.path.startsWith('/blog/') && req.path.endsWith('.html')) {
+                blogSlug = req.path.replace('/blog/', '').replace('.html', '');
+            }
+
+            // Insert visit record (async, non-blocking)
+            db.run(`
+                INSERT INTO analytics_visits (page_url, blog_slug, visitor_ip_hash, user_agent, device_type, referer, referer_category)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `, [req.path, blogSlug, ipHash, userAgent, deviceType, referer, refererCategory]);
+
+        } catch (error) {
+            // Silent fail - don't break user experience for analytics
+            console.error('Analytics tracking error:', error.message);
+        }
+    });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1135,27 +1265,55 @@ app.get('/api/user/referral', isAuthenticated, (req, res) => {
 
 /**
  * GET /api/admin/stats
- * Overview dashboard
+ * Enhanced overview dashboard with fraud monitoring metrics
  */
 app.get('/api/admin/stats', isAuthenticated, requireAdmin, (req, res) => {
     try {
+        // Basic counts
         const usersCount = db.get('SELECT COUNT(*) as c FROM users').c;
-        const totalPaid = db.get('SELECT SUM(amount) as s FROM transactions WHERE type="credit"').s || 0;
         const pendingWithdrawals = db.get('SELECT COUNT(*) as c FROM withdrawals WHERE status="pending"').c;
         const openReports = db.get('SELECT COUNT(*) as c FROM support_tickets WHERE type="bug" AND status="new"').c;
         const unreadMessages = db.get('SELECT COUNT(*) as c FROM support_tickets WHERE type="contact" AND status="new"').c;
+
+        // Online users (last activity within 5 minutes)
+        const onlineUsers = db.get(`
+            SELECT COUNT(*) as c FROM users 
+            WHERE datetime(last_activity_at) > datetime('now', '-5 minutes')
+        `).c || 0;
+
+        // Daily points distributed (today's credits)
+        const dailyPointsResult = db.get(`
+            SELECT COALESCE(SUM(amount), 0) as total 
+            FROM transactions 
+            WHERE type = 'credit' 
+            AND date(created_at) = date('now')
+        `);
+        const dailyPoints = dailyPointsResult?.total || 0;
+
+        // Total points distributed all time
+        const totalPaid = db.get('SELECT COALESCE(SUM(amount), 0) as s FROM transactions WHERE type="credit"').s || 0;
+
+        // Estimated revenue (40% of total points = platform profit)
+        // Convert points to dollars: points / 1000
+        const estimatedRevenue = Math.floor((totalPaid * PLATFORM_SPLIT) / POINTS_PER_DOLLAR * 100) / 100;
+        const dailyRevenue = Math.floor((dailyPoints * PLATFORM_SPLIT) / POINTS_PER_DOLLAR * 100) / 100;
 
         res.json({
             success: true,
             stats: {
                 users: usersCount,
+                onlineUsers,
                 totalPointsDistributed: totalPaid,
+                dailyPointsDistributed: dailyPoints,
                 pendingWithdrawals,
                 openReports,
-                unreadMessages
+                unreadMessages,
+                estimatedRevenue,
+                dailyRevenue
             }
         });
     } catch (e) {
+        console.error('Admin stats error:', e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -1227,6 +1385,390 @@ app.post('/api/admin/process-order', isAuthenticated, requireAdmin, (req, res) =
         }
         res.json({ success: true });
     } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FRAUD DETECTION ROUTES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/withdrawals/pending
+ * Returns pending withdrawals with comprehensive fraud detection data
+ */
+app.get('/api/admin/withdrawals/pending', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        // Get pending withdrawals with user info
+        const withdrawals = db.all(`
+            SELECT 
+                w.id,
+                w.user_id,
+                w.reward_id,
+                w.reward_name,
+                w.points_spent,
+                w.delivery_info,
+                w.status,
+                w.created_at as request_date,
+                NULL as request_ip, -- w.request_ip, TEMP FIX - column exists in file but not in sql.js cache
+                NULL as request_user_agent, -- w.request_user_agent, TEMP FIX
+                u.display_name,
+                u.email,
+                u.ip_address as registration_ip,
+                u.user_agent as registration_user_agent,
+                u.created_at as account_created,
+                u.total_earned,
+                u.total_withdrawn,
+                u.balance,
+                u.last_activity_at,
+                u.role
+            FROM withdrawals w
+            JOIN users u ON w.user_id = u.id
+            WHERE w.status = 'pending'
+            ORDER BY w.created_at DESC
+        `);
+
+        // Enrich each withdrawal with fraud indicators
+        const enrichedWithdrawals = withdrawals.map(w => {
+            // Calculate account age in days
+            const accountAge = Math.floor((Date.now() - new Date(w.account_created).getTime()) / (1000 * 60 * 60 * 24));
+
+            // Check IP mismatch
+            const ipMismatch = w.registration_ip && w.request_ip && w.registration_ip !== w.request_ip;
+
+            // Get task history (last 10 completed offers)
+            const taskHistory = db.all(`
+                SELECT offer_name, amount, created_at, ip_address
+                FROM transactions 
+                WHERE user_id = ? AND type = 'credit' AND source = 'lootably'
+                ORDER BY created_at DESC
+                LIMIT 10
+            `, [w.user_id]);
+
+            // Calculate velocity (points earned in last hour)
+            const velocityResult = db.get(`
+                SELECT COALESCE(SUM(amount), 0) as total 
+                FROM transactions 
+                WHERE user_id = ? AND type = 'credit' 
+                AND datetime(created_at) > datetime('now', '-1 hour')
+            `, [w.user_id]);
+            const hourlyVelocity = velocityResult?.total || 0;
+
+            // Determine risk level
+            let riskLevel = 'low';
+            let riskFlags = [];
+
+            if (accountAge < 1) {
+                riskLevel = 'high';
+                riskFlags.push('Account < 24 hours old');
+            } else if (accountAge < 7) {
+                if (riskLevel !== 'high') riskLevel = 'medium';
+                riskFlags.push('Account < 7 days old');
+            }
+
+            if (ipMismatch) {
+                if (riskLevel !== 'high') riskLevel = 'medium';
+                riskFlags.push('IP mismatch between registration and withdrawal');
+            }
+
+            if (hourlyVelocity > 5000) {
+                riskLevel = 'high';
+                riskFlags.push(`High velocity: ${hourlyVelocity} points in last hour`);
+            } else if (hourlyVelocity > 2000) {
+                if (riskLevel !== 'high') riskLevel = 'medium';
+                riskFlags.push(`Elevated velocity: ${hourlyVelocity} points in last hour`);
+            }
+
+            // Check if earnings are suspicious (earned more than withdrew + balance)
+            if (w.total_earned > 0 && taskHistory.length < 3 && w.points_spent > 5000) {
+                if (riskLevel !== 'high') riskLevel = 'medium';
+                riskFlags.push('Low activity but high withdrawal');
+            }
+
+            return {
+                id: w.id,
+                userId: w.user_id,
+                rewardName: w.reward_name,
+                pointsSpent: w.points_spent,
+                deliveryInfo: w.delivery_info,
+                requestDate: w.request_date,
+                user: {
+                    displayName: w.display_name,
+                    email: w.email,
+                    accountAge,
+                    totalEarned: w.total_earned,
+                    totalWithdrawn: w.total_withdrawn,
+                    balance: w.balance
+                },
+                security: {
+                    registrationIp: w.registration_ip,
+                    requestIp: w.request_ip,
+                    ipMismatch,
+                    userAgent: w.request_user_agent || w.registration_user_agent,
+                    lastActivity: w.last_activity_at
+                },
+                taskHistory,
+                riskLevel,
+                riskFlags,
+                hourlyVelocity
+            };
+        });
+
+        res.json({
+            success: true,
+            withdrawals: enrichedWithdrawals,
+            count: enrichedWithdrawals.length
+        });
+
+    } catch (e) {
+        console.error('Pending withdrawals error:', e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * GET /api/admin/user/:userId/security
+ * Returns detailed user security profile for inspection modal
+ */
+app.get('/api/admin/user/:userId/security', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Get user info (exclude sensitive data like password_hash)
+        const user = db.get(`
+            SELECT 
+                id, email, display_name, avatar_url, provider,
+                balance, total_earned, total_withdrawn,
+                created_at, last_login_at, last_activity_at,
+                ip_address, user_agent, role,
+                referral_code, referred_by_user_id,
+                lifetime_earnings, referral_unlocked
+            FROM users WHERE id = ?
+        `, [userId]);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Get transaction history (last 50)
+        const transactions = db.all(`
+            SELECT id, amount, type, source, offer_name, description, ip_address, created_at
+            FROM transactions 
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            LIMIT 50
+        `, [userId]);
+
+        // Get withdrawal history
+        const withdrawals = db.all(`
+            SELECT id, reward_name, points_spent, status, created_at, processed_at, completed_at, request_ip
+            FROM withdrawals 
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            LIMIT 20
+        `, [userId]);
+
+        // Calculate suspicious patterns
+        const accountAge = Math.floor((Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24));
+
+        // Get unique IPs used
+        const uniqueIps = db.all(`
+            SELECT DISTINCT ip_address, COUNT(*) as count 
+            FROM transactions 
+            WHERE user_id = ? AND ip_address IS NOT NULL
+            GROUP BY ip_address
+        `, [userId]);
+
+        // Calculate earnings velocity (points per day)
+        const earningsPerDay = accountAge > 0 ? Math.round(user.total_earned / accountAge) : user.total_earned;
+
+        // Get referrer info if referred
+        let referrer = null;
+        if (user.referred_by_user_id) {
+            referrer = db.get('SELECT display_name, email FROM users WHERE id = ?', [user.referred_by_user_id]);
+        }
+
+        // Get users this person referred
+        const referrals = db.all(`
+            SELECT id, display_name, created_at, total_earned 
+            FROM users 
+            WHERE referred_by_user_id = ?
+        `, [userId]);
+
+        // Build suspicious activity flags
+        const suspiciousFlags = [];
+
+        if (accountAge < 1 && user.total_earned > 1000) {
+            suspiciousFlags.push({ type: 'velocity', message: 'Earned over 1000 points in first 24 hours' });
+        }
+
+        if (uniqueIps.length > 5) {
+            suspiciousFlags.push({ type: 'ip', message: `Used ${uniqueIps.length} different IP addresses` });
+        }
+
+        if (earningsPerDay > 10000) {
+            suspiciousFlags.push({ type: 'earnings', message: `Extremely high earnings: ${earningsPerDay} pts/day average` });
+        }
+
+        // Check for same-IP referrals
+        const sameIpReferrals = referrals.filter(r => {
+            const refUser = db.get('SELECT ip_address FROM users WHERE id = ?', [r.id]);
+            return refUser && refUser.ip_address === user.ip_address;
+        });
+
+        if (sameIpReferrals.length > 0) {
+            suspiciousFlags.push({ type: 'referral', message: `${sameIpReferrals.length} referrals share same IP (self-referral?)` });
+        }
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                email: user.email,
+                displayName: user.display_name,
+                avatarUrl: user.avatar_url,
+                provider: user.provider,
+                balance: user.balance,
+                totalEarned: user.total_earned,
+                totalWithdrawn: user.total_withdrawn,
+                createdAt: user.created_at,
+                lastLoginAt: user.last_login_at,
+                lastActivityAt: user.last_activity_at,
+                role: user.role,
+                accountAge,
+                earningsPerDay
+            },
+            security: {
+                registrationIp: user.ip_address,
+                registrationUserAgent: user.user_agent,
+                uniqueIps,
+                suspiciousFlags
+            },
+            transactions,
+            withdrawals,
+            referral: {
+                code: user.referral_code,
+                referrer,
+                referrals: referrals.map(r => ({
+                    displayName: r.display_name,
+                    createdAt: r.created_at,
+                    totalEarned: r.total_earned
+                }))
+            }
+        });
+
+    } catch (e) {
+        console.error('User security error:', e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * POST /api/admin/withdrawals/:id/action
+ * Process withdrawal with approve/reject/ban options
+ */
+app.post('/api/admin/withdrawals/:id/action', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, notes } = req.body; // action: 'approve', 'reject', 'ban'
+
+        // Get the withdrawal
+        const withdrawal = db.get('SELECT * FROM withdrawals WHERE id = ?', [id]);
+        if (!withdrawal) {
+            return res.status(404).json({ success: false, error: 'Withdrawal not found' });
+        }
+
+        if (withdrawal.status !== 'pending') {
+            return res.status(400).json({ success: false, error: 'Withdrawal already processed' });
+        }
+
+        const userId = withdrawal.user_id;
+        const adminNotes = notes || `Processed by admin: ${action}`;
+
+        switch (action) {
+            case 'approve':
+                // Mark as completed
+                db.run(`
+                    UPDATE withdrawals 
+                    SET status = 'completed', 
+                        admin_notes = ?, 
+                        processed_at = datetime('now'),
+                        completed_at = datetime('now')
+                    WHERE id = ?
+                `, [adminNotes, id]);
+
+                console.log(`✅ Withdrawal #${id} APPROVED for user ${userId}`);
+                break;
+
+            case 'reject':
+                // Reject and refund points
+                db.run(`
+                    UPDATE withdrawals 
+                    SET status = 'cancelled', 
+                        admin_notes = ?, 
+                        processed_at = datetime('now')
+                    WHERE id = ?
+                `, [adminNotes, id]);
+
+                // Refund points to user
+                db.run('UPDATE users SET balance = balance + ? WHERE id = ?', [withdrawal.points_spent, userId]);
+
+                // Log refund transaction
+                const refundTxId = `refund_${id}_${Date.now()}`;
+                db.run(`
+                    INSERT INTO transactions (id, user_id, amount, type, source, description)
+                    VALUES (?, ?, ?, 'credit', 'admin_refund', ?)
+                `, [refundTxId, userId, withdrawal.points_spent, `Withdrawal #${id} rejected - points refunded`]);
+
+                console.log(`❌ Withdrawal #${id} REJECTED - ${withdrawal.points_spent} points refunded to user ${userId}`);
+                break;
+
+            case 'ban':
+                // Reject, refund, and ban user
+                db.run(`
+                    UPDATE withdrawals 
+                    SET status = 'cancelled', 
+                        admin_notes = ?, 
+                        processed_at = datetime('now')
+                    WHERE id = ?
+                `, [`BANNED: ${adminNotes}`, id]);
+
+                // Refund points
+                db.run('UPDATE users SET balance = balance + ? WHERE id = ?', [withdrawal.points_spent, userId]);
+
+                // Log refund
+                const banRefundTxId = `refund_ban_${id}_${Date.now()}`;
+                db.run(`
+                    INSERT INTO transactions (id, user_id, amount, type, source, description)
+                    VALUES (?, ?, ?, 'credit', 'admin_refund', ?)
+                `, [banRefundTxId, userId, withdrawal.points_spent, `Withdrawal #${id} - banned user refund`]);
+
+                // Ban the user (set role to 'banned')
+                db.run("UPDATE users SET role = 'banned' WHERE id = ?", [userId]);
+
+                // Cancel all other pending withdrawals from this user
+                db.run(`
+                    UPDATE withdrawals 
+                    SET status = 'cancelled', admin_notes = 'User banned'
+                    WHERE user_id = ? AND status = 'pending'
+                `, [userId]);
+
+                console.log(`🚫 User ${userId} BANNED - Withdrawal #${id} cancelled`);
+                break;
+
+            default:
+                return res.status(400).json({ success: false, error: 'Invalid action. Use: approve, reject, or ban' });
+        }
+
+        res.json({
+            success: true,
+            message: `Withdrawal ${action}ed successfully`,
+            action,
+            withdrawalId: id
+        });
+
+    } catch (e) {
+        console.error('Withdrawal action error:', e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -1959,12 +2501,22 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
 
         // Get user from database
         const user = db.get(`
-            SELECT balance, created_at, first_withdrawal_at 
+            SELECT balance, created_at, first_withdrawal_at, personal_info_completed 
             FROM users WHERE id = ?
         `, [userId]);
 
         if (!user) {
             return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Check if personal info is required (first withdrawal)
+        if (!user.personal_info_completed) {
+            return res.status(400).json({
+                success: false,
+                error: 'Personal information required for first withdrawal',
+                code: 'PERSONAL_INFO_REQUIRED',
+                needsPersonalInfo: true
+            });
         }
 
         // Check 7-day rule for first withdrawal (TEMPORARILY DISABLED FOR TESTING)
@@ -2009,11 +2561,14 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
             VALUES (?, ?, ?, 'debit', 'withdrawal', ?)
         `, [txId, userId, reward.price, `Redeemed: ${rewardName}`]);
 
-        // Create withdrawal record
+        // Create withdrawal record with fraud tracking data
+        const requestIp = getClientIP(req);
+        const requestUserAgent = req.headers['user-agent'] || null;
+
         db.run(`
-            INSERT INTO withdrawals (user_id, reward_id, reward_name, points_spent, delivery_info, status)
-            VALUES (?, ?, ?, ?, ?, 'pending')
-        `, [userId, rewardId, rewardName, reward.price, deliveryInfo || null]);
+            INSERT INTO withdrawals (user_id, reward_id, reward_name, points_spent, delivery_info, status, request_ip, request_user_agent)
+            VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
+        `, [userId, rewardId, rewardName, reward.price, deliveryInfo || null, requestIp, requestUserAgent]);
 
         // Get the last insert ID (for the withdrawal)
         const lastWithdrawal = db.get('SELECT id FROM withdrawals ORDER BY id DESC LIMIT 1');
@@ -2043,7 +2598,205 @@ app.post('/api/withdraw', verifyAuth, (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ADMIN ROUTES & FRAUD DETECTION
+// PERSONAL INFO ROUTES (KYC for Withdrawals)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/user/personal-info
+ * Check if user has completed personal info
+ */
+app.get('/api/user/personal-info', verifyAuth, (req, res) => {
+    try {
+        const userId = req.user.uid;
+        const user = db.get(`
+            SELECT first_name, last_name, address, city, postal_code, country, personal_info_completed
+            FROM users WHERE id = ?
+        `, [userId]);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        res.json({
+            success: true,
+            completed: !!user.personal_info_completed,
+            info: user.personal_info_completed ? {
+                firstName: user.first_name,
+                lastName: user.last_name,
+                address: user.address,
+                city: user.city,
+                postalCode: user.postal_code,
+                country: user.country
+            } : null
+        });
+    } catch (e) {
+        console.error('Personal info check error:', e);
+        res.status(500).json({ success: false, error: 'Failed to check personal info' });
+    }
+});
+
+/**
+ * POST /api/user/personal-info
+ * Save user personal info for KYC (first withdrawal requirement)
+ */
+app.post('/api/user/personal-info', verifyAuth, (req, res) => {
+    try {
+        const userId = req.user.uid;
+        const { firstName, lastName, address, city, postalCode, country } = req.body;
+
+        // Validation
+        if (!firstName || !lastName || !address || !city || !postalCode || !country) {
+            return res.status(400).json({
+                success: false,
+                error: 'All fields are required: firstName, lastName, address, city, postalCode, country'
+            });
+        }
+
+        // Basic validation
+        if (firstName.length < 2 || firstName.length > 50) {
+            return res.status(400).json({ success: false, error: 'First name must be between 2 and 50 characters' });
+        }
+        if (lastName.length < 2 || lastName.length > 50) {
+            return res.status(400).json({ success: false, error: 'Last name must be between 2 and 50 characters' });
+        }
+        if (address.length < 5 || address.length > 200) {
+            return res.status(400).json({ success: false, error: 'Address must be between 5 and 200 characters' });
+        }
+        if (city.length < 2 || city.length > 100) {
+            return res.status(400).json({ success: false, error: 'City must be between 2 and 100 characters' });
+        }
+        if (postalCode.length < 3 || postalCode.length > 20) {
+            return res.status(400).json({ success: false, error: 'Postal code must be between 3 and 20 characters' });
+        }
+        if (country.length < 2 || country.length > 100) {
+            return res.status(400).json({ success: false, error: 'Country must be between 2 and 100 characters' });
+        }
+
+        // Update user with personal info
+        db.run(`
+            UPDATE users SET
+                first_name = ?,
+                last_name = ?,
+                address = ?,
+                city = ?,
+                postal_code = ?,
+                country = ?,
+                personal_info_completed = 1
+            WHERE id = ?
+        `, [firstName.trim(), lastName.trim(), address.trim(), city.trim(), postalCode.trim(), country.trim(), userId]);
+
+        console.log(`📋 Personal info saved for user ${userId}`);
+
+        res.json({
+            success: true,
+            message: 'Personal information saved successfully'
+        });
+
+    } catch (e) {
+        console.error('Save personal info error:', e);
+        res.status(500).json({ success: false, error: 'Failed to save personal info' });
+    }
+});
+
+/**
+ * GET /api/user/profile
+ * Get complete user profile including personal info and withdrawal history
+ */
+app.get('/api/user/profile', verifyAuth, (req, res) => {
+    try {
+        const userId = req.user.uid;
+
+        // Get user data with personal info
+        const user = db.get(`
+            SELECT 
+                id, email, display_name, avatar_url,
+                first_name, last_name, address, city, postal_code, country,
+                balance, total_earned, total_withdrawn, personal_info_completed,
+                created_at, first_withdrawal_at, referral_code
+            FROM users WHERE id = ?
+        `, [userId]);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Get withdrawal history (last 50)
+        const withdrawals = db.all(`
+            SELECT 
+                id, reward_name, points_spent, status, 
+                created_at, processed_at, admin_notes
+            FROM withdrawals 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC 
+            LIMIT 50
+        `, [userId]);
+
+        console.log(`[PROFILE_DEBUG] UserID: ${userId}, Withdrawals found: ${withdrawals ? withdrawals.length : 0}`);
+        if (withdrawals && withdrawals.length > 0) {
+            console.log(`[PROFILE_DEBUG] First withdrawal:`, withdrawals[0]);
+        }
+
+        // Calculate account stats
+        const stats = {
+            accountAge: Math.floor((Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24)), // days
+            totalWithdrawals: withdrawals.length,
+            pendingWithdrawals: withdrawals.filter(w => w.status === 'pending').length,
+            completedWithdrawals: withdrawals.filter(w => w.status === 'approved').length,
+            rejectedWithdrawals: withdrawals.filter(w => w.status === 'rejected').length
+        };
+
+        res.json({
+            success: true,
+            profile: {
+                // Basic info
+                email: user.email,
+                displayName: user.display_name,
+                avatarUrl: user.avatar_url,
+
+                // Personal info (KYC)
+                personalInfo: user.personal_info_completed ? {
+                    firstName: user.first_name,
+                    lastName: user.last_name,
+                    address: user.address,
+                    city: user.city,
+                    postalCode: user.postal_code,
+                    country: user.country
+                } : null,
+                personalInfoCompleted: !!user.personal_info_completed,
+
+                // Account stats
+                balance: user.balance,
+                totalEarned: user.total_earned,
+                totalWithdrawn: user.total_withdrawn,
+                createdAt: user.created_at,
+                firstWithdrawalAt: user.first_withdrawal_at,
+                referralCode: user.referral_code,
+
+                // Calculated stats
+                stats: stats
+            },
+
+            // Withdrawal history
+            withdrawals: withdrawals.map(w => ({
+                id: w.id,
+                rewardName: w.reward_name,
+                pointsSpent: w.points_spent,
+                status: w.status,
+                createdAt: w.created_at,
+                processedAt: w.processed_at,
+                adminNote: w.admin_note
+            }))
+        });
+
+    } catch (e) {
+        console.error('Profile fetch error:', e);
+        res.status(500).json({ success: false, error: 'Failed to load profile' });
+    }
+});
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADMIN ROUTES (Optional - for manual management)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -2887,6 +3640,177 @@ app.get('/api/admin/stats', verifyAdmin, (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to fetch stats' });
     }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SEO ANALYTICS API ROUTES (Admin Only)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/analytics/stats
+ * Global analytics statistics
+ */
+app.get('/api/admin/analytics/stats', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const totalVisits = db.get('SELECT COUNT(*) as count FROM analytics_visits WHERE device_type != "bot"');
+        const totalVisitsToday = db.get(`
+            SELECT COUNT(*) as count 
+            FROM analytics_visits 
+            WHERE device_type != 'bot' 
+            AND DATE(timestamp) = DATE('now')
+        `);
+
+        const uniqueVisitors = db.get(`
+            SELECT COUNT(DISTINCT visitor_ip_hash) as count 
+            FROM analytics_visits 
+            WHERE device_type != 'bot'
+        `);
+
+        const topPage = db.get(`
+            SELECT page_url, COUNT(*) as visits
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            GROUP BY page_url
+            ORDER BY visits DESC
+            LIMIT 1
+        `);
+
+        res.json({
+            success: true,
+            stats: {
+                totalVisits: totalVisits?.count || 0,
+                totalVisitsToday: totalVisitsToday?.count || 0,
+                uniqueVisitors: uniqueVisitors?.count || 0,
+                topPage: topPage || null
+            }
+        });
+    } catch (error) {
+        console.error('Analytics stats error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/analytics/timeline
+ * Daily visits over last 30 days
+ */
+app.get('/api/admin/analytics/timeline', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const timeline = db.all(`
+            SELECT DATE(timestamp) as date, COUNT(*) as visits
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            AND timestamp >= datetime('now', '-30 days')
+            GROUP BY DATE(timestamp)
+            ORDER BY date ASC
+        `);
+
+        res.json({ success: true, timeline });
+    } catch (error) {
+        console.error('Analytics timeline error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/analytics/peak-hours
+ * Hourly traffic distribution (last 7 days)
+ */
+app.get('/api/admin/analytics/peak-hours', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const peakHours = db.all(`
+            SELECT 
+                CAST(strftime('%H', timestamp) AS INTEGER) as hour,
+                COUNT(*) as visits
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            AND timestamp >= datetime('now', '-7 days')
+            GROUP BY hour
+            ORDER BY hour ASC
+        `);
+
+        res.json({ success: true, peakHours });
+    } catch (error) {
+        console.error('Analytics peak hours error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/analytics/top-blogs
+ * Top 10 most visited blog articles (last 7 days)
+ */
+app.get('/api/admin/analytics/top-blogs', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const topBlogs = db.all(`
+            SELECT 
+                blog_slug,
+                page_url,
+                COUNT(*) as total_views,
+                COUNT(DISTINCT visitor_ip_hash) as unique_views
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            AND blog_slug IS NOT NULL
+            AND timestamp >= datetime('now', '-7 days')
+            GROUP BY blog_slug
+            ORDER BY total_views DESC
+            LIMIT 10
+        `);
+
+        res.json({ success: true, topBlogs });
+    } catch (error) {
+        console.error('Analytics top blogs error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/analytics/traffic-sources
+ * Traffic source breakdown (direct, google, social, other)
+ */
+app.get('/api/admin/analytics/traffic-sources', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const sources = db.all(`
+            SELECT 
+                referer_category,
+                COUNT(*) as visits,
+                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM analytics_visits WHERE device_type != 'bot'), 2) as percentage
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            GROUP BY referer_category
+            ORDER BY visits DESC
+        `);
+
+        res.json({ success: true, sources });
+    } catch (error) {
+        console.error('Analytics traffic sources error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/analytics/devices
+ * Device type breakdown (mobile, desktop, tablet)
+ */
+app.get('/api/admin/analytics/devices', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const devices = db.all(`
+            SELECT 
+                device_type,
+                COUNT(*) as visits,
+                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM analytics_visits WHERE device_type != 'bot'), 2) as percentage
+            FROM analytics_visits
+            WHERE device_type != 'bot'
+            GROUP BY device_type
+            ORDER BY visits DESC
+        `);
+
+        res.json({ success: true, devices });
+    } catch (error) {
+        console.error('Analytics devices error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 
 // SPA fallback - serve index.html for all other routes
 app.get('*', (req, res) => {

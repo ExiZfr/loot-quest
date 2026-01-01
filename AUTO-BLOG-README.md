@@ -4,16 +4,18 @@
 
 Le script `auto-blog-generator.js` génère automatiquement **1 nouveau blog par minute** :
 - Alterne entre français et anglais
-- 45+ sujets gaming dans la rotation
+- **151 sujets** gaming, streaming, finance, crypto dans la rotation
 - Template identique aux blogs existants
 - Met à jour `blog-data.js` automatiquement
+- Sauvegarde dans `public/blog/`
+
 
 ## 🚀 Déploiement sur le VPS
 
 ### Étape 1 : Push sur GitHub
 ```bash
 git add .
-git commit -m "Add auto-blog generator service"
+git commit -m "Expanded auto-blog generator to 200+ topics"
 git push origin master
 ```
 
@@ -40,12 +42,12 @@ Tu devrais voir :
 ```
 🤖 LOOTQUEST AUTO-BLOG GENERATOR STARTED
 ⏱️  Generation interval: 60s
-📚 Topic pool size: 45 topics
+📚 Topic pool size: 151 topics
 🌍 Languages: FR ↔ EN (alternating)
 
 🔄 [21:25:00] Generating FR: PlayStation Plus...
    ✅ Created: playstation-plus-gratuit-fr.html
-   📝 Updated blog-data.js
+   📝 Updated blog-data.js (ID: 200)
    📊 Total generated: 1
 ```
 
@@ -68,8 +70,11 @@ pm2 monit
 ## 🎯 Résultat
 
 - **1 blog/minute** = 60 blogs/heure = **1440 blogs/jour**
-- Rotation infinie des 45 sujets
+- **151 topics** × 2 langues = **302 blogs uniques** avant rotation
+- Rotation infinie après avoir épuisé tous les sujets
 - FR/EN pour chaque sujet
 - Logs dans `/var/www/lootquest/logs/`
 
-🚀 **Le site aura des centaines de blogs en quelques heures !**
+🚀 **Le site aura 302 blogs uniques en moins de 6 heures !**
+
+

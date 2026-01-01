@@ -195,6 +195,15 @@
                 <span class="font-medium">Boutique</span>
             </button>
 
+            <button onclick="navigate('profile')" id="nav-profile"
+                class="w-full nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all text-left">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span class="font-medium">Profil</span>
+            </button>
+
             <button onclick="navigate('settings')" id="nav-settings"
                 class="w-full nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all text-left group">
                 <svg class="w-5 h-5 group-hover:text-purple-400 transition-colors" fill="none" viewBox="0 0 24 24"
@@ -566,6 +575,88 @@
                 </div>
             </section>
 
+            <!-- ======================= VIEW: PROFILE ======================= -->
+            <section id="view-profile" class="hidden animate-fade-in pb-20 space-y-6">
+                <!-- Header -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-bold text-white font-display">Mon Profil</h2>
+                        <p class="text-gray-400 text-sm md:text-base mt-1">Gérez vos informations et consultez votre
+                            historique</p>
+                    </div>
+                </div>
+
+                <!-- Personal Info Card -->
+                <div class="glass-panel rounded-2xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Informations Personnelles
+                        </h3>
+                        <span id="kyc-badge"
+                            class="hidden px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full border border-green-500/30">
+                            ✓ Vérifiées
+                        </span>
+                    </div>
+
+                    <div id="profile-info-content" class="space-y-4">
+                        <div class="text-center py-8">
+                            <div
+                                class="animate-spin w-8 h-8 border-2 border-accent border-t-transparent rounded-full mx-auto">
+                            </div>
+                            <p class="text-gray-400 text-sm mt-2">Chargement...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="glass-panel rounded-2xl p-5 text-center border border-white/10">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Compte créé</p>
+                        <p class="text-2xl font-bold text-white" id="stat-account-age">-</p>
+                        <p class="text-xs text-gray-500 mt-1">jours</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-5 text-center border border-white/10">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Total Gagné</p>
+                        <p class="text-2xl font-bold text-accent" id="stat-total-earned">-</p>
+                        <p class="text-xs text-gray-500 mt-1">points</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-5 text-center border border-white/10">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Total Retiré</p>
+                        <p class="text-2xl font-bold text-purple-400" id="stat-total-withdrawn">-</p>
+                        <p class="text-xs text-gray-500 mt-1">points</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-5 text-center border border-white/10">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Retraits</p>
+                        <p class="text-2xl font-bold text-white" id="stat-total-withdrawals">-</p>
+                        <p class="text-xs text-gray-500 mt-1">total</p>
+                    </div>
+                </div>
+
+                <!-- Withdrawal History -->
+                <div class="glass-panel rounded-2xl p-6 border border-white/10">
+                    <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Historique des Retraits
+                    </h3>
+
+                    <div id="withdrawals-table" class="overflow-x-auto">
+                        <div class="text-center py-8">
+                            <div
+                                class="animate-spin w-8 h-8 border-2 border-accent border-t-transparent rounded-full mx-auto">
+                            </div>
+                            <p class="text-gray-400 text-sm mt-2">Chargement...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </div>
     </main>
 
@@ -614,7 +705,18 @@
 
         async function authenticateUser(u) {
             try {
-                const res = await fetch('/api/user/me');
+                // Build headers for Firebase users
+                const headers = {};
+                const firebaseUser = firebase.auth().currentUser;
+                if (firebaseUser) {
+                    const token = await firebaseUser.getIdToken();
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const res = await fetch('/api/user/me', {
+                    credentials: 'include', // Important for session cookies
+                    headers: headers
+                });
                 const data = await res.json();
                 if (data.success) {
                     state.user = data.user;
@@ -677,7 +779,7 @@
             state.currentView = view;
 
             // Toggle Views
-            ['home', 'earn', 'withdraw', 'settings'].forEach(id => {
+            ['home', 'earn', 'withdraw', 'profile', 'settings'].forEach(id => {
                 document.getElementById(`view-${id}`)?.classList.add('hidden');
                 document.getElementById(`nav-${id}`)?.classList.remove('active', 'bg-white/5', 'text-white');
                 document.getElementById(`nav-${id}`)?.classList.add('text-gray-400');
@@ -696,9 +798,10 @@
 
             // Load Data if needed
             if (view === 'settings') loadReferralData();
+            if (view === 'profile') loadProfileData();
 
             // Update Title
-            const titles = { 'home': 'Dashboard', 'earn': 'Gagner', 'withdraw': 'Boutique', 'settings': 'Parrainage' };
+            const titles = { 'home': 'Dashboard', 'earn': 'Gagner', 'withdraw': 'Boutique', 'profile': 'Profil', 'settings': 'Parrainage' };
             document.getElementById('page-title').innerText = titles[view];
         }
 
@@ -795,6 +898,113 @@
             }
             document.querySelector('.fixed.z-\\[100\\]').remove();
             navigate('settings');
+        }
+
+        // --- PROFILE DATA ---
+        async function loadProfileData() {
+            try {
+                // Build headers
+                const headers = {};
+                const firebaseUser = firebase.auth().currentUser;
+                if (firebaseUser) {
+                    const token = await firebaseUser.getIdToken();
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const res = await fetch('/api/user/profile', {
+                    credentials: 'include',
+                    headers: headers
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const { profile, withdrawals } = data;
+
+                    // Update personal info
+                    const infoContent = document.getElementById('profile-info-content');
+                    if (profile.personalInfoCompleted) {
+                        document.getElementById('kyc-badge').classList.remove('hidden');
+                        const info = profile.personalInfo;
+                        infoContent.innerHTML = `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-xs text-gray-500 mb-1">Nom complet</p>
+                                    <p class="text-white font-medium">${info.firstName} ${info.lastName}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 mb-1">Email</p>
+                                    <p class="text-white font-medium">${profile.email}</p>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <p class="text-xs text-gray-500 mb-1">Adresse</p>
+                                    <p class="text-white font-medium">${info.address}, ${info.postalCode} ${info.city}, ${info.country}</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        infoContent.innerHTML = `
+                            <div class="text-center py-6">
+                                <p class="text-gray-400 text-sm mb-4">Aucune information personnelle enregistrée</p>
+                                <p class="text-xs text-gray-500">Les informations seront demandées lors de votre premier retrait</p>
+                            </div>
+                        `;
+                    }
+
+                    // Update stats
+                    document.getElementById('stat-account-age').textContent = profile.stats.accountAge;
+                    document.getElementById('stat-total-earned').textContent = profile.totalEarned.toLocaleString();
+                    document.getElementById('stat-total-withdrawn').textContent = profile.totalWithdrawn.toLocaleString();
+                    document.getElementById('stat-total-withdrawals').textContent = profile.stats.totalWithdrawals;
+
+                    // Update withdrawal history
+                    const tableEl = document.getElementById('withdrawals-table');
+                    if (withdrawals.length === 0) {
+                        tableEl.innerHTML = '<div class="text-center py-8 text-gray-400">Aucun retrait pour le moment</div>';
+                    } else {
+                        const statusBadge = (status) => {
+                            const badges = {
+                                pending: '<span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded">⏳ En attente</span>',
+                                approved: '<span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">✓ Approuvé</span>',
+                                rejected: '<span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded">✗ Rejeté</span>',
+                                banned: '<span class="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs font-bold rounded">🚫 Banni</span>'
+                            };
+                            return badges[status] || status;
+                        };
+
+                        const formatDate = (dateStr) => {
+                            const date = new Date(dateStr);
+                            return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+                        };
+
+                        tableEl.innerHTML = `
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-white/10">
+                                        <th class="text-left py-3 px-4 text-xs font-bold text-gray-400 uppercase">Récompense</th>
+                                        <th class="text-center py-3 px-4 text-xs font-bold text-gray-400 uppercase">Points</th>
+                                        <th class="text-center py-3 px-4 text-xs font-bold text-gray-400 uppercase">Date</th>
+                                        <th class="text-center py-3 px-4 text-xs font-bold text-gray-400 uppercase">Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${withdrawals.map(w => `
+                                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                                            <td class="py-4 px-4 text-white font-medium">${w.rewardName}</td>
+                                            <td class="py-4 px-4 text-center text-accent font-mono">${w.pointsSpent.toLocaleString()}</td>
+                                            <td class="py-4 px-4 text-center text-gray-400 text-sm">${formatDate(w.createdAt)}</td>
+                                            <td class="py-4 px-4 text-center">${statusBadge(w.status)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        `;
+                    }
+                } else {
+                    console.error('Failed to load profile:', data.error);
+                }
+            } catch (e) {
+                console.error('Profile load error:', e);
+            }
         }
 
 
