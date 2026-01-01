@@ -285,25 +285,109 @@
 
         <!-- Users Section (Hidden by default) -->
         <section id="users-section" class="section hidden">
-            <h2 class="text-3xl font-bold mb-8">Users Management</h2>
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold">Users Management</h2>
+                    <p class="text-gray-400 mt-1">Manage registered users and their activity.</p>
+                </div>
+            </div>
+
+            <!-- Users Stats -->
+            <div class="grid grid-cols-4 gap-6 mb-6">
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs text-gray-400 uppercase">Total Users</p>
+                    <p class="text-2xl font-bold mt-1" id="total-users">-</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs text-gray-400 uppercase">New Today</p>
+                    <p class="text-2xl font-bold mt-1 text-green-400" id="new-today">-</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs text-gray-400 uppercase">Google</p>
+                    <p class="text-2xl font-bold mt-1 text-blue-400" id="google-count">-</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs text-gray-400 uppercase">Discord</p>
+                    <p class="text-2xl font-bold mt-1 text-purple-400" id="discord-count">-</p>
+                </div>
+            </div>
+
             <div class="glass-card rounded-2xl p-6">
-                <p class="text-gray-400">Users list will be displayed here</p>
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold">All Users</h3>
+                    <input type="text" placeholder="Search users..."
+                        class="px-4 py-2 bg-dark-bg rounded-lg text-sm border border-white/5 focus:border-brand-purple outline-none">
+                </div>
+                <div id="users-list" class="text-gray-400">Loading users...</div>
             </div>
         </section>
 
         <!-- Payouts Section (Hidden by default) -->
         <section id="payouts-section" class="section hidden">
-            <h2 class="text-3xl font-bold mb-8">Payouts & Fraud Detection</h2>
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold">Payouts & Fraud Detection</h2>
+                    <p class="text-gray-400 mt-1">Review pending withdrawals with security analysis.</p>
+                </div>
+            </div>
+
+            <!-- Payouts Stats -->
+            <div class="grid grid-cols-3 gap-6 mb-6">
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs text-gray-400 uppercase">Pending</p>
+                    <p class="text-2xl font-bold mt-1 text-yellow-400" id="pending-count">-</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs text-gray-400 uppercase">Approved</p>
+                    <p class="text-2xl font-bold mt-1 text-green-400" id="approved-count">-</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs text-gray-400 uppercase">Rejected</p>
+                    <p class="text-2xl font-bold mt-1 text-red-400" id="rejected-count">-</p>
+                </div>
+            </div>
+
             <div class="glass-card rounded-2xl p-6">
-                <p class="text-gray-400">Pending withdrawals will be displayed here</p>
+                <h3 class="text-lg font-semibold mb-6">Pending Withdrawals</h3>
+                <div id="withdrawals-list" class="space-y-4">
+                    <div class="text-center text-gray-500 py-8">Loading withdrawals...</div>
+                </div>
             </div>
         </section>
 
         <!-- SEO Analytics Section (Hidden by default) -->
         <section id="seo-section" class="section hidden">
             <h2 class="text-3xl font-bold mb-8">SEO Analytics</h2>
-            <div class="glass-card rounded-2xl p-6">
-                <p class="text-gray-400">SEO data will be displayed here</p>
+
+            <!-- SEO Stats -->
+            <div class="grid grid-cols-4 gap-6 mb-6">
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs text-gray-400 uppercase">SEO Traffic</p>
+                    <p class="text-2xl font-bold mt-1 text-blue-400" id="seo-traffic-count">-</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs text-gray-400 uppercase">Social</p>
+                    <p class="text-2xl font-bold mt-1 text-pink-400" id="social-count">-</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs text-gray-400 uppercase">Direct</p>
+                    <p class="text-2xl font-bold mt-1 text-purple-400" id="direct-count">-</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs text-gray-400 uppercase">Pages</p>
+                    <p class="text-2xl font-bold mt-1" id="pages-count">-</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-6">Top Sources</h3>
+                    <canvas id="sourcesChart" height="250"></canvas>
+                </div>
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-6">Devices</h3>
+                    <canvas id="devicesChart" height="250"></canvas>
+                </div>
             </div>
         </section>
 
@@ -485,18 +569,146 @@
         }
 
         // Load SEO Analytics
-        function loadSEOAnalytics() {
-            document.getElementById('seo-section').innerHTML = '<h2 class="text-3xl font-bold mb-8">SEO Analytics</h2><div class="glass-card rounded-2xl p-6"><p class="text-gray-400">Full SEO analytics coming soon...</p></div>';
+        async function loadSEOAnalytics() {
+            try {
+                const response = await fetch('/api/admin/seo-stats', { credentials: 'include' });
+                const data = await response.json();
+
+                if (data.success) {
+                    const seo = data.channelBreakdown.find(c => c.channel === 'SEO')?.visits || 0;
+                    const social = data.channelBreakdown.find(c => c.channel === 'Social')?.visits || 0;
+                    const direct = data.channelBreakdown.find(c => c.channel === 'Direct')?.visits || 0;
+
+                    document.getElementById('seo-traffic-count').textContent = seo.toLocaleString();
+                    document.getElementById('social-count').textContent = social.toLocaleString();
+                    document.getElementById('direct-count').textContent = direct.toLocaleString();
+                    document.getElementById('pages-count').textContent = data.topPages.length;
+
+                    const sourcesCtx = document.getElementById('sourcesChart');
+                    new Chart(sourcesCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.topSources.map(s => s.source),
+                            datasets: [{ label: 'Visits', data: data.topSources.map(s => s.visits), backgroundColor: '#6366f1' }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                                x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                            }
+                        }
+                    });
+
+                    const devicesCtx = document.getElementById('devicesChart');
+                    new Chart(devicesCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.deviceStats.map(d => d.device_type),
+                            datasets: [{ data: data.deviceStats.map(d => d.visits), backgroundColor: ['#6366f1', '#14b8a6', '#ec4899'] }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#9ca3af' } } } }
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load SEO:', error);
+            }
         }
 
         // Load Users
-        function loadUsers() {
-            document.getElementById('users-section').innerHTML = '<h2 class="text-3xl font-bold mb-8">Users Management</h2><div class="glass-card rounded-2xl p-6"><p class="text-gray-400">Users management coming soon...</p></div>';
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/stats', { credentials: 'include' });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('total-users').textContent = data.stats.users.total.toLocaleString();
+                    document.getElementById('new-today').textContent = data.stats.users.today || 0;
+                    document.getElementById('users-list').innerHTML = `
+                        <div class="text-center text-gray-400 py-8">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                            <p class="text-lg font-semibold">Users: ${data.stats.users.total}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Failed to load users:', error);
+            }
         }
 
         // Load Payouts
-        function loadPayouts() {
-            document.getElementById('payouts-section').innerHTML = '<h2 class="text-3xl font-bold mb-8">Payouts & Fraud Detection</h2><div class="glass-card rounded-2xl p-6"><p class="text-gray-400">Payouts fraud detection coming soon...</p></div>';
+        async function loadPayouts() {
+            try {
+                const response = await fetch('/api/admin/withdrawals/pending', { credentials: 'include' });
+                const data = await response.json();
+                if (data.success) {
+                    const pending = data.withdrawals.filter(w => w.status === 'pending').length;
+                    const approved = data.withdrawals.filter(w => w.status === 'completed').length;
+                    const rejected = data.withdrawals.filter(w => w.status === 'rejected').length;
+
+                    document.getElementById('pending-count').textContent = pending;
+                    document.getElementById('approved-count').textContent = approved;
+                    document.getElementById('rejected-count').textContent = rejected;
+
+                    const pendingList = data.withdrawals.filter(w => w.status === 'pending');
+                    if (pendingList.length === 0) {
+                        document.getElementById('withdrawals-list').innerHTML = `
+                            <div class="text-center text-gray-500 py-8">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <p class="text-lg font-semibold">No pending withdrawals</p>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('withdrawals-list').innerHTML = pendingList.map(w => `
+                            <div class="glass-card rounded-xl p-6">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+                                            ${w.user_email ? w.user_email[0].toUpperCase() : 'U'}
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold">${w.user_email || 'Unknown'}</p>
+                                            <p class="text-sm text-gray-400">${w.reward_name} - ${w.points_spent} pts</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button onclick="approveWithdrawal(${w.id})" class="px-4 py-2 bg-green-600 rounded-lg text-sm">Approve</button>
+                                        <button onclick="rejectWithdrawal(${w.id})" class="px-4 py-2 bg-red-600 rounded-lg text-sm">Reject</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load payouts:', error);
+            }
+        }
+
+        async function approveWithdrawal(id) {
+            if (!confirm('Approve?')) return;
+            try {
+                const response = await fetch(`/api/admin/withdrawals/${id}/action`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include', body: JSON.stringify({ action: 'approve' })
+                });
+                if (response.ok) { alert('Approved!'); loadPayouts(); }
+            } catch (error) { alert('Failed'); }
+        }
+
+        async function rejectWithdrawal(id) {
+            if (!confirm('Reject?')) return;
+            try {
+                const response = await fetch(`/api/admin/withdrawals/${id}/action`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include', body: JSON.stringify({ action: 'reject' })
+                });
+                if (response.ok) { alert('Rejected!'); loadPayouts(); }
+            } catch (error) { alert('Failed'); }
         }
 
         // Check admin authentication
