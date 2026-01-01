@@ -1135,6 +1135,38 @@ app.post('/api/auth/logout', async (req, res) => {
 });
 
 /**
+ * GET /api/user
+ * Get current user info (for admin panel auth check)
+ */
+app.get('/api/user', isAuthenticated, (req, res) => {
+    try {
+        const user = db.get('SELECT * FROM users WHERE id = ?', [req.user.id]);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                email: user.email,
+                displayName: user.display_name,
+                avatarUrl: user.avatar_url,
+                balance: user.balance,
+                role: user.role || 'user'
+            }
+        });
+    } catch (e) {
+        console.error('Get user error:', e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
  * GET /api/user/me
  * 
  * Get current authenticated user info from session.
@@ -1182,16 +1214,16 @@ app.get('/api/user/me', isAuthenticated, (req, res) => {
  */
 app.get('/api/user/referral', isAuthenticated, (req, res) => {
     try {
-        console.log(`📊 Fetching referral data for user: ${req.user.id}`);
+        console.log(`📊 Fetching referral data for user: ${req.user.id} `);
 
         let user = db.get('SELECT id, referral_code, referred_by_user_id FROM users WHERE id = ?', [req.user.id]);
 
         if (!user) {
-            console.error(`❌ User not found in DB: ${req.user.id}`);
+            console.error(`❌ User not found in DB: ${req.user.id} `);
             return res.status(404).json({ success: false, error: 'User not found' });
         }
 
-        console.log(`✅ User found:`, user);
+        console.log(`✅ User found: `, user);
 
         // AUTO-GENERATE referral code if user doesn't have one (legacy users)
         if (!user.referral_code) {
@@ -1199,7 +1231,7 @@ app.get('/api/user/referral', isAuthenticated, (req, res) => {
                 const newCode = generateReferralCode(user.id);
                 db.run('UPDATE users SET referral_code = ? WHERE id = ?', [newCode, user.id]);
                 user.referral_code = newCode;
-                console.log(`🔗 Generated referral code for legacy user: ${user.id} -> ${newCode}`);
+                console.log(`🔗 Generated referral code for legacy user: ${user.id} -> ${newCode} `);
             } catch (genError) {
                 console.error('❌ Error generating referral code:', genError);
                 // Continue anyway, we'll handle missing code later
@@ -1211,7 +1243,7 @@ app.get('/api/user/referral', isAuthenticated, (req, res) => {
         try {
             const countResult = db.get('SELECT COUNT(*) as count FROM users WHERE referred_by_user_id = ?', [req.user.id]);
             referralCount = countResult?.count || 0;
-            console.log(`📈 Total referrals: ${referralCount}`);
+            console.log(`📈 Total referrals: ${referralCount} `);
         } catch (countError) {
             console.error('❌ Error counting referrals:', countError);
         }
@@ -1221,7 +1253,7 @@ app.get('/api/user/referral', isAuthenticated, (req, res) => {
         try {
             const unlockedResult = db.get('SELECT COUNT(*) as count FROM users WHERE referred_by_user_id = ? AND referral_unlocked = 1', [req.user.id]);
             unlockedCount = unlockedResult?.count || 0;
-            console.log(`🔓 Unlocked referrals: ${unlockedCount}`);
+            console.log(`🔓 Unlocked referrals: ${unlockedCount} `);
         } catch (unlockedError) {
             console.error('⚠️ Error counting unlocked (column may not exist):', unlockedError);
             // Column might not exist for legacy DB, default to 0
@@ -1233,7 +1265,7 @@ app.get('/api/user/referral', isAuthenticated, (req, res) => {
         try {
             const commissionResult = db.get("SELECT COALESCE(SUM(amount), 0) as sum FROM transactions WHERE user_id = ? AND source IN ('referral_bonus', 'referral_commission')", [req.user.id]);
             totalCommission = commissionResult?.sum || 0;
-            console.log(`💰 Total commission: ${totalCommission}`);
+            console.log(`💰 Total commission: ${totalCommission} `);
         } catch (commissionError) {
             console.error('❌ Error calculating commission:', commissionError);
         }
