@@ -424,8 +424,11 @@ const htmlTemplate = (lang, title, metaDesc, category, h1, date, leadIntro, cont
 
 ${content}
 
-            <!-- Horizontal Ad Banner -->
-            <div class="ad-horizontal">BANNIÈRE PUBLICITAIRE (728x90)</div>
+            <!-- HORIZONTAL AD BANNER PLACEHOLDER (728x90) -->
+            <div class="ad-banner-horizontal my-8 p-4 rounded-xl border-2 border-dashed border-indigo-500/30 bg-indigo-500/5 text-center">
+                <p class="text-indigo-400 font-bold text-sm">📢 ESPACE PUBLICITAIRE (728x90)</p>
+                <p class="text-gray-500 text-xs mt-1">Votre pub ici</p>
+            </div>
 
             <div class="bg-indigo-600/20 border border-indigo-500 rounded-2xl p-8 text-center mt-12">
                 <h3 class="!mt-0 !text-indigo-300">${ctaTitle}</h3>
