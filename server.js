@@ -412,22 +412,30 @@ function getRewardById(id) {
 const app = express();
 
 // Security middleware
-app.use(helmet({
-    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
-    crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://www.gstatic.com", "https://apis.google.com", "https://*.firebaseapp.com", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://*.highperformanceformat.com", "https://*.effectivegatecpm.com"],
-            scriptSrcAttr: ["'unsafe-inline'"], // Allow onclick handlers
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            imgSrc: ["'self'", "data:", "https:", "blob:"],
-            connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://*.firebaseapp.com", "wss://*.firebaseio.com", "https://lootably.com", "https://unpkg.com", "https://www.gstatic.com", "https://*.highperformanceformat.com", "https://*.effectivegatecpm.com"],
-            frameSrc: ["'self'", "https://*.firebaseapp.com", "https://lootably.com", "https://*.highperformanceformat.com", "https://*.effectivegatecpm.com"],
+// Configuration de sécurité (Helmet) - Permissive pour Adsterra ads
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                // On autorise les scripts externes (Adsterra, Google, Chart.js, etc.)
+                scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:", "http:", "*"],
+                scriptSrcAttr: ["'unsafe-inline'"],
+                // CRUCIAL : On autorise les connexions vers n'importe où (car Adsterra change de domaine tout le temps)
+                connectSrc: ["'self'", "https:", "http:", "*"],
+                // CRUCIAL : On autorise les iFrames de n'importe où (pour les pubs)
+                frameSrc: ["'self'", "https:", "http:", "*"],
+                // On autorise les images de partout
+                imgSrc: ["'self'", "data:", "https:", "http:", "*"],
+                styleSrc: ["'self'", "'unsafe-inline'", "https:", "http:", "*"],
+                fontSrc: ["'self'", "https:", "data:"],
+                upgradeInsecureRequests: [], // Désactive la conversion auto http->https
+            },
         },
-    },
-}));
+        crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+        crossOriginEmbedderPolicy: false, // Désactive pour éviter de bloquer les ressources croisées
+    })
+);
 
 app.use(cors());
 app.use(express.json());
