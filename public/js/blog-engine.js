@@ -155,13 +155,20 @@ class BlogEngine {
                     <!-- Footer -->
                     <div class="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
                         <div class="flex items-center gap-2 text-xs font-medium text-gray-500">
-                            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                            <span>${post.readTime}</span>
+                            <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                            <span>${post.date}</span>
                         </div>
+                        ${post.timestamp ? `
+                        <div class="flex items-center gap-2 text-xs font-medium text-gray-500">
+                            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                            <span>${new Date(post.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        ` : `
                         <div class="flex items-center gap-2 text-xs font-medium text-gray-500 group-hover:text-loot-neon transition-colors">
                             <span>Lire l'article</span>
                             <i data-lucide="arrow-right" class="w-3.5 h-3.5 transform transition-transform group-hover:translate-x-1"></i>
                         </div>
+                        `}
                     </div>
                 </div>
             </article>
