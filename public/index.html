@@ -3101,6 +3101,13 @@
             }
         })();
 
+        // ════════════════ MOONTAG SERVICE WORKER REGISTRATION ════════════════
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('✅ MoonTag SW registered'))
+                .catch(err => console.log('SW registration failed:', err));
+        }
+
     </script>
 
     <!-- Shop Logic -->
