@@ -327,20 +327,10 @@
 
         let currentWithdrawalId = null;
 
-        function getAuthToken() {
-            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-        }
-
         async function loadPendingWithdrawals() {
             try {
-                const token = getAuthToken();
-                if (!token) {
-                    window.location.href = '/index.html';
-                    return;
-                }
-
                 const response = await fetch('/api/admin/withdrawals/pending', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    credentials: 'include'
                 });
 
                 if (!response.ok) {
@@ -612,13 +602,12 @@
             if (!currentWithdrawalId) return;
 
             const notes = document.getElementById('approve-notes').value;
-            const token = getAuthToken();
 
             try {
                 const response = await fetch(`/api/admin/withdrawals/${currentWithdrawalId}/approve`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ notes })
@@ -647,13 +636,11 @@
                 return;
             }
 
-            const token = getAuthToken();
-
             try {
                 const response = await fetch(`/api/admin/withdrawals/${currentWithdrawalId}/reject`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ reason })

@@ -375,24 +375,11 @@
         // Init Lucide Icons
         lucide.createIcons();
 
-        // Get session token
-        function getAuthToken() {
-            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-        }
-
-        // Fetch dashboard stats
+        // Fetch dashboard stats (uses session cookies automatically)
         async function loadDashboardStats() {
             try {
-                const token = getAuthToken();
-                if (!token) {
-                    window.location.href = '/index.html';
-                    return;
-                }
-
                 const response = await fetch('/api/admin/stats', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    credentials: 'include'
                 });
 
                 if (!response.ok) {

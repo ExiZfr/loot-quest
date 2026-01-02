@@ -300,18 +300,8 @@
         let totalPages = 1;
         let searchQuery = '';
 
-        function getAuthToken() {
-            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-        }
-
         async function loadUsers(page = 1) {
             try {
-                const token = getAuthToken();
-                if (!token) {
-                    window.location.href = '/index.html';
-                    return;
-                }
-
                 const url = new URL('/api/admin/users', window.location.origin);
                 url.searchParams.set('page', page);
                 url.searchParams.set('limit', 50);
@@ -320,7 +310,7 @@
                 }
 
                 const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    credentials: 'include'
                 });
 
                 if (!response.ok) {
@@ -409,9 +399,8 @@
         }
 
         function showUserDetails(userId) {
-            const token = getAuthToken();
             fetch(`/api/admin/users?search=${userId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             })
                 .then(res => res.json())
                 .then(data => {
