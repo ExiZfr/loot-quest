@@ -457,8 +457,6 @@ app.locals.db = db;
 // Tracks all page visits to analytics_visits table for real-time SEO metrics
 // ═══════════════════════════════════════════════════════════════════════════
 
-const crypto = require('crypto');
-
 /**
  * Track page visit middleware
  * Records all HTML page visits to analytics_visits table
