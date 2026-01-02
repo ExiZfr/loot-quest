@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="fr" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LootQuest | Admin Panel</title>
-    <link rel="icon" href="/favicon.png?v=2" type="image/png">
+    <title>LootQuest | Ultimate SEO Dashboard</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,726 +18,746 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif']
-                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         dark: {
-                            bg: '#0f1117',
-                            card: '#1a1d29',
-                            hover: '#21242f'
+                            900: '#0f172a', // Slate 900
+                            800: '#1e293b', // Slate 800
+                            card: 'rgba(15, 23, 42, 0.6)'
                         },
                         brand: {
-                            purple: '#6366f1',
-                            cyan: '#14b8a6'
+                            purple: '#8b5cf6', // Violet-500
+                            cyan: '#06b6d4',   // Cyan-500
+                            accent: '#22d3ee'  // Cyan-400
                         }
+                    },
+                    boxShadow: {
+                        'neon': '0 0 10px rgba(139, 92, 246, 0.3), 0 0 20px rgba(6, 182, 212, 0.2)',
+                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
                     }
                 }
             }
         }
     </script>
 
-    <!-- Chart.js -->
+    <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Three.js for 3D Globe -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
         body {
-            background: linear-gradient(135deg, #0f1117 0%, #1a1d29 100%);
+            background-color: #0f172a;
+            /* Slate 900 */
+            color: #e2e8f0;
+            overflow-x: hidden;
         }
 
-        .glass-card {
-            background: rgba(26, 29, 41, 0.5);
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-header {
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .glass-card:hover {
-            border-color: rgba(99, 102, 241, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .sidebar-link {
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.2) 0%, transparent 100%);
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-link:hover::before,
+        .sidebar-link.active::before {
+            width: 100%;
         }
 
         .sidebar-link.active {
-            background: rgba(99, 102, 241, 0.1);
-            border-left: 3px solid #6366f1;
+            border-right: 3px solid #8b5cf6;
+            color: white;
         }
 
-        .stat-card {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(20, 184, 166, 0.05) 100%);
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Globe Container */
+        #globe-container {
+            width: 100%;
+            height: 100%;
+            min-height: 350px;
+            overflow: hidden;
+            border-radius: 1rem;
+            position: relative;
+        }
+
+        #globe-container canvas {
+            outline: none;
+        }
+
+        .pulse-dot {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.33);
+                opacity: 1;
+            }
+
+            80%,
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
         }
     </style>
 </head>
 
-<body class="font-sans text-gray-200">
+<body class="flex h-screen">
 
-    <!-- Sidebar -->
-    <aside class="fixed left-0 top-0 h-screen w-64 bg-dark-card border-r border-white/5 z-50">
-        <div class="p-6">
-            <h1
-                class="text-2xl font-bold bg-gradient-to-r from-brand-purple to-brand-cyan bg-clip-text text-transparent">
-                LOOTQUEST</h1>
-            <p class="text-xs text-gray-500 mt-1">Admin Panel</p>
+    <!-- 1. SIDEBAR -->
+    <aside id="sidebar"
+        class="hidden md:flex flex-col w-64 glass-header border-r border-white/5 z-20 h-full transition-all duration-300">
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-white/5">
+            <div class="flex items-center gap-2 font-bold text-xl tracking-wider">
+                <div
+                    class="w-8 h-8 rounded bg-gradient-to-br from-brand-purple to-brand-cyan flex items-center justify-center text-white shadow-neon">
+                    <i data-lucide="gamepad-2" class="w-5 h-5"></i>
+                </div>
+                <span class="text-white">LOOT<span class="text-brand-cyan">QUEST</span></span>
+            </div>
         </div>
 
-        <nav class="px-4 space-y-1">
-            <button onclick="showSection('dashboard')"
-                class="sidebar-link active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-sm font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                Dashboard
-            </button>
-
-            <button onclick="showSection('users')"
-                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-sm font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                Users
-            </button>
-
-            <button onclick="showSection('payouts')"
-                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-sm font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Payouts
-            </button>
-
-            <button onclick="showSection('seo')"
-                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-sm font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                SEO Analytics
-            </button>
+        <!-- Navigation -->
+        <nav class="flex-1 py-6 px-3 space-y-1">
+            <a href="/admin.html" class="sidebar-link flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 group-hover:text-brand-cyan transition-colors"></i>
+                <span class="text-sm font-medium">Dashboard</span>
+            </a>
+            <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="users" class="w-5 h-5 group-hover:text-brand-cyan transition-colors"></i>
+                <span class="text-sm font-medium">Users</span>
+            </a>
+            <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="wallet" class="w-5 h-5 group-hover:text-brand-cyan transition-colors"></i>
+                <span class="text-sm font-medium">Payouts</span>
+            </a>
+            <a href="/admin-seo.html"
+                class="sidebar-link active flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="bar-chart-2" class="w-5 h-5 text-brand-purple"></i>
+                <span class="text-sm font-medium">SEO Analytics</span>
+            </a>
         </nav>
 
-        <div class="absolute bottom-0 w-full p-4 border-t border-white/5">
-            <div class="flex items-center gap-3 px-2">
-                <div
-                    class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-purple to-brand-cyan flex items-center justify-center text-white font-bold">
-                    A
+        <!-- User Profile -->
+        <div class="p-4 border-t border-white/5">
+            <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=8b5cf6&color=fff" alt="Admin"
+                    class="w-10 h-10 rounded-full border border-white/10">
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-white truncate">Admin</p>
+                    <p class="text-xs text-gray-400 truncate">admin@lootquest.fr</p>
                 </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium">Admin</p>
-                    <p class="text-xs text-gray-500" id="admin-email">Loading...</p>
-                </div>
+                <i data-lucide="log-out" class="w-4 h-4 text-gray-500 hover:text-white transition-colors"></i>
             </div>
         </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="ml-64 p-8">
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <!-- Background Ambient Glow -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+            <div
+                class="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-brand-purple/20 blur-[120px]">
+            </div>
+            <div
+                class="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-brand-cyan/10 blur-[100px]">
+            </div>
+        </div>
 
-        <!-- Dashboard Section -->
-        <section id="dashboard-section" class="section">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h2 class="text-3xl font-bold">Traffic Overview</h2>
-                    <p class="text-gray-400 mt-1">Real-time insights and performance metrics.</p>
-                </div>
-                <div class="flex gap-2">
-                    <button class="px-4 py-2 text-sm rounded-lg border border-white/10 hover:bg-dark-hover">24h</button>
-                    <button class="px-4 py-2 text-sm rounded-lg bg-brand-purple">7d</button>
-                    <button class="px-4 py-2 text-sm rounded-lg border border-white/10 hover:bg-dark-hover">30d</button>
-                    <button class="px-4 py-2 text-sm rounded-lg border border-white/10 hover:bg-dark-hover">90d</button>
+        <!-- 2. HEADER -->
+        <header class="h-16 glass-header flex items-center justify-between px-6 z-10 shrink-0">
+            <!-- Mobile Menu Button & Breadcrumbs -->
+            <div class="flex items-center gap-4">
+                <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-400 hover:text-white">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div class="hidden sm:flex items-center gap-2 text-sm text-gray-400">
+                    <span>Admin</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    <span class="text-white font-medium">Analytics</span>
                 </div>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-4 gap-6 mb-8">
-                <div class="glass-card stat-card rounded-2xl p-6">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
+            <!-- Right Actions -->
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <i data-lucide="bell"
+                        class="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors"></i>
+                    <span class="absolute -top-1 -right-0.5 w-2 h-2 bg-brand-cyan rounded-full animate-pulse"></span>
+                </div>
+                <button
+                    class="bg-gradient-to-r from-brand-purple to-indigo-600 hover:from-brand-purple/90 hover:to-indigo-600/90 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-lg shadow-brand-purple/20 transition-all flex items-center gap-2">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    Export Report
+                </button>
+            </div>
+        </header>
+
+        <!-- 3. SCROLLABLE CONTENT -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+            <div class="max-w-7xl mx-auto space-y-6">
+
+                <!-- Title Section -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-white tracking-tight">Traffic Overview</h1>
+                        <p class="text-gray-400 mt-1">Real-time insights and performance metrics.</p>
+                    </div>
+                    <div class="flex bg-dark-800/50 rounded-lg p-1 border border-white/5">
+                        <button
+                            class="px-3 py-1 text-xs font-medium rounded text-gray-400 hover:text-white transition-colors">24h</button>
+                        <button
+                            class="px-3 py-1 text-xs font-medium rounded bg-white/10 text-white shadow-sm">7d</button>
+                        <button
+                            class="px-3 py-1 text-xs font-medium rounded text-gray-400 hover:text-white transition-colors">30d</button>
+                        <button
+                            class="px-3 py-1 text-xs font-medium rounded text-gray-400 hover:text-white transition-colors">90d</button>
+                    </div>
+                </div>
+
+                <!-- KPI GRID (Ligne 1) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    <!-- KPI 1 -->
+                    <div
+                        class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-brand-purple/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Visites
+                                    Aujourd'hui</p>
+                                <h3
+                                    class="text-3xl font-bold text-white mt-1 group-hover:scale-105 transition-transform origin-left">
+                                    14,203</h3>
+                            </div>
+                            <div class="p-2 bg-brand-purple/10 rounded-lg text-brand-purple">
+                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-wider">Visits Last 7d</p>
-                            <p class="text-2xl font-bold" id="total-visits">-</p>
-                            <p class="text-xs text-green-400 mt-1">+24.5% vs yesterday</p>
+                        <div class="flex items-center text-xs">
+                            <span
+                                class="text-emerald-400 flex items-center font-medium bg-emerald-400/10 px-1.5 py-0.5 rounded">
+                                <i data-lucide="trending-up" class="w-3 h-3 mr-1"></i> +12.5%
+                            </span>
+                            <span class="text-gray-500 ml-2">vs yesterday</span>
+                        </div>
+                    </div>
+
+                    <!-- KPI 2 -->
+                    <div
+                        class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-brand-cyan/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Temps Moyen</p>
+                                <h3
+                                    class="text-3xl font-bold text-white mt-1 group-hover:scale-105 transition-transform origin-left">
+                                    4m 32s</h3>
+                            </div>
+                            <div class="p-2 bg-brand-cyan/10 rounded-lg text-brand-cyan">
+                                <i data-lucide="clock" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span
+                                class="text-emerald-400 flex items-center font-medium bg-emerald-400/10 px-1.5 py-0.5 rounded">
+                                <i data-lucide="trending-up" class="w-3 h-3 mr-1"></i> +5.2%
+                            </span>
+                            <span class="text-gray-500 ml-2">vs yesterday</span>
+                        </div>
+                    </div>
+
+                    <!-- KPI 3 -->
+                    <div
+                        class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-pink-500/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Taux de Rebond</p>
+                                <h3
+                                    class="text-3xl font-bold text-white mt-1 group-hover:scale-105 transition-transform origin-left">
+                                    42.8%</h3>
+                            </div>
+                            <div class="p-2 bg-pink-500/10 rounded-lg text-pink-500">
+                                <i data-lucide="activity" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span
+                                class="text-emerald-400 flex items-center font-medium bg-emerald-400/10 px-1.5 py-0.5 rounded">
+                                <i data-lucide="arrow-down" class="w-3 h-3 mr-1"></i> -2.1%
+                            </span>
+                            <span class="text-gray-500 ml-2">Better than avg</span>
+                        </div>
+                    </div>
+
+                    <!-- KPI 4 (Live) -->
+                    <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group border-brand-accent/20">
+                        <div
+                            class="absolute top-0 right-0 w-16 h-16 bg-brand-accent/10 rounded-bl-full -mr-8 -mt-8 animate-pulse">
+                        </div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p
+                                    class="text-xs font-medium text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                                    Live Users
+                                </p>
+                                <h3 class="text-3xl font-bold text-white mt-1">1,208</h3>
+                            </div>
+                            <div class="p-2 bg-brand-accent/10 rounded-lg text-brand-accent">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="w-full bg-dark-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                            <div class="bg-gradient-to-r from-brand-cyan to-brand-purple h-1.5 rounded-full"
+                                style="width: 75%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2 text-right">Server Load: 75%</p>
+                    </div>
+                </div>
+
+                <!-- ROW 2: CHART + GLOBE (Ligne 2 Feature Star) -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    <!-- Traffic Chart (2/3 width on large screens) -->
+                    <div class="lg:col-span-2 glass-panel p-6 rounded-2xl flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                                <i data-lucide="bar-chart" class="w-5 h-5 text-brand-purple"></i>
+                                Traffic Evolution
+                            </h3>
+                            <button
+                                class="text-xs text-brand-cyan hover:text-white transition-colors flex items-center gap-1">
+                                Full Report <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container flex-1">
+                            <canvas id="trafficChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 3D GLOBE (The Star Feature) -->
+                    <div class="glass-panel p-0 rounded-2xl relative overflow-hidden flex flex-col h-[400px] lg:h-auto">
+                        <div class="absolute top-4 left-4 z-10">
+                            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                                <i data-lucide="globe" class="w-5 h-5 text-brand-accent"></i>
+                                Live Connections
+                            </h3>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                <span class="text-xs text-gray-400">Monitoring Active</span>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Container -->
+                        <div id="globe-container"></div>
+
+                        <!-- Overlay Legend -->
+                        <div
+                            class="absolute bottom-4 left-4 right-4 z-10 flex gap-4 text-xs text-gray-400 justify-center">
+                            <div class="flex items-center gap-1"><span
+                                    class="w-2 h-2 rounded-full bg-brand-cyan"></span> Direct</div>
+                            <div class="flex items-center gap-1"><span
+                                    class="w-2 h-2 rounded-full bg-brand-purple"></span> Organic</div>
+                            <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-pink-500"></span>
+                                Social</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card stat-card rounded-2xl p-6">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                <!-- ROW 3: BLOG TABLE (Ligne 3) -->
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                        <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-5 h-5 text-gray-400"></i>
+                            Top Performing Articles
+                        </h3>
+                        <div class="relative">
+                            <i data-lucide="search"
+                                class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" placeholder="Search article..."
+                                class="bg-dark-900/50 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-brand-purple/50 w-64">
                         </div>
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-wider">Avg Session</p>
-                            <p class="text-2xl font-bold">4m 32s</p>
-                            <p class="text-xs text-green-400 mt-1">+45.2% vs yesterday</p>
-                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-white/[0.02] text-gray-400 font-medium border-b border-white/5">
+                                <tr>
+                                    <th class="px-6 py-4">Article Title</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4 text-right">Views</th>
+                                    <th class="px-6 py-4 text-right">Unique</th>
+                                    <th class="px-6 py-4">Primary Source</th>
+                                    <th class="px-6 py-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5 text-gray-300" id="blog-table-body">
+                                <!-- Data injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-4 border-t border-white/5 flex justify-center">
+                        <button class="text-sm text-gray-400 hover:text-brand-purple transition-colors">View All
+                            Articles</button>
                     </div>
                 </div>
 
-                <div class="glass-card stat-card rounded-2xl p-6">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-wider">Bounce Rate</p>
-                            <p class="text-2xl font-bold">42.8%</p>
-                            <p class="text-xs text-green-400 mt-1">+2.1% Better than avg</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-card stat-card rounded-2xl p-6">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-wider">Active Users</p>
-                            <p class="text-2xl font-bold" id="active-users">-</p>
-                            <p class="text-xs text-gray-400 mt-1">Same Level +5%</p>
-                        </div>
-                    </div>
-                </div>
             </div>
-
-            <!-- Charts -->
-            <div class="grid grid-cols-3 gap-6 mb-8">
-                <div class="col-span-2 glass-card rounded-2xl p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold">Traffic Evolution</h3>
-                        <button class="text-xs text-brand-purple">Full Report →</button>
-                    </div>
-                    <canvas id="trafficChart" height="80"></canvas>
-                </div>
-
-                <div class="glass-card rounded-2xl p-6">
-                    <h3 class="text-lg font-semibold mb-6">Live Connections</h3>
-                    <div class="relative h-48 flex items-center justify-center">
-                        <canvas id="liveChart"></canvas>
-                    </div>
-                    <div class="flex justify-around mt-6 text-sm">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 rounded-full bg-purple-500"></div>
-                            <span>Direct</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 rounded-full bg-cyan-500"></div>
-                            <span>Organic</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 rounded-full bg-pink-500"></div>
-                            <span>Social</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Top Articles -->
-            <div class="glass-card rounded-2xl p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-semibold">Top Performing Articles</h3>
-                    <input type="text" placeholder="Search article..."
-                        class="px-4 py-2 bg-dark-bg rounded-lg text-sm border border-white/5 focus:border-brand-purple outline-none">
-                </div>
-
-                <table class="w-full">
-                    <thead class="text-xs text-gray-400 uppercase border-b border-white/5">
-                        <tr>
-                            <th class="pb-3 text-left">Article Title</th>
-                            <th class="pb-3 text-left">Status</th>
-                            <th class="pb-3 text-right">Views</th>
-                            <th class="pb-3 text-right">Unique</th>
-                            <th class="pb-3 text-left">Primary Source</th>
-                            <th class="pb-3 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="top-articles-tbody" class="text-sm">
-                        <tr class="border-b border-white/5">
-                            <td class="py-4" colspan="6">
-                                <div class="text-center text-gray-500">Loading articles...</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Users Section (Hidden by default) -->
-        <section id="users-section" class="section hidden">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h2 class="text-3xl font-bold">Users Management</h2>
-                    <p class="text-gray-400 mt-1">Manage registered users and their activity.</p>
-                </div>
-            </div>
-
-            <!-- Users Stats -->
-            <div class="grid grid-cols-4 gap-6 mb-6">
-                <div class="glass-card rounded-xl p-4">
-                    <p class="text-xs text-gray-400 uppercase">Total Users</p>
-                    <p class="text-2xl font-bold mt-1" id="total-users">-</p>
-                </div>
-                <div class="glass-card rounded-xl p-4">
-                    <p class="text-xs text-gray-400 uppercase">New Today</p>
-                    <p class="text-2xl font-bold mt-1 text-green-400" id="new-today">-</p>
-                </div>
-                <div class="glass-card rounded-xl p-4">
-                    <p class="text-xs text-gray-400 uppercase">Google</p>
-                    <p class="text-2xl font-bold mt-1 text-blue-400" id="google-count">-</p>
-                </div>
-                <div class="glass-card rounded-xl p-4">
-                    <p class="text-xs text-gray-400 uppercase">Discord</p>
-                    <p class="text-2xl font-bold mt-1 text-purple-400" id="discord-count">-</p>
-                </div>
-            </div>
-
-            <div class="glass-card rounded-2xl p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-semibold">All Users</h3>
-                    <input type="text" placeholder="Search users..."
-                        class="px-4 py-2 bg-dark-bg rounded-lg text-sm border border-white/5 focus:border-brand-purple outline-none">
-                </div>
-                <div id="users-list" class="text-gray-400">Loading users...</div>
-            </div>
-        </section>
-
-        <!-- Payouts Section (Hidden by default) -->
-        <section id="payouts-section" class="section hidden">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h2 class="text-3xl font-bold">Payouts & Fraud Detection</h2>
-                    <p class="text-gray-400 mt-1">Review pending withdrawals with security analysis.</p>
-                </div>
-            </div>
-
-            <!-- Payouts Stats -->
-            <div class="grid grid-cols-3 gap-6 mb-6">
-                <div class="glass-card rounded-xl p-4">
-                    <p class="text-xs text-gray-400 uppercase">Pending</p>
-                    <p class="text-2xl font-bold mt-1 text-yellow-400" id="pending-count">-</p>
-                </div>
-                <div class="glass-card rounded-xl p-4">
-                    <p class="text-xs text-gray-400 uppercase">Approved</p>
-                    <p class="text-2xl font-bold mt-1 text-green-400" id="approved-count">-</p>
-                </div>
-                <div class="glass-card rounded-xl p-4">
-                    <p class="text-xs text-gray-400 uppercase">Rejected</p>
-                    <p class="text-2xl font-bold mt-1 text-red-400" id="rejected-count">-</p>
-                </div>
-            </div>
-
-            <div class="glass-card rounded-2xl p-6">
-                <h3 class="text-lg font-semibold mb-6">Pending Withdrawals</h3>
-                <div id="withdrawals-list" class="space-y-4">
-                    <div class="text-center text-gray-500 py-8">Loading withdrawals...</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SEO Analytics Section (Hidden by default) -->
-        <section id="seo-section" class="section hidden">
-            <h2 class="text-3xl font-bold mb-8">SEO Analytics</h2>
-
-            <!-- SEO Stats -->
-            <div class="grid grid-cols-4 gap-6 mb-6">
-                <div class="glass-card rounded-xl p-4">
-                    <p class="text-xs text-gray-400 uppercase">SEO Traffic</p>
-                    <p class="text-2xl font-bold mt-1 text-blue-400" id="seo-traffic-count">-</p>
-                </div>
-                <div class="glass-card rounded-xl p-4">
-                    <p class="text-xs text-gray-400 uppercase">Social</p>
-                    <p class="text-2xl font-bold mt-1 text-pink-400" id="social-count">-</p>
-                </div>
-                <div class="glass-card rounded-xl p-4">
-                    <p class="text-xs text-gray-400 uppercase">Direct</p>
-                    <p class="text-2xl font-bold mt-1 text-purple-400" id="direct-count">-</p>
-                </div>
-                <div class="glass-card rounded-xl p-4">
-                    <p class="text-xs text-gray-400 uppercase">Pages</p>
-                    <p class="text-2xl font-bold mt-1" id="pages-count">-</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-6">
-                <div class="glass-card rounded-2xl p-6">
-                    <h3 class="text-lg font-semibold mb-6">Top Sources</h3>
-                    <canvas id="sourcesChart" height="250"></canvas>
-                </div>
-                <div class="glass-card rounded-2xl p-6">
-                    <h3 class="text-lg font-semibold mb-6">Devices</h3>
-                    <canvas id="devicesChart" height="250"></canvas>
-                </div>
-            </div>
-        </section>
-
+        </div>
     </main>
 
+    <!-- INITIALIZATION SCRIPT -->
     <script>
-        // Global variables
-        let trafficChartInstance = null;
-        let liveChartInstance = null;
+        // Init Lucide Icons
+        lucide.createIcons();
 
-        // Section navigation
-        function showSection(section) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-            // Show selected section
-            document.getElementById(section + '-section').classList.remove('hidden');
+        // --- 1. MOCK DATA & CHART.JS ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const ctx = document.getElementById('trafficChart').getContext('2d');
 
-            // Update sidebar active state
-            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
-            event.target.closest('.sidebar-link').classList.add('active');
+            // Gradient Layout
+            const gradientPurple = ctx.createLinearGradient(0, 0, 0, 400);
+            gradientPurple.addColorStop(0, 'rgba(139, 92, 246, 0.5)'); // Brand Purple
+            gradientPurple.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
 
-            // Load section data
-            if (section === 'dashboard') loadDashboard();
-            else if (section === 'seo') loadSEOAnalytics();
-            else if (section === 'users') loadUsers();
-            else if (section === 'payouts') loadPayouts();
-        }
+            const gradientCyan = ctx.createLinearGradient(0, 0, 0, 400);
+            gradientCyan.addColorStop(0, 'rgba(6, 182, 212, 0.5)'); // Brand Cyan
+            gradientCyan.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
 
-        // Load dashboard data
-        async function loadDashboard() {
-            try {
-                // Load SEO stats
-                const response = await fetch('/api/admin/seo-stats', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
+            // Fake Data Generation (30 Days)
+            const labels = Array.from({ length: 30 }, (_, i) => `Nov ${i + 1}`);
+            const data1 = Array.from({ length: 30 }, () => Math.floor(Math.random() * 500) + 1200);
+            const data2 = Array.from({ length: 30 }, () => Math.floor(Math.random() * 300) + 800);
 
-                if (data.success) {
-                    document.getElementById('total-visits').textContent = data.stats.total_visits.toLocaleString();
-                    document.getElementById('active-users').textContent = data.stats.unique_visitors.toLocaleString();
-
-                    // Load top articles
-                    loadTopArticles(data.topPages);
-
-                    // Update charts
-                    updateTrafficChart(data.dailyTrend);
-                    updateLiveChart(data.channelBreakdown);
-                }
-            } catch (error) {
-                console.error('Failed to load dashboard:', error);
-            }
-        }
-
-        // Load top articles
-        function loadTopArticles(topPages) {
-            const tbody = document.getElementById('top-articles-tbody');
-
-            if (!topPages || topPages.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-gray-500">No articles found</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = topPages.map(article => `
-                <tr class="border-b border-white/5 hover:bg-dark-hover">
-                    <td class="py-4">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                            </svg>
-                            <span class="font-medium">${article.page_url}</span>
-                        </div>
-                    </td>
-                    <td class="py-4">
-                        <span class="px-2 py-1 text-xs rounded-full bg-green-500/10 text-green-400">Trending</span>
-                    </td>
-                    <td class="py-4 text-right font-semibold">${article.views.toLocaleString()}</td>
-                    <td class="py-4 text-right text-gray-400">${article.unique_visitors.toLocaleString()}</td>
-                    <td class="py-4">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
-                            </svg>
-                            <span class="text-sm">Google</span>
-                        </div>
-                    </td>
-                    <td class="py-4 text-right">
-                        <button class="text-gray-400 hover:text-white">•••</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // Update traffic chart
-        function updateTrafficChart(dailyTrend) {
-            const ctx = document.getElementById('trafficChart');
-
-            if (trafficChartInstance) {
-                trafficChartInstance.destroy();
-            }
-
-            const labels = dailyTrend.map(d => d.date);
-            const totalVisits = dailyTrend.map(d => d.visits);
-            const uniqueVisits = dailyTrend.map(d => d.unique_visitors);
-
-            trafficChartInstance = new Chart(ctx, {
+            // Chart Configuration
+            new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Total Visits',
-                        data: totalVisits,
-                        borderColor: '#6366f1',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }, {
-                        label: 'Unique Visitors',
-                        data: uniqueVisits,
-                        borderColor: '#14b8a6',
-                        backgroundColor: 'rgba(20, 184, 166, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        borderDash: [5, 5]
-                    }]
+                    datasets: [
+                        {
+                            label: 'Total Visits',
+                            data: data1,
+                            borderColor: '#8b5cf6', // Purple
+                            backgroundColor: gradientPurple,
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Unique Visitors',
+                            data: data2,
+                            borderColor: '#22d3ee', // Cyan
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            fill: false,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
                     plugins: {
                         legend: {
                             display: true,
-                            labels: { color: '#9ca3af' }
+                            labels: { color: '#94a3b8', font: { family: 'Inter' } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#cbd5e1',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: true
                         }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: { color: '#9ca3af' }
-                        },
                         x: {
-                            grid: { display: false },
-                            ticks: { color: '#9ca3af' }
+                            grid: { display: false, drawBorder: false },
+                            ticks: { color: '#64748b', font: { size: 11 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                            ticks: { color: '#64748b', font: { size: 11 } }
                         }
                     }
                 }
             });
-        }
 
-        // Update live connections chart
-        function updateLiveChart(channelBreakdown) {
-            const ctx = document.getElementById('liveChart');
+            // Populate Table with Mock Data
+            const articles = [
+                { title: "Comment avoir des V-Bucks Gratuits en 2026", status: "Trending", views: "12,405", unique: "8,300", source: "Google", trend: "up" },
+                { title: "Meilleurs Jeux PS5 du moment", status: "Stable", views: "8,100", unique: "5,200", source: "Direct", trend: "neutral" },
+                { title: "Guide: Optimiser son PC pour Warzone", status: "Rising", views: "6,850", unique: "4,100", source: "Social", trend: "up" },
+                { title: "Les Easter Eggs de GTA VI", status: "Hot", views: "24,000", unique: "18,500", source: "Google", trend: "up" },
+                { title: "Avis LootQuest: Arnaque ou Fiable ?", status: "Stable", views: "3,200", unique: "2,800", source: "Organic", trend: "down" }
+            ];
 
-            if (liveChartInstance) {
-                liveChartInstance.destroy();
-            }
-
-            const labels = channelBreakdown.map(c => c.channel);
-            const data = channelBreakdown.map(c => c.visits);
-
-            liveChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: ['#6366f1', '#14b8a6', '#ec4899', '#f59e0b'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-        }
-
-        // Load SEO Analytics
-        async function loadSEOAnalytics() {
-            try {
-                const response = await fetch('/api/admin/seo-stats', { credentials: 'include' });
-                const data = await response.json();
-
-                if (data.success) {
-                    const seo = data.channelBreakdown.find(c => c.channel === 'SEO')?.visits || 0;
-                    const social = data.channelBreakdown.find(c => c.channel === 'Social')?.visits || 0;
-                    const direct = data.channelBreakdown.find(c => c.channel === 'Direct')?.visits || 0;
-
-                    document.getElementById('seo-traffic-count').textContent = seo.toLocaleString();
-                    document.getElementById('social-count').textContent = social.toLocaleString();
-                    document.getElementById('direct-count').textContent = direct.toLocaleString();
-                    document.getElementById('pages-count').textContent = data.topPages.length;
-
-                    const sourcesCtx = document.getElementById('sourcesChart');
-                    new Chart(sourcesCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: data.topSources.map(s => s.source),
-                            datasets: [{ label: 'Visits', data: data.topSources.map(s => s.visits), backgroundColor: '#6366f1' }]
-                        },
-                        options: {
-                            responsive: true, maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
-                            scales: {
-                                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
-                                x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
-                            }
-                        }
-                    });
-
-                    const devicesCtx = document.getElementById('devicesChart');
-                    new Chart(devicesCtx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: data.deviceStats.map(d => d.device_type),
-                            datasets: [{ data: data.deviceStats.map(d => d.visits), backgroundColor: ['#6366f1', '#14b8a6', '#ec4899'] }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#9ca3af' } } } }
-                    });
-                }
-            } catch (error) {
-                console.error('Failed to load SEO:', error);
-            }
-        }
-
-        // Load Users
-        async function loadUsers() {
-            try {
-                const response = await fetch('/api/admin/stats', { credentials: 'include' });
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('total-users').textContent = data.stats.users.total.toLocaleString();
-                    document.getElementById('new-today').textContent = data.stats.users.today || 0;
-                    document.getElementById('users-list').innerHTML = `
-                        <div class="text-center text-gray-400 py-8">
-                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                            </svg>
-                            <p class="text-lg font-semibold">Users: ${data.stats.users.total}</p>
+            const tbody = document.getElementById('blog-table-body');
+            tbody.innerHTML = articles.map(row => `
+                <tr class="hover:bg-white/[0.02] transition-colors group">
+                    <td class="px-6 py-4 font-medium text-white flex items-center gap-3">
+                        <div class="w-8 h-8 rounded bg-dark-800 flex items-center justify-center text-gray-400 group-hover:text-brand-cyan transition-colors">
+                            <i data-lucide="file" class="w-4 h-4"></i>
                         </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Failed to load users:', error);
-            }
-        }
-
-        // Load Payouts
-        async function loadPayouts() {
-            try {
-                const response = await fetch('/api/admin/withdrawals/pending', { credentials: 'include' });
-                const data = await response.json();
-                if (data.success) {
-                    const pending = data.withdrawals.filter(w => w.status === 'pending').length;
-                    const approved = data.withdrawals.filter(w => w.status === 'completed').length;
-                    const rejected = data.withdrawals.filter(w => w.status === 'rejected').length;
-
-                    document.getElementById('pending-count').textContent = pending;
-                    document.getElementById('approved-count').textContent = approved;
-                    document.getElementById('rejected-count').textContent = rejected;
-
-                    const pendingList = data.withdrawals.filter(w => w.status === 'pending');
-                    if (pendingList.length === 0) {
-                        document.getElementById('withdrawals-list').innerHTML = `
-                            <div class="text-center text-gray-500 py-8">
-                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <p class="text-lg font-semibold">No pending withdrawals</p>
-                            </div>
-                        `;
-                    } else {
-                        document.getElementById('withdrawals-list').innerHTML = pendingList.map(w => `
-                            <div class="glass-card rounded-xl p-6">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white font-bold">
-                                            ${w.user_email ? w.user_email[0].toUpperCase() : 'U'}
-                                        </div>
-                                        <div>
-                                            <p class="font-semibold">${w.user_email || 'Unknown'}</p>
-                                            <p class="text-sm text-gray-400">${w.reward_name} - ${w.points_spent} pts</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="approveWithdrawal(${w.id})" class="px-4 py-2 bg-green-600 rounded-lg text-sm">Approve</button>
-                                        <button onclick="rejectWithdrawal(${w.id})" class="px-4 py-2 bg-red-600 rounded-lg text-sm">Reject</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('');
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to load payouts:', error);
-            }
-        }
-
-        async function approveWithdrawal(id) {
-            if (!confirm('Approve?')) return;
-            try {
-                const response = await fetch(`/api/admin/withdrawals/${id}/action`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include', body: JSON.stringify({ action: 'approve' })
-                });
-                if (response.ok) { alert('Approved!'); loadPayouts(); }
-            } catch (error) { alert('Failed'); }
-        }
-
-        async function rejectWithdrawal(id) {
-            if (!confirm('Reject?')) return;
-            try {
-                const response = await fetch(`/api/admin/withdrawals/${id}/action`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include', body: JSON.stringify({ action: 'reject' })
-                });
-                if (response.ok) { alert('Rejected!'); loadPayouts(); }
-            } catch (error) { alert('Failed'); }
-        }
-
-        // Check admin authentication
-        async function checkAuth() {
-            try {
-                const response = await fetch('/api/user/me', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-
-                if (!data.success || data.user.role !== 'admin') {
-                    window.location.href = '/';
-                    return;
-                }
-
-                document.getElementById('admin-email').textContent = data.user.email;
-            } catch (error) {
-                window.location.href = '/';
-            }
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
-            loadDashboard();
+                        ${row.title}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-${row.status === 'Hot' || row.status === 'Trending' ? 'brand-purple/20 text-brand-purple' : 'gray-700/50 text-gray-400'}">
+                            ${row.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right font-mono text-gray-300">${row.views}</td>
+                    <td class="px-6 py-4 text-right font-mono text-gray-400">${row.unique}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="w-1.5 h-1.5 rounded-full ${row.source === 'Google' ? 'bg-blue-500' : row.source === 'Social' ? 'bg-pink-500' : 'bg-emerald-500'}"></span>
+                            ${row.source}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="text-gray-500 hover:text-white transition-colors"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
         });
+
+
+        // --- 2. THREE.JS CYBERPUNK GLOBE ---
+        function initGlobe() {
+            const container = document.getElementById('globe-container');
+            const scene = new THREE.Scene();
+            // Background is transparent for glassmorphism layer behind if needed, or slate-900 matches body
+            // scene.background = new THREE.Color(0x0f172a); 
+
+            const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 18;
+            camera.position.y = 5;
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enableZoom = false;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 1.0;
+
+            // GROUP TO HOLD GLOBE ELEMENTS
+            const globeGroup = new THREE.Group();
+            scene.add(globeGroup);
+
+            // 1. BASE SPHERE (Wireframe Cyberpunk)
+            const geometry = new THREE.IcosahedronGeometry(7, 2); // Radius 7, Detail 2
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x1e293b, // Dark Slate
+                wireframe: true,
+                transparent: true,
+                opacity: 0.1
+            });
+            const sphere = new THREE.Mesh(geometry, material);
+            globeGroup.add(sphere);
+
+            // 2. GLOWING DOTS (Vertices)
+            const particleGeo = new THREE.BufferGeometry();
+            const particlesCount = geometry.attributes.position.count;
+            const posArray = geometry.attributes.position.array;
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+            const particleMat = new THREE.PointsMaterial({
+                size: 0.1,
+                color: 0x8b5cf6, // Brand Purple
+                transparent: true,
+                opacity: 0.4,
+                blending: THREE.AdditiveBlending
+            });
+            const particles = new THREE.Points(particleGeo, particleMat);
+            globeGroup.add(particles);
+
+            // 3. INNER GLOW SPHERE
+            const innerGeo = new THREE.SphereGeometry(6.8, 32, 32);
+            const innerMat = new THREE.MeshBasicMaterial({
+                color: 0x0f172a,
+                transparent: true,
+                opacity: 0.8
+            });
+            const innerSphere = new THREE.Mesh(innerGeo, innerMat);
+            globeGroup.add(innerSphere);
+
+            // 4. ACTIVE CONNECTIONS (ARCS) - Mock Data
+            // Helper to convert Lat/Lon to Vector3
+            function latLonToVector3(lat, lon, radius) {
+                const phi = (90 - lat) * (Math.PI / 180);
+                const theta = (lon + 180) * (Math.PI / 180);
+                const x = -(radius * Math.sin(phi) * Math.cos(theta));
+                const z = (radius * Math.sin(phi) * Math.sin(theta));
+                const y = (radius * Math.cos(phi));
+                return new THREE.Vector3(x, y, z);
+            }
+
+            // Cities (Mock)
+            const cities = [
+                { name: "Paris", lat: 48.8566, lon: 2.3522, color: 0x06b6d4 },   // Cyan
+                { name: "New York", lat: 40.7128, lon: -74.0060, color: 0x8b5cf6 },// Purple
+                { name: "Tokyo", lat: 35.6762, lon: 139.6503, color: 0x22d3ee },   // Cyan Accent
+                { name: "Sao Paulo", lat: -23.5505, lon: -46.6333, color: 0xec4899 },// Pink
+                { name: "Sydney", lat: -33.8688, lon: 151.2093, color: 0x8b5cf6 }  // Purple
+            ];
+
+            // Add Markers
+            cities.forEach(city => {
+                const pos = latLonToVector3(city.lat, city.lon, 7.1);
+
+                // Marker Mesh
+                const markerGeo = new THREE.SphereGeometry(0.2, 8, 8);
+                const markerMat = new THREE.MeshBasicMaterial({ color: city.color });
+                const marker = new THREE.Mesh(markerGeo, markerMat);
+                marker.position.copy(pos);
+                globeGroup.add(marker);
+
+                // Add Ring (Pulse effect - static for simplified ThreeJS, purely visual)
+                const ringGeo = new THREE.RingGeometry(0.3, 0.35, 16);
+                const ringMat = new THREE.MeshBasicMaterial({
+                    color: city.color,
+                    transparent: true,
+                    opacity: 0.6,
+                    side: THREE.DoubleSide
+                });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.position.copy(pos);
+                ring.lookAt(new THREE.Vector3(0, 0, 0)); // Face center
+                globeGroup.add(ring);
+            });
+
+            // Add Arcs (Bezier Curves)
+            function addCurve(c1, c2, color) {
+                const v1 = latLonToVector3(c1.lat, c1.lon, 7.1);
+                const v2 = latLonToVector3(c2.lat, c2.lon, 7.1);
+                const dist = v1.distanceTo(v2);
+
+                // Control points for height
+                const center = v1.clone().add(v2).multiplyScalar(0.5).normalize().multiplyScalar(7.1 + (dist * 0.5));
+
+                const curve = new THREE.QuadraticBezierCurve3(v1, center, v2);
+                const points = curve.getPoints(50);
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: 0.4,
+                    linewidth: 1
+                });
+                const curveObject = new THREE.Line(geometry, material);
+                globeGroup.add(curveObject);
+            }
+
+            // Connect Paris to others
+            addCurve(cities[0], cities[1], 0x8b5cf6); // Paris -> NY
+            addCurve(cities[0], cities[2], 0x06b6d4); // Paris -> Tokyo
+            addCurve(cities[1], cities[3], 0xec4899); // NY -> Sao Paulo
+
+            // Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                globeGroup.rotation.y += 0.002; // Slow visual rotation on top of autoRotate
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Resize Handler
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        // Init Globe after delay to ensure dimensions
+        setTimeout(initGlobe, 500);
+
+        // --- 3. MOBILE MENU TOGGLE ---
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            // When open on mobile, make it fixed/absolute if needed, 
+            // but simple toggle 'hidden' works with current flex layout (pushes content)
+            // or add specific mobile styling class
+            if (!sidebar.classList.contains('hidden')) {
+                sidebar.classList.add('absolute', 'inset-y-0', 'left-0', 'bg-dark-900', 'z-50', 'w-64');
+            } else {
+                sidebar.classList.remove('absolute', 'inset-y-0', 'left-0', 'bg-dark-900', 'z-50', 'w-64');
+            }
+        });
+
+
     </script>
 </body>
 

@@ -560,36 +560,51 @@ function slugify(text) {
         .replace(/(^-|-$)/g, '');
 }
 
-async function callGPT(prompt) {
-    const response = await fetch(OPENAI_API_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-            model: 'gpt-5-mini',
-            messages: [
-                {
-                    role: 'system',
-                    content: 'Tu es un expert en gaming, rewards et GPT. Rédige des articles SEO optimisés, engageants et factuels.'
+async function callGPT(prompt, retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const response = await fetch(OPENAI_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENAI_API_KEY}`
                 },
-                {
-                    role: 'user',
-                    content: prompt
-                }
-            ],
-            max_completion_tokens: 2500
-        })
-    });
+                body: JSON.stringify({
+                    model: 'gpt-5-mini',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: 'Tu es un expert en gaming, rewards et GPT. Rédige des articles SEO optimisés, engageants et factuels.'
+                        },
+                        {
+                            role: 'user',
+                            content: prompt
+                        }
+                    ],
+                    max_completion_tokens: 2500
+                })
+            });
 
-    if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`GPT API error: ${response.status} - ${errorBody}`);
+            if (!response.ok) {
+                const errorBody = await response.text();
+                throw new Error(`GPT API error: ${response.status} - ${errorBody.substring(0, 200)}`);
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content;
+
+        } catch (error) {
+            console.error(`   ⚠️  Attempt ${attempt}/${retries} failed: ${error.message}`);
+
+            if (attempt < retries) {
+                const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
+                console.log(`   ⏳ Retrying in ${waitTime / 1000}s...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+            } else {
+                throw error; // Re-throw on final attempt
+            }
+        }
     }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
 }
 
 async function generateBlogContent(keyword, lang) {
