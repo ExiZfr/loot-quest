@@ -1600,6 +1600,52 @@ app.get('/api/user/me', isAuthenticated, (req, res) => {
 });
 
 /**
+ * GET /api/user/cpx-config
+ * 
+ * Get CPX Research configuration for the authenticated user.
+ * Returns the secure hash required for CPX offer wall authentication.
+ * Hash format: MD5(user_id + '-' + secure_key)
+ */
+app.get('/api/user/cpx-config', isAuthenticated, (req, res) => {
+    try {
+        const user = db.get('SELECT id, email, display_name FROM users WHERE id = ?', [req.user.id]);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        // CPX Research configuration
+        const CPX_APP_ID = 30761;
+        const CPX_SECURE_KEY = 'H0bveVeMM04s1HKFfejGr0pWDxYJUVhX';
+
+        // Generate secure hash: MD5(user_id + '-' + secure_key)
+        const hashInput = `${user.id}-${CPX_SECURE_KEY}`;
+        const secureHash = crypto.createHash('md5').update(hashInput).digest('hex');
+
+        res.json({
+            success: true,
+            cpx: {
+                app_id: CPX_APP_ID,
+                user_id: user.id.toString(),
+                secure_hash: secureHash,
+                username: user.display_name || user.email?.split('@')[0] || 'User',
+                email: user.email || ''
+            }
+        });
+
+    } catch (error) {
+        console.error('CPX Config error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get CPX configuration'
+        });
+    }
+});
+
+/**
  * GET /api/user/referral
  * 
  * Returns the user's referral code and referral statistics.
