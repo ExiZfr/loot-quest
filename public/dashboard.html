@@ -1184,7 +1184,7 @@
                 console.log('✅ CPX Config loaded:', { app_id: cpxConfig.app_id, user_id: cpxConfig.user_id });
 
                 // Configure CPX settings BEFORE loading the script
-                // CPX v2.0 requires window.config with general_config structure
+                // CPX v2.0 requires window.config with all config sections
                 window.config = {
                     general_config: {
                         app_id: cpxConfig.app_id,
@@ -1217,7 +1217,13 @@
                             text_color: '#ffffff'
                         }
                     },
-                    div_id: 'cpx-container'
+                    // Script configs - required by CPX v2.0
+                    script_config: [
+                        {
+                            div_id: 'cpx-container',
+                            script_type: 'wall'
+                        }
+                    ]
                 };
 
                 // Create and load the CPX script
