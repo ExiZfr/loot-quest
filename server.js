@@ -4159,23 +4159,23 @@ app.post('/api/admin/withdrawals/:id/reject', isAuthenticated, requireAdmin, (re
 /**
  * GET /api/admin/seo-stats
  * Returns aggregated SEO data: top sources and top pages
- * Uses the visits_logs table populated by trackTraffic middleware
+ * Uses the analytics_visits table for real-time traffic data
  */
 app.get('/api/admin/seo-stats', isAuthenticated, requireAdmin, (req, res) => {
     try {
         // Time range filter (default: last 7 days)
         const days = parseInt(req.query.days) || 7;
 
-        // Top Sources (grouped by referrer_source)
+        // Top Sources (grouped by referer_category)
         const topSources = db.all(`
             SELECT 
-                referrer_source as source,
+                referer_category as source,
                 COUNT(*) as visits,
-                COUNT(DISTINCT ip_hash) as unique_visitors,
-                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM visits_logs WHERE timestamp >= datetime('now', '-' || ? || ' days')), 2) as percentage
-            FROM visits_logs
+                COUNT(DISTINCT visitor_ip_hash) as unique_visitors,
+                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM analytics_visits WHERE timestamp >= datetime('now', '-' || ? || ' days')), 2) as percentage
+            FROM analytics_visits
             WHERE timestamp >= datetime('now', '-' || ? || ' days')
-            GROUP BY referrer_source
+            GROUP BY referer_category
             ORDER BY visits DESC
             LIMIT 20
         `, [days, days]);
@@ -4185,8 +4185,8 @@ app.get('/api/admin/seo-stats', isAuthenticated, requireAdmin, (req, res) => {
             SELECT 
                 page_url,
                 COUNT(*) as views,
-                COUNT(DISTINCT ip_hash) as unique_visitors
-            FROM visits_logs
+                COUNT(DISTINCT visitor_ip_hash) as unique_visitors
+            FROM analytics_visits
             WHERE timestamp >= datetime('now', '-' || ? || ' days')
             GROUP BY page_url
             ORDER BY views DESC
@@ -4198,62 +4198,54 @@ app.get('/api/admin/seo-stats', isAuthenticated, requireAdmin, (req, res) => {
             SELECT 
                 device_type,
                 COUNT(*) as visits,
-                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM visits_logs WHERE timestamp >= datetime('now', '-' || ? || ' days')), 2) as percentage
-            FROM visits_logs
+                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM analytics_visits WHERE timestamp >= datetime('now', '-' || ? || ' days')), 2) as percentage
+            FROM analytics_visits
             WHERE timestamp >= datetime('now', '-' || ? || ' days')
             GROUP BY device_type
             ORDER BY visits DESC
         `, [days, days]);
 
-        // Daily visits trend (last 7 days)
+        // Daily trend (last N days)
         const dailyTrend = db.all(`
             SELECT 
                 DATE(timestamp) as date,
                 COUNT(*) as visits,
-                COUNT(DISTINCT ip_hash) as unique_visitors
-            FROM visits_logs
-            WHERE timestamp >= datetime('now', '-7 days')
+                COUNT(DISTINCT visitor_ip_hash) as unique_visitors
+            FROM analytics_visits
+            WHERE timestamp >= datetime('now', '-' || ? || ' days')
             GROUP BY DATE(timestamp)
             ORDER BY date ASC
-        `);
+        `, [days]);
 
-        // Total stats
+        // Channel breakdown (referer categories)
+        const channelBreakdown = db.all(`
+            SELECT 
+                referer_category as channel,
+                COUNT(*) as visits
+            FROM analytics_visits
+            WHERE timestamp >= datetime('now', '-' || ? || ' days')
+            GROUP BY referer_category
+        `, [days]);
+
+        // Total stats for the period
         const totalStats = db.get(`
             SELECT 
                 COUNT(*) as total_visits,
-                COUNT(DISTINCT ip_hash) as unique_visitors,
-                COUNT(DISTINCT page_url) as pages_tracked
-            FROM visits_logs
+                COUNT(DISTINCT visitor_ip_hash) as unique_visitors,
+                COUNT(DISTINCT page_url) as pages_viewed
+            FROM analytics_visits
             WHERE timestamp >= datetime('now', '-' || ? || ' days')
         `, [days]);
-
-        // SEO vs Social vs Direct breakdown
-        const channelBreakdown = db.all(`
-            SELECT 
-                CASE 
-                    WHEN referrer_source LIKE 'SEO%' THEN 'SEO'
-                    WHEN referrer_source IN ('Twitter', 'Facebook', 'Instagram', 'LinkedIn', 'TikTok', 'Reddit', 'Discord', 'YouTube', 'Twitch') THEN 'Social'
-                    WHEN referrer_source = 'Direct / Inconnu' THEN 'Direct'
-                    WHEN referrer_source = 'Internal' THEN 'Internal'
-                    ELSE 'Other'
-                END as channel,
-                COUNT(*) as visits,
-                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM visits_logs WHERE timestamp >= datetime('now', '-' || ? || ' days')), 2) as percentage
-            FROM visits_logs
-            WHERE timestamp >= datetime('now', '-' || ? || ' days')
-            GROUP BY channel
-            ORDER BY visits DESC
-        `, [days, days]);
 
         res.json({
             success: true,
             period: `${days} days`,
-            stats: totalStats,
-            topSources,
-            topPages,
-            deviceStats,
-            dailyTrend,
-            channelBreakdown
+            stats: totalStats || { total_visits: 0, unique_visitors: 0, pages_viewed: 0 },
+            topSources: topSources || [],
+            topPages: topPages || [],
+            deviceStats: deviceStats || [],
+            dailyTrend: dailyTrend || [],
+            channelBreakdown: channelBreakdown || []
         });
 
     } catch (error) {
@@ -4269,22 +4261,22 @@ app.get('/api/admin/seo-stats', isAuthenticated, requireAdmin, (req, res) => {
 app.get('/api/admin/seo-stats/realtime', isAuthenticated, requireAdmin, (req, res) => {
     try {
         const lastHour = db.all(`
-            SELECT 
-                page_url,
-                referrer_source,
-                device_type,
-                timestamp
+        SELECT
+        page_url,
+            referrer_source,
+            device_type,
+            timestamp
             FROM visits_logs
             WHERE timestamp >= datetime('now', '-1 hour')
             ORDER BY timestamp DESC
             LIMIT 50
-        `);
+            `);
 
         const hourlyCount = db.get(`
             SELECT COUNT(*) as visits_last_hour
             FROM visits_logs
             WHERE timestamp >= datetime('now', '-1 hour')
-        `);
+            `);
 
         res.json({
             success: true,
