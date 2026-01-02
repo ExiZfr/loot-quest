@@ -3803,6 +3803,355 @@ app.get('/api/admin/analytics/devices', isAuthenticated, requireAdmin, (req, res
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ADMIN API: DASHBOARD, USERS, PAYOUTS
+// Comprehensive admin panel APIs for managing the platform
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/stats
+ * Dashboard statistics for admin panel
+ * Returns: total users, connected users, revenue metrics, points distributed
+ */
+app.get('/api/admin/stats', isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+        // Total users
+        const totalUsers = db.get('SELECT COUNT(*) as count FROM users');
+
+        // Connected users (active in last 15 minutes)
+        const connectedUsers = db.get(`
+            SELECT COUNT(*) as count FROM users 
+            WHERE last_activity_at >= datetime('now', '-15 minutes')
+        `);
+
+        // Revenue calculations (based on withdrawals)
+        const dailyRevenue = db.get(`
+            SELECT COALESCE(SUM(points_spent), 0) as total FROM withdrawals 
+            WHERE created_at >= datetime('now', '-1 day')
+        `);
+
+        const weeklyRevenue = db.get(`
+            SELECT COALESCE(SUM(points_spent), 0) as total FROM withdrawals 
+            WHERE created_at >= datetime('now', '-7 days')
+        `);
+
+        const monthlyRevenue = db.get(`
+            SELECT COALESCE(SUM(points_spent), 0) as total FROM withdrawals 
+            WHERE created_at >= datetime('now', '-30 days')
+        `);
+
+        const yearlyRevenue = db.get(`
+            SELECT COALESCE(SUM(points_spent), 0) as total FROM withdrawals 
+            WHERE created_at >= datetime('now', '-365 days')
+        `);
+
+        // Total revenue (all time)
+        const totalRevenue = db.get('SELECT COALESCE(SUM(points_spent), 0) as total FROM withdrawals');
+
+        // Points distributed
+        const dailyPoints = db.get(`
+            SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
+            WHERE type = 'credit' AND created_at >= datetime('now', '-1 day')
+        `);
+
+        const weeklyPoints = db.get(`
+            SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
+            WHERE type = 'credit' AND created_at >= datetime('now', '-7 days')
+        `);
+
+        const monthlyPoints = db.get(`
+            SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
+            WHERE type = 'credit' AND created_at >= datetime('now', '-30 days')
+        `);
+
+        // Pending withdrawals count
+        const pendingWithdrawals = db.get(`
+            SELECT COUNT(*) as count FROM withdrawals WHERE status = 'pending'
+        `);
+
+        // New users today
+        const newUsersToday = db.get(`
+            SELECT COUNT(*) as count FROM users 
+            WHERE created_at >= datetime('now', '-1 day')
+        `);
+
+        // Get connected users count from Redis if available
+        let onlineUsers = connectedUsers?.count || 0;
+        try {
+            if (redis.isConnected()) {
+                const sessions = await redis.client.keys('sess:*');
+                onlineUsers = sessions.length;
+            }
+        } catch (e) {
+            console.warn('Redis session count failed, using DB fallback');
+        }
+
+        res.json({
+            success: true,
+            stats: {
+                totalUsers: totalUsers?.count || 0,
+                connectedUsers: onlineUsers,
+                newUsersToday: newUsersToday?.count || 0,
+                pendingWithdrawals: pendingWithdrawals?.count || 0,
+                revenue: {
+                    daily: Math.floor((dailyRevenue?.total || 0) / POINTS_PER_DOLLAR * 100) / 100,
+                    weekly: Math.floor((weeklyRevenue?.total || 0) / POINTS_PER_DOLLAR * 100) / 100,
+                    monthly: Math.floor((monthlyRevenue?.total || 0) / POINTS_PER_DOLLAR * 100) / 100,
+                    yearly: Math.floor((yearlyRevenue?.total || 0) / POINTS_PER_DOLLAR * 100) / 100,
+                    total: Math.floor((totalRevenue?.total || 0) / POINTS_PER_DOLLAR * 100) / 100
+                },
+                pointsDistributed: {
+                    daily: dailyPoints?.total || 0,
+                    weekly: weeklyPoints?.total || 0,
+                    monthly: monthlyPoints?.total || 0
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Admin stats error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/users
+ * Get all users with pagination and search
+ * Query params: page, limit, search
+ */
+app.get('/api/admin/users', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+        const offset = (page - 1) * limit;
+        const search = req.query.search || '';
+
+        let query = `
+            SELECT 
+                id, email, display_name, avatar_url, provider,
+                balance, total_earned, total_withdrawn, role,
+                created_at, last_login_at, last_activity_at,
+                ip_address, referral_code, lifetime_earnings
+            FROM users
+        `;
+
+        let countQuery = 'SELECT COUNT(*) as count FROM users';
+        let params = [];
+
+        if (search) {
+            const searchPattern = `%${search}%`;
+            query += ' WHERE email LIKE ? OR display_name LIKE ? OR id LIKE ?';
+            countQuery += ' WHERE email LIKE ? OR display_name LIKE ? OR id LIKE ?';
+            params = [searchPattern, searchPattern, searchPattern];
+        }
+
+        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+
+        const users = db.all(query, params);
+        const totalCount = db.get(countQuery, search ? [search, search, search] : []);
+
+        res.json({
+            success: true,
+            users,
+            pagination: {
+                page,
+                limit,
+                total: totalCount?.count || 0,
+                totalPages: Math.ceil((totalCount?.count || 0) / limit)
+            }
+        });
+
+    } catch (error) {
+        console.error('Admin users error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/admin/withdrawals/pending
+ * Get all pending withdrawal requests with user details and fraud indicators
+ */
+app.get('/api/admin/withdrawals/pending', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const withdrawals = db.all(`
+            SELECT 
+                w.id, w.user_id, w.reward_id, w.reward_name, w.points_spent,
+                w.delivery_info, w.status, w.created_at, w.admin_notes,
+                w.request_ip, w.request_user_agent,
+                u.email, u.display_name, u.balance, u.total_earned, u.total_withdrawn,
+                u.created_at as user_created_at, u.ip_address as registration_ip,
+                u.lifetime_earnings, u.role
+            FROM withdrawals w
+            JOIN users u ON w.user_id = u.id
+            WHERE w.status = 'pending'
+            ORDER BY w.created_at DESC
+        `);
+
+        // Enhance with fraud indicators
+        const enhancedWithdrawals = withdrawals.map(w => {
+            const accountAge = Date.now() - new Date(w.user_created_at).getTime();
+            const accountAgeDays = Math.floor(accountAge / (24 * 60 * 60 * 1000));
+
+            // Get recent transaction history
+            const recentTransactions = db.all(`
+                SELECT amount, type, source, created_at 
+                FROM transactions 
+                WHERE user_id = ? 
+                ORDER BY created_at DESC 
+                LIMIT 10
+            `, [w.user_id]);
+
+            // Calculate earning velocity (points per day)
+            const earningVelocity = accountAgeDays > 0
+                ? Math.floor(w.lifetime_earnings / accountAgeDays)
+                : w.lifetime_earnings;
+
+            // Fraud indicators
+            const fraudIndicators = {
+                ipMismatch: w.registration_ip && w.request_ip && w.registration_ip !== w.request_ip,
+                newAccount: accountAgeDays < 7,
+                highVelocity: earningVelocity > 5000, // More than 5000 points/day
+                firstWithdrawal: w.total_withdrawn === 0,
+                suspiciousAmount: w.points_spent > w.total_earned * 0.9 // Withdrawing >90% of earnings
+            };
+
+            const riskLevel = Object.values(fraudIndicators).filter(Boolean).length;
+
+            return {
+                ...w,
+                accountAgeDays,
+                earningVelocity,
+                recentTransactions,
+                fraudIndicators,
+                riskLevel: riskLevel >= 3 ? 'high' : riskLevel >= 2 ? 'medium' : 'low'
+            };
+        });
+
+        res.json({
+            success: true,
+            withdrawals: enhancedWithdrawals
+        });
+
+    } catch (error) {
+        console.error('Admin pending withdrawals error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/admin/withdrawals/:id/approve
+ * Approve a withdrawal request
+ */
+app.post('/api/admin/withdrawals/:id/approve', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const withdrawalId = req.params.id;
+        const { notes } = req.body;
+
+        // Get withdrawal details
+        const withdrawal = db.get('SELECT * FROM withdrawals WHERE id = ?', [withdrawalId]);
+
+        if (!withdrawal) {
+            return res.status(404).json({ success: false, error: 'Withdrawal not found' });
+        }
+
+        if (withdrawal.status !== 'pending') {
+            return res.status(400).json({
+                success: false,
+                error: `Cannot approve withdrawal with status: ${withdrawal.status}`
+            });
+        }
+
+        // Update withdrawal status
+        db.run(`
+            UPDATE withdrawals 
+            SET status = 'processing', 
+                processed_at = CURRENT_TIMESTAMP,
+                admin_notes = ?
+            WHERE id = ?
+        `, [notes || `Approved by admin ${req.user.email}`, withdrawalId]);
+
+        console.log(`✅ Withdrawal #${withdrawalId} approved by ${req.user.email}`);
+
+        res.json({
+            success: true,
+            message: 'Withdrawal approved successfully'
+        });
+
+    } catch (error) {
+        console.error('Admin approve withdrawal error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/admin/withdrawals/:id/reject
+ * Reject a withdrawal request and refund points
+ */
+app.post('/api/admin/withdrawals/:id/reject', isAuthenticated, requireAdmin, (req, res) => {
+    try {
+        const withdrawalId = req.params.id;
+        const { reason } = req.body;
+
+        if (!reason || reason.trim().length < 5) {
+            return res.status(400).json({
+                success: false,
+                error: 'Rejection reason is required (min 5 characters)'
+            });
+        }
+
+        // Get withdrawal details
+        const withdrawal = db.get('SELECT * FROM withdrawals WHERE id = ?', [withdrawalId]);
+
+        if (!withdrawal) {
+            return res.status(404).json({ success: false, error: 'Withdrawal not found' });
+        }
+
+        if (withdrawal.status !== 'pending') {
+            return res.status(400).json({
+                success: false,
+                error: `Cannot reject withdrawal with status: ${withdrawal.status}`
+            });
+        }
+
+        // Refund points to user
+        db.run('UPDATE users SET balance = balance + ? WHERE id = ?',
+            [withdrawal.points_spent, withdrawal.user_id]);
+
+        // Create refund transaction
+        const refundTxId = `refund_${withdrawalId}_${Date.now()}`;
+        db.run(`
+            INSERT INTO transactions (id, user_id, amount, type, source, description)
+            VALUES (?, ?, ?, 'credit', 'withdrawal_refund', ?)
+        `, [
+            refundTxId,
+            withdrawal.user_id,
+            withdrawal.points_spent,
+            `Refund for rejected withdrawal: ${reason}`
+        ]);
+
+        // Update withdrawal status
+        db.run(`
+            UPDATE withdrawals 
+            SET status = 'cancelled', 
+                processed_at = CURRENT_TIMESTAMP,
+                admin_notes = ?
+            WHERE id = ?
+        `, [`Rejected by admin ${req.user.email}: ${reason}`, withdrawalId]);
+
+        console.log(`❌ Withdrawal #${withdrawalId} rejected by ${req.user.email}. Points refunded.`);
+
+        res.json({
+            success: true,
+            message: 'Withdrawal rejected and points refunded successfully'
+        });
+
+    } catch (error) {
+        console.error('Admin reject withdrawal error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
 // ADMIN API: SEO STATS (from visits_logs table)
 // Detailed referrer source analytics for Admin Panel
 // ═══════════════════════════════════════════════════════════════════════════

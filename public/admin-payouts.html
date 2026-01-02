@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LootQuest | Payout Management</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        dark: {
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            card: 'rgba(15, 23, 42, 0.6)'
+                        },
+                        brand: {
+                            purple: '#8b5cf6',
+                            cyan: '#06b6d4',
+                            accent: '#22d3ee'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Libraries -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-header {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-link {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.2) 0%, transparent 100%);
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-link:hover::before,
+        .sidebar-link.active::before {
+            width: 100%;
+        }
+
+        .sidebar-link.active {
+            border-right: 3px solid #8b5cf6;
+            color: white;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body class="flex h-screen">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar"
+        class="hidden md:flex flex-col w-64 glass-header border-r border-white/5 z-20 h-full transition-all duration-300">
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-white/5">
+            <div class="flex items-center gap-2 font-bold text-xl tracking-wider">
+                <div
+                    class="w-8 h-8 rounded bg-gradient-to-br from-brand-purple to-brand-cyan flex items-center justify-center text-white shadow-neon">
+                    <i data-lucide="gamepad-2" class="w-5 h-5"></i>
+                </div>
+                <span class="text-white">LOOT<span class="text-brand-cyan">QUEST</span></span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 py-6 px-3 space-y-1">
+            <a href="/admin-dashboard.html"
+                class="sidebar-link flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 group-hover:text-brand-cyan transition-colors"></i>
+                <span class="text-sm font-medium">Dashboard</span>
+            </a>
+            <a href="/admin-users.html"
+                class="sidebar-link flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="users" class="w-5 h-5 group-hover:text-brand-cyan transition-colors"></i>
+                <span class="text-sm font-medium">Users</span>
+            </a>
+            <a href="/admin-payouts.html"
+                class="sidebar-link active flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="wallet" class="w-5 h-5 text-brand-purple"></i>
+                <span class="text-sm font-medium">Payouts</span>
+            </a>
+            <a href="/admin-seo.html"
+                class="sidebar-link flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="bar-chart-2" class="w-5 h-5 group-hover:text-brand-cyan transition-colors"></i>
+                <span class="text-sm font-medium">SEO Analytics</span>
+            </a>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-white/5">
+            <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=8b5cf6&color=fff" alt="Admin"
+                    class="w-10 h-10 rounded-full border border-white/10">
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-white truncate">Admin</p>
+                    <p class="text-xs text-gray-400 truncate">admin@lootquest.fr</p>
+                </div>
+                <i data-lucide="log-out" class="w-4 h-4 text-gray-500 hover:text-white transition-colors"></i>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <!-- Background Ambient Glow -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+            <div
+                class="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-brand-purple/20 blur-[120px]">
+            </div>
+            <div
+                class="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-brand-cyan/10 blur-[100px]">
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <header class="h-16 glass-header flex items-center justify-between px-6 z-10 shrink-0">
+            <div class="flex items-center gap-4">
+                <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-400 hover:text-white">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div class="hidden sm:flex items-center gap-2 text-sm text-gray-400">
+                    <span>Admin</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    <span class="text-white font-medium">Payouts</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button onclick="window.location.reload()"
+                    class="bg-gradient-to-r from-brand-purple to-indigo-600 hover:from-brand-purple/90 hover:to-indigo-600/90 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-lg shadow-brand-purple/20 transition-all flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    Refresh
+                </button>
+            </div>
+        </header>
+
+        <!-- SCROLLABLE CONTENT -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+            <div class="max-w-7xl mx-auto space-y-6">
+
+                <!-- Title Section -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-white tracking-tight">Payout Management</h1>
+                        <p class="text-gray-400 mt-1">Review and process withdrawal requests</p>
+                    </div>
+                    <div class="text-sm text-gray-400">
+                        Pending: <span class="text-white font-medium" id="pending-count">0</span> requests
+                    </div>
+                </div>
+
+                <!-- Pending Withdrawals Table -->
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-white/[0.02] text-gray-400 font-medium border-b border-white/5">
+                                <tr>
+                                    <th class="px-6 py-4">User</th>
+                                    <th class="px-6 py-4">Reward</th>
+                                    <th class="px-6 py-4 text-right">Points</th>
+                                    <th class="px-6 py-4">Risk Level</th>
+                                    <th class="px-6 py-4">Date</th>
+                                    <th class="px-6 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5 text-gray-300" id="withdrawals-table-body">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                        <i data-lucide="loader" class="w-8 h-8 mx-auto animate-spin mb-2"></i>
+                                        <p>Loading pending withdrawals...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Withdrawal Detail Modal -->
+    <div id="detail-modal" class="modal">
+        <div class="glass-panel rounded-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-white">Withdrawal Details</h2>
+                <button onclick="closeDetailModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-6" id="detail-content">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Modal -->
+    <div id="approve-modal" class="modal">
+        <div class="glass-panel rounded-2xl max-w-md w-full mx-4">
+            <div class="p-6 border-b border-white/5">
+                <h2 class="text-xl font-bold text-white">Approve Withdrawal</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-gray-300">Are you sure you want to approve this withdrawal?</p>
+                <textarea id="approve-notes" placeholder="Optional notes..."
+                    class="w-full bg-dark-900/50 border border-white/10 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand-purple/50 resize-none"
+                    rows="3"></textarea>
+                <div class="flex gap-3">
+                    <button onclick="closeApproveModal()"
+                        class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="confirmApprove()"
+                        class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <i data-lucide="check" class="w-4 h-4"></i> Approve
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="reject-modal" class="modal">
+        <div class="glass-panel rounded-2xl max-w-md w-full mx-4">
+            <div class="p-6 border-b border-white/5">
+                <h2 class="text-xl font-bold text-white">Reject Withdrawal</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-gray-300">Please provide a reason for rejection:</p>
+                <textarea id="reject-reason" placeholder="Reason for rejection (required)..."
+                    class="w-full bg-dark-900/50 border border-white/10 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand-purple/50 resize-none"
+                    rows="3"></textarea>
+                <div class="flex gap-3">
+                    <button onclick="closeRejectModal()"
+                        class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="confirmReject()"
+                        class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <i data-lucide="x" class="w-4 h-4"></i> Reject
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        let currentWithdrawalId = null;
+
+        function getAuthToken() {
+            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        }
+
+        async function loadPendingWithdrawals() {
+            try {
+                const token = getAuthToken();
+                if (!token) {
+                    window.location.href = '/index.html';
+                    return;
+                }
+
+                const response = await fetch('/api/admin/withdrawals/pending', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        alert('Access denied. Admin privileges required.');
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    throw new Error('Failed to load withdrawals');
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    displayWithdrawals(data.withdrawals);
+                    document.getElementById('pending-count').textContent = data.withdrawals.length;
+                }
+            } catch (error) {
+                console.error('Error loading withdrawals:', error);
+                document.getElementById('withdrawals-table-body').innerHTML = `
+                    <tr><td colspan="6" class="px-6 py-12 text-center text-red-400">Error loading withdrawals</td></tr>
+                `;
+            }
+        }
+
+        function displayWithdrawals(withdrawals) {
+            const tbody = document.getElementById('withdrawals-table-body');
+
+            if (withdrawals.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                        <i data-lucide="check-circle" class="w-12 h-12 mx-auto mb-2 text-green-500"></i>
+                        <p>No pending withdrawals</p>
+                    </td></tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            tbody.innerHTML = withdrawals.map(w => {
+                const riskColor = w.riskLevel === 'high' ? 'red' : w.riskLevel === 'medium' ? 'yellow' : 'green';
+                const riskIcon = w.riskLevel === 'high' ? 'alert-triangle' : w.riskLevel === 'medium' ? 'alert-circle' : 'shield-check';
+
+                return `
+                <tr class="hover:bg-white/[0.02] transition-colors group">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(w.display_name || w.email)}&background=random" 
+                                alt="${w.display_name || w.email}"
+                                class="w-10 h-10 rounded-full border border-white/10">
+                            <div>
+                                <p class="font-medium text-white">${w.display_name || 'No name'}</p>
+                                <p class="text-xs text-gray-400">${w.email}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-white font-medium">${w.reward_name}</p>
+                        <p class="text-xs text-gray-400">${w.reward_id}</p>
+                    </td>
+                    <td class="px-6 py-4 text-right font-mono text-brand-cyan font-bold">${w.points_spent.toLocaleString()}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="${riskIcon}" class="w-4 h-4 text-${riskColor}-500"></i>
+                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-${riskColor}-500/20 text-${riskColor}-400">
+                                ${w.riskLevel.toUpperCase()}
+                            </span>
+                        </div>
+                        ${w.fraudIndicators.ipMismatch ? '<p class="text-xs text-red-400 mt-1">⚠ IP Mismatch</p>' : ''}
+                        ${w.fraudIndicators.newAccount ? '<p class="text-xs text-yellow-400 mt-1">⚠ New Account</p>' : ''}
+                        ${w.fraudIndicators.highVelocity ? '<p class="text-xs text-orange-400 mt-1">⚠ High Velocity</p>' : ''}
+                    </td>
+                    <td class="px-6 py-4 text-gray-400 text-xs">
+                        ${new Date(w.created_at).toLocaleString()}
+                        <p class="text-gray-500 mt-1">Account: ${w.accountAgeDays}d old</p>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="showDetails(${w.id})" 
+                                class="px-3 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded text-xs transition-colors flex items-center gap-1">
+                                <i data-lucide="eye" class="w-3 h-3"></i> Details
+                            </button>
+                            <button onclick="showApproveModal(${w.id})" 
+                                class="px-3 py-1 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded text-xs transition-colors flex items-center gap-1">
+                                <i data-lucide="check" class="w-3 h-3"></i> Approve
+                            </button>
+                            <button onclick="showRejectModal(${w.id})" 
+                                class="px-3 py-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded text-xs transition-colors flex items-center gap-1">
+                                <i data-lucide="x" class="w-3 h-3"></i> Reject
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+
+            lucide.createIcons();
+        }
+
+        function showDetails(withdrawalId) {
+            const token = getAuthToken();
+            fetch('/api/admin/withdrawals/pending', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const withdrawal = data.withdrawals.find(w => w.id === withdrawalId);
+                    if (withdrawal) {
+                        const content = document.getElementById('detail-content');
+                        content.innerHTML = `
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="col-span-2 bg-white/5 p-4 rounded-lg">
+                                <h3 class="text-white font-semibold mb-3">Withdrawal Information</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-xs text-gray-400">Withdrawal ID</p>
+                                        <p class="text-sm text-white font-mono">#${withdrawal.id}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Reward</p>
+                                        <p class="text-sm text-white">${withdrawal.reward_name}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Points Spent</p>
+                                        <p class="text-sm text-brand-cyan font-bold">${withdrawal.points_spent.toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Request Date</p>
+                                        <p class="text-sm text-white">${new Date(withdrawal.created_at).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-span-2 bg-white/5 p-4 rounded-lg">
+                                <h3 class="text-white font-semibold mb-3">User Information</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-xs text-gray-400">Email</p>
+                                        <p class="text-sm text-white">${withdrawal.email}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Display Name</p>
+                                        <p class="text-sm text-white">${withdrawal.display_name || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Current Balance</p>
+                                        <p class="text-sm text-white">${withdrawal.balance.toLocaleString()} pts</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Total Earned</p>
+                                        <p class="text-sm text-white">${withdrawal.total_earned.toLocaleString()} pts</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Account Age</p>
+                                        <p class="text-sm text-white">${withdrawal.accountAgeDays} days</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Earning Velocity</p>
+                                        <p class="text-sm text-white">${withdrawal.earningVelocity.toLocaleString()} pts/day</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-span-2 bg-white/5 p-4 rounded-lg">
+                                <h3 class="text-white font-semibold mb-3 flex items-center gap-2">
+                                    <i data-lucide="shield-alert" class="w-5 h-5 text-red-400"></i>
+                                    Fraud Detection
+                                </h3>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between p-2 rounded ${withdrawal.fraudIndicators.ipMismatch ? 'bg-red-500/10' : 'bg-green-500/10'}">
+                                        <span class="text-sm text-gray-300">IP Address Match</span>
+                                        <span class="${withdrawal.fraudIndicators.ipMismatch ? 'text-red-400' : 'text-green-400'} text-sm font-medium">
+                                            ${withdrawal.fraudIndicators.ipMismatch ? '⚠ MISMATCH' : '✓ Match'}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2 rounded ${withdrawal.fraudIndicators.newAccount ? 'bg-yellow-500/10' : 'bg-green-500/10'}">
+                                        <span class="text-sm text-gray-300">Account Age</span>
+                                        <span class="${withdrawal.fraudIndicators.newAccount ? 'text-yellow-400' : 'text-green-400'} text-sm font-medium">
+                                            ${withdrawal.fraudIndicators.newAccount ? '⚠ New Account' : '✓ Established'}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2 rounded ${withdrawal.fraudIndicators.highVelocity ? 'bg-orange-500/10' : 'bg-green-500/10'}">
+                                        <span class="text-sm text-gray-300">Earning Velocity</span>
+                                        <span class="${withdrawal.fraudIndicators.highVelocity ? 'text-orange-400' : 'text-green-400'} text-sm font-medium">
+                                            ${withdrawal.fraudIndicators.highVelocity ? '⚠ High' : '✓ Normal'}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2 rounded ${withdrawal.fraudIndicators.suspiciousAmount ? 'bg-red-500/10' : 'bg-green-500/10'}">
+                                        <span class="text-sm text-gray-300">Withdrawal Amount</span>
+                                        <span class="${withdrawal.fraudIndicators.suspiciousAmount ? 'text-red-400' : 'text-green-400'} text-sm font-medium">
+                                            ${withdrawal.fraudIndicators.suspiciousAmount ? '⚠ Suspicious' : '✓ Normal'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="mt-4 p-3 rounded ${withdrawal.riskLevel === 'high' ? 'bg-red-500/20' : withdrawal.riskLevel === 'medium' ? 'bg-yellow-500/20' : 'bg-green-500/20'}">
+                                    <p class="text-sm font-semibold ${withdrawal.riskLevel === 'high' ? 'text-red-400' : withdrawal.riskLevel === 'medium' ? 'text-yellow-400' : 'text-green-400'}">
+                                        Overall Risk Level: ${withdrawal.riskLevel.toUpperCase()}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="col-span-2 bg-white/5 p-4 rounded-lg">
+                                <h3 class="text-white font-semibold mb-3">Recent Transactions</h3>
+                                <div class="space-y-2 max-h-48 overflow-y-auto">
+                                    ${withdrawal.recentTransactions.map(tx => `
+                                        <div class="flex items-center justify-between p-2 bg-dark-900/50 rounded">
+                                            <div>
+                                                <p class="text-sm text-white">${tx.source}</p>
+                                                <p class="text-xs text-gray-400">${new Date(tx.created_at).toLocaleString()}</p>
+                                            </div>
+                                            <span class="text-sm font-mono ${tx.type === 'credit' ? 'text-green-400' : 'text-red-400'}">
+                                                ${tx.type === 'credit' ? '+' : '-'}${tx.amount.toLocaleString()}
+                                            </span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <div class="col-span-2 bg-white/5 p-4 rounded-lg">
+                                <h3 class="text-white font-semibold mb-3">Security Information</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-xs text-gray-400">Registration IP</p>
+                                        <p class="text-sm text-white font-mono">${withdrawal.registration_ip || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Request IP</p>
+                                        <p class="text-sm text-white font-mono">${withdrawal.request_ip || 'N/A'}</p>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <p class="text-xs text-gray-400">User Agent</p>
+                                        <p class="text-sm text-white font-mono break-all">${withdrawal.request_user_agent || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                        document.getElementById('detail-modal').classList.add('active');
+                        lucide.createIcons();
+                    }
+                });
+        }
+
+        function showApproveModal(id) {
+            currentWithdrawalId = id;
+            document.getElementById('approve-modal').classList.add('active');
+            lucide.createIcons();
+        }
+
+        function showRejectModal(id) {
+            currentWithdrawalId = id;
+            document.getElementById('reject-modal').classList.add('active');
+            lucide.createIcons();
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.remove('active');
+        }
+
+        function closeApproveModal() {
+            document.getElementById('approve-modal').classList.remove('active');
+            currentWithdrawalId = null;
+        }
+
+        function closeRejectModal() {
+            document.getElementById('reject-modal').classList.remove('active');
+            currentWithdrawalId = null;
+        }
+
+        async function confirmApprove() {
+            if (!currentWithdrawalId) return;
+
+            const notes = document.getElementById('approve-notes').value;
+            const token = getAuthToken();
+
+            try {
+                const response = await fetch(`/api/admin/withdrawals/${currentWithdrawalId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ notes })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Withdrawal approved successfully!');
+                    closeApproveModal();
+                    loadPendingWithdrawals();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error approving withdrawal:', error);
+                alert('Failed to approve withdrawal');
+            }
+        }
+
+        async function confirmReject() {
+            if (!currentWithdrawalId) return;
+
+            const reason = document.getElementById('reject-reason').value.trim();
+            if (!reason || reason.length < 5) {
+                alert('Please provide a reason for rejection (minimum 5 characters)');
+                return;
+            }
+
+            const token = getAuthToken();
+
+            try {
+                const response = await fetch(`/api/admin/withdrawals/${currentWithdrawalId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Withdrawal rejected and points refunded successfully!');
+                    closeRejectModal();
+                    loadPendingWithdrawals();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error rejecting withdrawal:', error);
+                alert('Failed to reject withdrawal');
+            }
+        }
+
+        // Mobile menu
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        });
+
+        // Close modals on outside click
+        document.getElementById('detail-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'detail-modal') closeDetailModal();
+        });
+        document.getElementById('approve-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'approve-modal') closeApproveModal();
+        });
+        document.getElementById('reject-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'reject-modal') closeRejectModal();
+        });
+
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPendingWithdrawals();
+            // Auto-refresh every 60 seconds
+            setInterval(loadPendingWithdrawals, 60000);
+        });
+    </script>
+</body>
+
+</html>

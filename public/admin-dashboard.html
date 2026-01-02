@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LootQuest | Admin Dashboard</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        dark: {
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            card: 'rgba(15, 23, 42, 0.6)'
+                        },
+                        brand: {
+                            purple: '#8b5cf6',
+                            cyan: '#06b6d4',
+                            accent: '#22d3ee'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-header {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-link {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.2) 0%, transparent 100%);
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-link:hover::before,
+        .sidebar-link.active::before {
+            width: 100%;
+        }
+
+        .sidebar-link.active {
+            border-right: 3px solid #8b5cf6;
+            color: white;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body class="flex h-screen">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar"
+        class="hidden md:flex flex-col w-64 glass-header border-r border-white/5 z-20 h-full transition-all duration-300">
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-white/5">
+            <div class="flex items-center gap-2 font-bold text-xl tracking-wider">
+                <div
+                    class="w-8 h-8 rounded bg-gradient-to-br from-brand-purple to-brand-cyan flex items-center justify-center text-white shadow-neon">
+                    <i data-lucide="gamepad-2" class="w-5 h-5"></i>
+                </div>
+                <span class="text-white">LOOT<span class="text-brand-cyan">QUEST</span></span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 py-6 px-3 space-y-1">
+            <a href="/admin-dashboard.html"
+                class="sidebar-link active flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 text-brand-purple"></i>
+                <span class="text-sm font-medium">Dashboard</span>
+            </a>
+            <a href="/admin-users.html"
+                class="sidebar-link flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="users" class="w-5 h-5 group-hover:text-brand-cyan transition-colors"></i>
+                <span class="text-sm font-medium">Users</span>
+            </a>
+            <a href="/admin-payouts.html"
+                class="sidebar-link flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="wallet" class="w-5 h-5 group-hover:text-brand-cyan transition-colors"></i>
+                <span class="text-sm font-medium">Payouts</span>
+            </a>
+            <a href="/admin-seo.html"
+                class="sidebar-link flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 group">
+                <i data-lucide="bar-chart-2" class="w-5 h-5 group-hover:text-brand-cyan transition-colors"></i>
+                <span class="text-sm font-medium">SEO Analytics</span>
+            </a>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-white/5">
+            <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=8b5cf6&color=fff" alt="Admin"
+                    class="w-10 h-10 rounded-full border border-white/10">
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-white truncate" id="admin-name">Admin</p>
+                    <p class="text-xs text-gray-400 truncate" id="admin-email">admin@lootquest.fr</p>
+                </div>
+                <i data-lucide="log-out" class="w-4 h-4 text-gray-500 hover:text-white transition-colors"></i>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <!-- Background Ambient Glow -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+            <div
+                class="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-brand-purple/20 blur-[120px]">
+            </div>
+            <div
+                class="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-brand-cyan/10 blur-[100px]">
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <header class="h-16 glass-header flex items-center justify-between px-6 z-10 shrink-0">
+            <div class="flex items-center gap-4">
+                <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-400 hover:text-white">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div class="hidden sm:flex items-center gap-2 text-sm text-gray-400">
+                    <span>Admin</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    <span class="text-white font-medium">Dashboard</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <i data-lucide="bell"
+                        class="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors"></i>
+                    <span class="absolute -top-1 -right-0.5 w-2 h-2 bg-brand-cyan rounded-full animate-pulse"></span>
+                </div>
+                <button onclick="window.location.reload()"
+                    class="bg-gradient-to-r from-brand-purple to-indigo-600 hover:from-brand-purple/90 hover:to-indigo-600/90 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-lg shadow-brand-purple/20 transition-all flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    Refresh
+                </button>
+            </div>
+        </header>
+
+        <!-- SCROLLABLE CONTENT -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+            <div class="max-w-7xl mx-auto space-y-6">
+
+                <!-- Title Section -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-white tracking-tight">Dashboard Overview</h1>
+                        <p class="text-gray-400 mt-1">Real-time platform statistics and metrics</p>
+                    </div>
+                </div>
+
+                <!-- KPI GRID -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    <!-- Total Users -->
+                    <div
+                        class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-brand-purple/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Users</p>
+                                <h3 class="text-3xl font-bold text-white mt-1 group-hover:scale-105 transition-transform origin-left"
+                                    id="total-users">
+                                    0</h3>
+                            </div>
+                            <div class="p-2 bg-brand-purple/10 rounded-lg text-brand-purple">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span
+                                class="text-emerald-400 flex items-center font-medium bg-emerald-400/10 px-1.5 py-0.5 rounded"
+                                id="new-users-badge">
+                                <i data-lucide="trending-up" class="w-3 h-3 mr-1"></i> +0
+                            </span>
+                            <span class="text-gray-500 ml-2">new today</span>
+                        </div>
+                    </div>
+
+                    <!-- Connected Users -->
+                    <div
+                        class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-brand-cyan/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p
+                                    class="text-xs font-medium text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                    Online Now
+                                </p>
+                                <h3 class="text-3xl font-bold text-white mt-1 group-hover:scale-105 transition-transform origin-left"
+                                    id="connected-users">
+                                    0</h3>
+                            </div>
+                            <div class="p-2 bg-brand-cyan/10 rounded-lg text-brand-cyan">
+                                <i data-lucide="activity" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="w-full bg-dark-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                            <div class="bg-gradient-to-r from-brand-cyan to-brand-purple h-1.5 rounded-full transition-all duration-500"
+                                id="online-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Total Revenue -->
+                    <div
+                        class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-pink-500/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Revenue</p>
+                                <h3 class="text-3xl font-bold text-white mt-1 group-hover:scale-105 transition-transform origin-left"
+                                    id="total-revenue">
+                                    $0.00</h3>
+                            </div>
+                            <div class="p-2 bg-pink-500/10 rounded-lg text-pink-500">
+                                <i data-lucide="dollar-sign" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="text-gray-400">Monthly:</span>
+                            <span class="text-white ml-2 font-medium" id="monthly-revenue">$0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Pending Withdrawals -->
+                    <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group border-brand-accent/20">
+                        <div
+                            class="absolute top-0 right-0 w-16 h-16 bg-brand-accent/10 rounded-bl-full -mr-8 -mt-8 animate-pulse">
+                        </div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Pending Payouts
+                                </p>
+                                <h3 class="text-3xl font-bold text-white mt-1" id="pending-withdrawals">0</h3>
+                            </div>
+                            <div class="p-2 bg-brand-accent/10 rounded-lg text-brand-accent">
+                                <i data-lucide="wallet" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <a href="/admin-payouts.html"
+                            class="text-xs text-brand-cyan hover:text-white transition-colors flex items-center gap-1">
+                            Review Now <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ROW 2: CHARTS -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    <!-- Revenue Chart -->
+                    <div class="glass-panel p-6 rounded-2xl flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                                <i data-lucide="trending-up" class="w-5 h-5 text-brand-purple"></i>
+                                Revenue Overview
+                            </h3>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="bg-white/5 p-3 rounded-lg">
+                                <p class="text-xs text-gray-400">Daily</p>
+                                <p class="text-lg font-bold text-white" id="daily-revenue">$0.00</p>
+                            </div>
+                            <div class="bg-white/5 p-3 rounded-lg">
+                                <p class="text-xs text-gray-400">Weekly</p>
+                                <p class="text-lg font-bold text-white" id="weekly-revenue">$0.00</p>
+                            </div>
+                            <div class="bg-white/5 p-3 rounded-lg">
+                                <p class="text-xs text-gray-400">Monthly</p>
+                                <p class="text-lg font-bold text-white" id="monthly-revenue-detail">$0.00</p>
+                            </div>
+                            <div class="bg-white/5 p-3 rounded-lg">
+                                <p class="text-xs text-gray-400">Yearly</p>
+                                <p class="text-lg font-bold text-white" id="yearly-revenue">$0.00</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Points Distributed Chart -->
+                    <div class="glass-panel p-6 rounded-2xl flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                                <i data-lucide="coins" class="w-5 h-5 text-brand-cyan"></i>
+                                Points Distributed
+                            </h3>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <div class="bg-white/5 p-3 rounded-lg">
+                                <p class="text-xs text-gray-400">Daily</p>
+                                <p class="text-lg font-bold text-white" id="daily-points">0</p>
+                            </div>
+                            <div class="bg-white/5 p-3 rounded-lg">
+                                <p class="text-xs text-gray-400">Weekly</p>
+                                <p class="text-lg font-bold text-white" id="weekly-points">0</p>
+                            </div>
+                            <div class="bg-white/5 p-3 rounded-lg">
+                                <p class="text-xs text-gray-400">Monthly</p>
+                                <p class="text-lg font-bold text-white" id="monthly-points">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Init Lucide Icons
+        lucide.createIcons();
+
+        // Get session token
+        function getAuthToken() {
+            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        }
+
+        // Fetch dashboard stats
+        async function loadDashboardStats() {
+            try {
+                const token = getAuthToken();
+                if (!token) {
+                    window.location.href = '/index.html';
+                    return;
+                }
+
+                const response = await fetch('/api/admin/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        alert('Access denied. Admin privileges required.');
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    throw new Error('Failed to load stats');
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    updateDashboard(data.stats);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('total-users').textContent = 'Error';
+            }
+        }
+
+        // Update dashboard with stats
+        function updateDashboard(stats) {
+            // KPI Cards
+            document.getElementById('total-users').textContent = stats.totalUsers.toLocaleString();
+            document.getElementById('connected-users').textContent = stats.connectedUsers.toLocaleString();
+            document.getElementById('new-users-badge').innerHTML = `<i data-lucide="trending-up" class="w-3 h-3 mr-1"></i> +${stats.newUsersToday}`;
+            document.getElementById('pending-withdrawals').textContent = stats.pendingWithdrawals.toLocaleString();
+
+            // Revenue
+            document.getElementById('total-revenue').textContent = `$${stats.revenue.total.toFixed(2)}`;
+            document.getElementById('monthly-revenue').textContent = `$${stats.revenue.monthly.toFixed(2)}`;
+            document.getElementById('daily-revenue').textContent = `$${stats.revenue.daily.toFixed(2)}`;
+            document.getElementById('weekly-revenue').textContent = `$${stats.revenue.weekly.toFixed(2)}`;
+            document.getElementById('monthly-revenue-detail').textContent = `$${stats.revenue.monthly.toFixed(2)}`;
+            document.getElementById('yearly-revenue').textContent = `$${stats.revenue.yearly.toFixed(2)}`;
+
+            // Points
+            document.getElementById('daily-points').textContent = stats.pointsDistributed.daily.toLocaleString();
+            document.getElementById('weekly-points').textContent = stats.pointsDistributed.weekly.toLocaleString();
+            document.getElementById('monthly-points').textContent = stats.pointsDistributed.monthly.toLocaleString();
+
+            // Online bar
+            const onlinePercentage = stats.totalUsers > 0 ? (stats.connectedUsers / stats.totalUsers * 100) : 0;
+            document.getElementById('online-bar').style.width = `${Math.min(onlinePercentage, 100)}%`;
+
+            // Re-init icons
+            lucide.createIcons();
+        }
+
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardStats();
+
+            // Auto-refresh every 30 seconds
+            setInterval(loadDashboardStats, 30000);
+        });
+
+        // Mobile menu toggle
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            if (!sidebar.classList.contains('hidden')) {
+                sidebar.classList.add('absolute', 'inset-y-0', 'left-0', 'bg-dark-900', 'z-50', 'w-64');
+            } else {
+                sidebar.classList.remove('absolute', 'inset-y-0', 'left-0', 'bg-dark-900', 'z-50', 'w-64');
+            }
+        });
+    </script>
+</body>
+
+</html>
