@@ -1341,8 +1341,8 @@
                 const userId = data.user.id;
                 console.log('✅ Bitlab: User ID:', userId);
 
-                // Build Bitlab iframe URL
-                const bitlabUrl = `https://web.bitlabs.ai/?token=${BITLAB_API_TOKEN}&uid=${userId}`;
+                // Build Bitlab iframe URL (uid must come before token)
+                const bitlabUrl = `https://web.bitlabs.ai/?uid=${userId}&token=${BITLAB_API_TOKEN}`;
 
                 console.log('✅ Bitlab URL:', bitlabUrl);
 
