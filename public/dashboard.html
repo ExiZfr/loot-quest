@@ -493,7 +493,8 @@
                                     </svg>
                                 </button>
                             </div>
-                            <div id="cpx-container" class="flex-1 overflow-hidden bg-dark-900">
+                            <div id="cpx-container" class="flex-1 overflow-auto"
+                                style="min-height: 500px; height: calc(100vh - 200px);">
                                 <!-- CPX Research surveys will be loaded here -->
                                 <div id="cpx-loading" class="flex items-center justify-center h-full">
                                     <div class="text-center">
@@ -1183,38 +1184,30 @@
                 console.log('✅ CPX Config loaded:', { app_id: cpxConfig.app_id, user_id: cpxConfig.user_id });
 
                 // Configure CPX settings BEFORE loading the script
+                // Using correct CPX v2.0 configuration format
                 window.cpx_settings = {
                     general: {
                         app_id: cpxConfig.app_id,
                         ext_user_id: cpxConfig.user_id,
                         secure_hash: cpxConfig.secure_hash,
                         username: cpxConfig.username,
-                        email: cpxConfig.email
+                        email: cpxConfig.email,
+                        div_id: 'cpx-container'  // Container where surveys will be displayed
                     },
                     style: {
-                        fullscreen: true,
-                        position: 'inside-element',
-                        containerElementId: 'cpx-container',
-                        backgroundStartColor: '#0B0E14',
-                        backgroundEndColor: '#151A23',
-                        rounded_corners: true,
-                        survey_box: {
-                            borderColor: '#3730a3',
-                            starColor: '#a855f7',
-                            hide_rating_amount: false,
-                            show_amount_of_time_instead_of_rating: false,
-                            amount_of_time_text_color: '#9ca3af',
-                            amount_of_time_text_background: 'transparent'
-                        },
                         text: {
                             headline_color: '#ffffff',
-                            text_color: '#9ca3af'
+                            color: '#9ca3af'
+                        },
+                        survey_box: {
+                            border_color: '#6366f1',
+                            star_color: '#a855f7'
                         },
                         button: {
                             corner_radius: 8,
-                            text_color: '#ffffff',
                             color: '#6366f1'
-                        }
+                        },
+                        hideBranding: false
                     }
                 };
 
