@@ -1184,31 +1184,40 @@
                 console.log('✅ CPX Config loaded:', { app_id: cpxConfig.app_id, user_id: cpxConfig.user_id });
 
                 // Configure CPX settings BEFORE loading the script
-                // Using correct CPX v2.0 configuration format
-                window.cpx_settings = {
-                    general: {
+                // CPX v2.0 requires window.config with general_config structure
+                window.config = {
+                    general_config: {
                         app_id: cpxConfig.app_id,
                         ext_user_id: cpxConfig.user_id,
                         secure_hash: cpxConfig.secure_hash,
-                        username: cpxConfig.username,
                         email: cpxConfig.email,
-                        div_id: 'cpx-container'  // Container where surveys will be displayed
+                        username: cpxConfig.username,
+                        subid_1: '',
+                        subid_2: ''
                     },
-                    style: {
-                        text: {
-                            headline_color: '#ffffff',
-                            color: '#9ca3af'
-                        },
+                    style_config: {
+                        corner_radius: 10,
+                        background_color: '#151A23',
                         survey_box: {
-                            border_color: '#6366f1',
-                            star_color: '#a855f7'
+                            topbar_background_color: '#1a1a2e',
+                            box_background_color: '#151A23',
+                            rounded_borders: true,
+                            stars_filled: '#a855f7'
+                        },
+                        text: {
+                            headline_text_color: '#ffffff',
+                            survey_headline_text_color: '#ffffff',
+                            survey_earnings_text_color: '#10b981',
+                            survey_rating_text_color: '#9ca3af',
+                            survey_loi_text_color: '#9ca3af'
                         },
                         button: {
-                            corner_radius: 8,
-                            color: '#6366f1'
-                        },
-                        hideBranding: false
-                    }
+                            rounded_corners: true,
+                            background_color: '#6366f1',
+                            text_color: '#ffffff'
+                        }
+                    },
+                    div_id: 'cpx-container'
                 };
 
                 // Create and load the CPX script
