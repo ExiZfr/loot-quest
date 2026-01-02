@@ -4641,10 +4641,8 @@ async function syncCPXCompletes() {
                     continue;
                 }
 
-                // Convert USD to points (1€ = 1000 points, CPX pays in USD)
-                // Using approximate rate: $1 USD ≈ €0.92 EUR = 920 points
-                const USD_TO_EUR = 0.92;
-                const pointsEarned = Math.floor(payoutUSD * USD_TO_EUR * 1000);
+                // Convert USD to points (1$ = 1000 points)
+                const pointsEarned = Math.floor(payoutUSD * 1000);
 
                 if (pointsEarned <= 0) {
                     skipped++;
