@@ -449,15 +449,23 @@
                         </div>
                     </div>
 
-                    <!-- Placeholders (Cards) -->
-                    <div class="glass-panel rounded-2xl p-6 opacity-60 flex flex-col items-center text-center">
+                    <!-- BITLAB -->
+                    <div id="offerwall-bitlab"
+                        class="glass-panel rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer border border-cyan-500/20 hover:border-cyan-500/40 transition-all active:scale-[0.98]"
+                        onclick="openBitlabWall()">
                         <div
-                            class="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-xl mb-4">
-                            N</div>
-                        <h3 class="font-bold text-lg text-white">Notik</h3>
-                        <p class="text-xs text-gray-500 mt-1 mb-4">Essais gratuits</p>
-                        <button
-                            class="w-full py-2 rounded-lg bg-white/5 text-gray-500 text-xs font-bold uppercase">Bientôt</button>
+                            class="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center font-bold text-xl mb-4 shadow-lg shadow-cyan-500/20">
+                            <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-lg text-white">Bitlab</h3>
+                        <p class="text-xs text-gray-400 mt-1 mb-4">Offres & Sondages</p>
+                        <button id="bitlab-open-btn"
+                            class="w-full py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-bold uppercase hover:from-cyan-400 hover:to-blue-500 transition-all">
+                            Voir les Offres
+                        </button>
                     </div>
 
                     <!-- CPX RESEARCH -->
@@ -510,6 +518,43 @@
                                             class="animate-spin w-10 h-10 border-3 border-purple-500 border-t-transparent rounded-full mx-auto mb-4">
                                         </div>
                                         <p class="text-gray-400">Chargement des sondages...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bitlab Modal/Container (Hidden by default) -->
+                    <div id="bitlab-modal" class="fixed inset-0 z-[200] hidden">
+                        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeBitlabWall()"></div>
+                        <div
+                            class="absolute inset-4 md:inset-8 lg:inset-16 bg-surface rounded-2xl overflow-hidden flex flex-col border border-white/10 shadow-2xl">
+                            <div class="flex items-center justify-between p-4 border-b border-white/10">
+                                <h3 class="font-bold text-white flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                    </svg>
+                                    Bitlab - Offres & Sondages
+                                </h3>
+                                <button onclick="closeBitlabWall()"
+                                    class="p-2 text-gray-400 hover:text-white transition-colors">
+                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div id="bitlab-container" class="flex-1 overflow-auto"
+                                style="min-height: 500px; height: calc(100vh - 200px);">
+                                <!-- Bitlab offers will be loaded here -->
+                                <div id="bitlab-loading" class="flex items-center justify-center h-full">
+                                    <div class="text-center">
+                                        <div
+                                            class="animate-spin w-10 h-10 border-3 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4">
+                                        </div>
+                                        <p class="text-gray-400">Chargement des offres...</p>
                                     </div>
                                 </div>
                             </div>
@@ -1256,6 +1301,98 @@
         // Make CPX functions globally available
         window.openCPXWall = openCPXWall;
         window.closeCPXWall = closeCPXWall;
+
+        // =====================================================
+        // BITLAB INTEGRATION
+        // =====================================================
+        let bitlabInitialized = false;
+        const BITLAB_API_TOKEN = '2f85ad48-a6b6-4f59-ba6a-d2c6d8f03ebe';
+
+        // Open Bitlab Wall modal
+        function openBitlabWall() {
+            const modal = document.getElementById('bitlab-modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            // Initialize Bitlab if not already done
+            if (!bitlabInitialized) {
+                initBitlab();
+            }
+        }
+
+        // Close Bitlab Wall modal
+        function closeBitlabWall() {
+            const modal = document.getElementById('bitlab-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Initialize Bitlab
+        async function initBitlab() {
+            try {
+                // Get user ID from session
+                const res = await fetch('/api/user/me', { credentials: 'include' });
+                const data = await res.json();
+
+                if (!data.success || !data.user) {
+                    throw new Error('Not authenticated');
+                }
+
+                const userId = data.user.id;
+                console.log('✅ Bitlab: User ID:', userId);
+
+                // Build Bitlab iframe URL
+                const bitlabUrl = `https://web.bitlabs.ai/?token=${BITLAB_API_TOKEN}&uid=${userId}`;
+
+                console.log('✅ Bitlab URL:', bitlabUrl);
+
+                // Create iframe
+                const container = document.getElementById('bitlab-container');
+                const loading = document.getElementById('bitlab-loading');
+
+                const iframe = document.createElement('iframe');
+                iframe.src = bitlabUrl;
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.style.minHeight = '500px';
+                iframe.setAttribute('allow', 'payment');
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox');
+
+                iframe.onload = () => {
+                    console.log('✅ Bitlab iframe loaded');
+                    bitlabInitialized = true;
+                    if (loading) loading.style.display = 'none';
+                };
+
+                iframe.onerror = () => {
+                    console.error('❌ Failed to load Bitlab iframe');
+                    if (loading) {
+                        loading.innerHTML = `
+                            <div class="text-center text-red-400">
+                                <p>Erreur de chargement</p>
+                                <p class="text-xs text-gray-500 mt-2">Veuillez désactiver votre bloqueur de pubs</p>
+                            </div>
+                        `;
+                    }
+                };
+
+                container.appendChild(iframe);
+
+            } catch (error) {
+                console.error('Bitlab Init error:', error);
+                document.getElementById('bitlab-loading').innerHTML = `
+                    <div class="text-center text-red-400">
+                        <p>Erreur de connexion</p>
+                        <p class="text-xs text-gray-500 mt-2">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Make Bitlab functions globally available
+        window.openBitlabWall = openBitlabWall;
+        window.closeBitlabWall = closeBitlabWall;
 
         // Init
         navigate('home');

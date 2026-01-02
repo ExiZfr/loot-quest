@@ -1764,6 +1764,91 @@ app.get('/api/cpx-postback', (req, res) => {
 });
 
 /**
+ * GET /api/bitlab-postback
+ * 
+ * Postback endpoint for Bitlab.
+ * Called by Bitlab when a user completes an offer.
+ * Credits points to user account.
+ * 
+ * Economy: 1$ = 1000 points
+ * 
+ * Bitlab sends parameters:
+ * - user_id: Our user ID (passed as uid in iframe)
+ * - amount: Amount earned in USD
+ * - tx: Transaction ID (unique)
+ */
+app.get('/api/bitlab-postback', (req, res) => {
+    try {
+        const { user_id, amount, tx } = req.query;
+        const BITLAB_SECRET = 'DyDMU59gGkmgslph5jhbKq8UvrdUQC';
+
+        console.log('📊 Bitlab Postback received:', { user_id, amount, tx });
+
+        // Validate required parameters
+        if (!tx || !user_id || !amount) {
+            console.error('❌ Bitlab Postback: Missing required parameters');
+            return res.status(400).json({ success: false, error: 'Missing parameters' });
+        }
+
+        // Check if transaction already processed (prevent duplicates)
+        const existingTx = db.get('SELECT id FROM transactions WHERE external_id = ? AND source = ?',
+            [`bitlab_${tx}`, 'bitlab']);
+        if (existingTx) {
+            console.log('⚠️ Bitlab Postback: Transaction already processed', tx);
+            return res.json({ success: true, message: 'Already processed' });
+        }
+
+        // Get user
+        const user = db.get('SELECT id, balance, total_earned, referred_by_user_id FROM users WHERE id = ?', [user_id]);
+        if (!user) {
+            console.error('❌ Bitlab Postback: User not found', user_id);
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Convert USD to points (1$ = 1000 points)
+        const amountUSD = parseFloat(amount) || 0;
+        const pointsEarned = Math.floor(amountUSD * 1000);
+
+        if (pointsEarned <= 0) {
+            console.log('⚠️ Bitlab Postback: Zero points, skipping', { amountUSD });
+            return res.json({ success: true, message: 'No points to credit' });
+        }
+
+        // Credit points to user
+        db.run('UPDATE users SET balance = balance + ?, total_earned = total_earned + ? WHERE id = ?',
+            [pointsEarned, pointsEarned, user_id]);
+
+        // Log transaction
+        db.run(`INSERT INTO transactions (id, user_id, amount, type, description, source, external_id, created_at)
+                VALUES (?, ?, ?, 'credit', ?, 'bitlab', ?, datetime('now'))`,
+            [require('uuid').v4(), user_id, pointsEarned, `Bitlab Offer: +${pointsEarned} pts ($${amountUSD.toFixed(2)})`, `bitlab_${tx}`]);
+
+        console.log(`✅ Bitlab Postback: Credited ${pointsEarned} pts to user ${user_id}`);
+
+        // Handle referral commission (5%)
+        if (user.referred_by_user_id) {
+            const referralBonus = Math.floor(pointsEarned * 0.05);
+            if (referralBonus > 0) {
+                db.run('UPDATE users SET balance = balance + ?, total_earned = total_earned + ? WHERE id = ?',
+                    [referralBonus, referralBonus, user.referred_by_user_id]);
+
+                db.run(`INSERT INTO transactions (user_id, amount, type, description, source, created_at)
+                        VALUES (?, ?, 'credit', ?, 'referral', datetime('now'))`,
+                    [user.referred_by_user_id, referralBonus, `Commission parrainage Bitlab: +${referralBonus} pts`]);
+
+                console.log(`💜 Referral bonus: +${referralBonus} pts to ${user.referred_by_user_id}`);
+            }
+        }
+
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error('❌ Bitlab Postback error:', error);
+        res.status(500).json({ success: false, error: 'Server error' });
+    }
+});
+
+/**
  * GET /api/user/referral
  * 
  * Returns the user's referral code and referral statistics.
