@@ -1183,70 +1183,48 @@
                 cpxConfig = data.cpx;
                 console.log('✅ CPX Config loaded:', { app_id: cpxConfig.app_id, user_id: cpxConfig.user_id });
 
-                // Configure CPX settings BEFORE loading the script
-                // CPX v2.0 requires window.config with all config sections
-                window.config = {
-                    general_config: {
-                        app_id: cpxConfig.app_id,
-                        ext_user_id: cpxConfig.user_id,
-                        secure_hash: cpxConfig.secure_hash,
-                        email: cpxConfig.email,
-                        username: cpxConfig.username,
-                        subid_1: '',
-                        subid_2: ''
-                    },
-                    style_config: {
-                        corner_radius: 10,
-                        background_color: '#151A23',
-                        survey_box: {
-                            topbar_background_color: '#1a1a2e',
-                            box_background_color: '#151A23',
-                            rounded_borders: true,
-                            stars_filled: '#a855f7'
-                        },
-                        text: {
-                            headline_text_color: '#ffffff',
-                            survey_headline_text_color: '#ffffff',
-                            survey_earnings_text_color: '#10b981',
-                            survey_rating_text_color: '#9ca3af',
-                            survey_loi_text_color: '#9ca3af'
-                        },
-                        button: {
-                            rounded_corners: true,
-                            background_color: '#6366f1',
-                            text_color: '#ffffff'
-                        }
-                    },
-                    // Script configs - required by CPX v2.0
-                    script_config: [
-                        {
-                            div_id: 'cpx-container',
-                            script_type: 'wall'
-                        }
-                    ]
-                };
+                // Build CPX iframe URL (more reliable than script tag)
+                const cpxUrl = new URL('https://offers.cpx-research.com/index.php');
+                cpxUrl.searchParams.set('app_id', cpxConfig.app_id);
+                cpxUrl.searchParams.set('ext_user_id', cpxConfig.user_id);
+                cpxUrl.searchParams.set('secure_hash', cpxConfig.secure_hash);
+                if (cpxConfig.email) cpxUrl.searchParams.set('email', cpxConfig.email);
+                if (cpxConfig.username) cpxUrl.searchParams.set('username', cpxConfig.username);
 
-                // Create and load the CPX script
-                const script = document.createElement('script');
-                script.src = 'https://cdn.cpx-research.com/assets/js/script_tag_v2.0.js';
-                script.async = true;
-                script.onload = () => {
-                    console.log('✅ CPX Research script loaded');
+                console.log('✅ CPX URL:', cpxUrl.toString());
+
+                // Create iframe
+                const container = document.getElementById('cpx-container');
+                const loading = document.getElementById('cpx-loading');
+
+                const iframe = document.createElement('iframe');
+                iframe.src = cpxUrl.toString();
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.style.minHeight = '500px';
+                iframe.setAttribute('allow', 'payment');
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox');
+
+                iframe.onload = () => {
+                    console.log('✅ CPX iframe loaded');
                     cpxInitialized = true;
-                    // Hide loading indicator
-                    const loading = document.getElementById('cpx-loading');
                     if (loading) loading.style.display = 'none';
                 };
-                script.onerror = () => {
-                    console.error('❌ Failed to load CPX script');
-                    document.getElementById('cpx-loading').innerHTML = `
-                        <div class="text-center text-red-400">
-                            <p>Erreur de chargement du script</p>
-                            <p class="text-xs text-gray-500 mt-2">Veuillez désactiver votre bloqueur de pubs</p>
-                        </div>
-                    `;
+
+                iframe.onerror = () => {
+                    console.error('❌ Failed to load CPX iframe');
+                    if (loading) {
+                        loading.innerHTML = `
+                            <div class="text-center text-red-400">
+                                <p>Erreur de chargement</p>
+                                <p class="text-xs text-gray-500 mt-2">Veuillez désactiver votre bloqueur de pubs</p>
+                            </div>
+                        `;
+                    }
                 };
-                document.head.appendChild(script);
+
+                container.appendChild(iframe);
 
             } catch (error) {
                 console.error('CPX Init error:', error);
