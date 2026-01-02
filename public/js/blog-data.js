@@ -127,6 +127,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-blue-900/50 to-indigo-900/50",
         icon: "🎮",
+        slug: "cartes-psn-gratuites-obtenez-les-legitimement-fr",
         lang: "fr"
     },
     {
@@ -139,6 +140,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-blue-900/50 to-indigo-900/50",
         icon: "🎮",
+        slug: "free-playstation-gift-cards-with-lootquest-en",
         lang: "en"
     },
     {
@@ -151,6 +153,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-green-900/50 to-black/50",
         icon: "🟢",
+        slug: "cartes-xbox-gratuites-obtenez-les-avec-lootquest-fr",
         lang: "fr"
     },
     {
@@ -163,6 +166,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-red-900/50 to-white/50",
         icon: "🍄",
+        slug: "cartes-nintendo-eshop-gratuites-le-guide-ultime-fr",
         lang: "fr"
     },
     {
@@ -175,6 +179,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-red-900/50 to-white/50",
         icon: "🍄",
+        slug: "free-nintendo-eshop-codes-legit-way-to-get-them-en",
         lang: "en"
     },
     {
@@ -187,6 +192,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-red-900/50 to-gray-900/50",
         icon: "🎲",
+        slug: "robux-gratuit-roblox-le-guide-lootquest-ultime-fr",
         lang: "fr"
     },
     {
@@ -199,6 +205,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-red-900/50 to-gray-900/50",
         icon: "🎲",
+        slug: "free-robux-legit-ways-to-earn-robux-with-lootquest-en",
         lang: "en"
     },
     {
@@ -211,6 +218,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-purple-900/50 to-blue-900/50",
         icon: "🔫",
+        slug: "v-bucks-fortnite-gratuits-le-guide-lootquest-fr",
         lang: "fr"
     },
     {
@@ -223,6 +231,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-purple-900/50 to-blue-900/50",
         icon: "🔫",
+        slug: "free-v-bucks-fortnite-get-rewards-legitimately-en",
         lang: "en"
     },
     {
@@ -235,6 +244,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-purple-900/50 to-cyan-900/50",
         icon: "💎",
+        slug: "genshin-impact-primo-gemmes-gratuites-fr",
         lang: "fr"
     },
     {
@@ -247,6 +257,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-purple-900/50 to-cyan-900/50",
         icon: "💎",
+        slug: "free-primogems-genshin-impact-lootquest-guide-en",
         lang: "en"
     },
     {
@@ -259,6 +270,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-red-900/50 to-black/50",
         icon: "🎯",
+        slug: "vp-valorant-gratuits-obtenez-les-avec-lootquest-fr",
         lang: "fr"
     },
     {
@@ -271,6 +283,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-red-900/50 to-black/50",
         icon: "🎯",
+        slug: "free-valorant-points-get-vp-with-lootquest-en",
         lang: "en"
     },
     {
@@ -283,6 +296,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-green-800/50 to-brown-900/50",
         icon: "⛏️",
+        slug: "minecoins-minecraft-gratuites-le-guide-ultime-fr",
         lang: "fr"
     },
     {
@@ -295,6 +309,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-green-800/50 to-brown-900/50",
         icon: "⛏️",
+        slug: "free-minecraft-minecoins-get-them-legally-en",
         lang: "en"
     },
     {
@@ -307,6 +322,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-red-900/50 to-orange-900/50",
         icon: "🔥",
+        slug: "apex-coins-gratuit-le-guide-ultime-2024-fr",
         lang: "fr"
     },
     {
@@ -319,6 +335,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-red-900/50 to-orange-900/50",
         icon: "🔥",
+        slug: "free-apex-coins-legit-methods-only-en",
         lang: "en"
     },
     {
@@ -331,6 +348,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-blue-900/50 to-gold-900/50",
         icon: "⚔️",
+        slug: "rp-league-of-legends-gratos-c-est-possible-fr",
         lang: "fr"
     },
     {
@@ -343,6 +361,7 @@ export const blogPosts = [
         image: null,
         gradient: "from-blue-900/50 to-gold-900/50",
         icon: "⚔️",
+        slug: "free-lol-rp-how-to-get-riot-points-for-league-of-legends-en",
         lang: "en"
     }
 ];

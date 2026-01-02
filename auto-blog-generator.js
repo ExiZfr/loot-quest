@@ -693,6 +693,7 @@ async function generateSingleBlog() {
                 image: null,
                 gradient: topic.gradient,
                 icon: topic.icon,
+                slug,
                 lang
             };
 
