@@ -448,8 +448,91 @@ app.set('trust proxy', 1);
 const isProduction = process.env.NODE_ENV === 'production';
 app.use(createSessionMiddleware(isProduction));
 
+
 // Expose db instance for middleware to use (activity tracking)
 app.locals.db = db;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SEO ANALYTICS TRACKING MIDDLEWARE
+// Tracks all page visits to analytics_visits table for real-time SEO metrics
+// ═══════════════════════════════════════════════════════════════════════════
+
+const crypto = require('crypto');
+
+/**
+ * Track page visit middleware
+ * Records all HTML page visits to analytics_visits table
+ */
+function trackVisit(req, res, next) {
+    // Only track HTML pages (not API calls, static assets, etc.)
+    const isHtmlPage = req.path.endsWith('.html') || req.path === '/' ||
+        (req.path.startsWith('/blog/') && !req.path.includes('.'));
+
+    if (!isHtmlPage) {
+        return next();
+    }
+
+    // Run tracking asynchronously (non-blocking)
+    setImmediate(() => {
+        try {
+            // Get visitor IP
+            const ip = requestIp.getClientIp(req) || req.ip || 'unknown';
+            const ipHash = crypto.createHash('sha256').update(ip).digest('hex').substring(0, 32);
+
+            // Get page URL
+            const pageUrl = req.path === '/' ? '/index.html' : req.path;
+
+            // Extract blog slug if it's a blog page
+            let blogSlug = null;
+            if (pageUrl.includes('/blog/') || pageUrl.includes('blog.html')) {
+                const slugMatch = pageUrl.match(/\/blog\/([^\/]+)/);
+                if (slugMatch) blogSlug = slugMatch[1];
+            }
+
+            // Get user agent and detect device type
+            const userAgent = req.get('user-agent') || '';
+            let deviceType = 'desktop';
+            if (/bot|crawler|spider|crawling/i.test(userAgent)) {
+                deviceType = 'bot';
+            } else if (/mobile|android|iphone|ipad|ipod/i.test(userAgent)) {
+                deviceType = /ipad|tablet/i.test(userAgent) ? 'tablet' : 'mobile';
+            }
+
+            // Get and categorize referrer
+            const referer = req.get('referer') || req.get('referrer') || '';
+            let refererCategory = 'direct';
+
+            if (referer) {
+                const refererLower = referer.toLowerCase();
+                if (refererLower.includes(req.get('host'))) {
+                    refererCategory = 'direct'; // Internal navigation
+                } else if (refererLower.includes('google')) {
+                    refererCategory = 'google';
+                } else if (refererLower.includes('facebook') || refererLower.includes('twitter') ||
+                    refererLower.includes('instagram') || refererLower.includes('tiktok') ||
+                    refererLower.includes('reddit') || refererLower.includes('discord')) {
+                    refererCategory = 'social';
+                } else {
+                    refererCategory = 'other';
+                }
+            }
+
+            // Insert visit record
+            db.run(`
+                INSERT INTO analytics_visits (
+                    page_url, blog_slug, visitor_ip_hash, user_agent, 
+                    device_type, referer, referer_category
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            `, [pageUrl, blogSlug, ipHash, userAgent, deviceType, referer, refererCategory]);
+
+        } catch (error) {
+            // Silent fail - don't break the request if tracking fails
+            console.error('Analytics tracking error:', error.message);
+        }
+    });
+
+    next();
+}
 
 app.use(express.static(path.join(__dirname, 'public')));
 
