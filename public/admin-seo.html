@@ -455,8 +455,11 @@
                         </table>
                     </div>
                     <div class="p-4 border-t border-white/5 flex justify-center">
-                        <button class="text-sm text-gray-400 hover:text-brand-purple transition-colors">View All
-                            Articles</button>
+                        <button id="view-all-btn" onclick="toggleAllArticles()"
+                            class="text-sm text-gray-400 hover:text-brand-purple transition-colors flex items-center gap-2">
+                            <span id="view-all-text">View All Articles</span>
+                            <i data-lucide="chevron-down" class="w-4 h-4" id="view-all-icon"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -482,7 +485,11 @@
                 }
                 const data = await response.json();
                 if (data.success) {
-                    return data.stats;
+                    // Return full response with stats and topPages
+                    return {
+                        stats: data.stats,
+                        topPages: data.topPages || []
+                    };
                 }
             } catch (error) {
                 console.error('Error loading SEO stats:', error);
@@ -556,7 +563,10 @@
         // --- MAIN INIT ---
         document.addEventListener('DOMContentLoaded', async () => {
             // Load real SEO stats
-            const stats = await loadSEOStats();
+            const response = await loadSEOStats();
+            const stats = response?.stats || null;
+            const topPages = response?.topPages || [];
+
             if (stats) {
                 updateKPIs(stats);
             }
@@ -643,44 +653,106 @@
                 }
             });
 
-            // Populate Table with Mock Data
-            const articles = [
-                { title: "Comment avoir des V-Bucks Gratuits en 2026", status: "Trending", views: "12,405", unique: "8,300", source: "Google", trend: "up" },
-                { title: "Meilleurs Jeux PS5 du moment", status: "Stable", views: "8,100", unique: "5,200", source: "Direct", trend: "neutral" },
-                { title: "Guide: Optimiser son PC pour Warzone", status: "Rising", views: "6,850", unique: "4,100", source: "Social", trend: "up" },
-                { title: "Les Easter Eggs de GTA VI", status: "Hot", views: "24,000", unique: "18,500", source: "Google", trend: "up" },
-                { title: "Avis LootQuest: Arnaque ou Fiable ?", status: "Stable", views: "3,200", unique: "2,800", source: "Organic", trend: "down" }
-            ];
+            // Populate Table with Real Data from API
+            // topPages is already loaded from the initial API call
+            window.allPagesData = topPages;
+            window.showingAllPages = false;
 
+            // Display initial 5 pages
+            displayPages(topPages.slice(0, 5));
+
+            // Update View All button text with count
+            const viewAllText = document.getElementById('view-all-text');
+            if (viewAllText && topPages.length > 5) {
+                viewAllText.textContent = `View All Articles (${topPages.length})`;
+            }
+            lucide.createIcons();
+        });
+
+        // Display pages in table
+        function displayPages(pages) {
             const tbody = document.getElementById('blog-table-body');
-            tbody.innerHTML = articles.map(row => `
+
+            if (!pages || pages.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <i data-lucide="file-x" class="w-8 h-8 mx-auto mb-2"></i>
+                            <p>Aucune page visitée récemment</p>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            tbody.innerHTML = pages.map((page, index) => {
+                // Extract page name from URL
+                const pageName = page.page_url
+                    .replace(/^https?:\/\/[^\/]+/, '')
+                    .replace(/\.html$/, '')
+                    .replace(/\/$/, '') || '/';
+
+                // Determine status based on views
+                const status = page.views > 100 ? 'Hot' : page.views > 50 ? 'Trending' : page.views > 20 ? 'Rising' : 'Stable';
+                const statusClass = status === 'Hot' || status === 'Trending' ? 'brand-purple/20 text-brand-purple' : 'gray-700/50 text-gray-400';
+
+                // Determine source based on common patterns
+                const isBlog = pageName.includes('blog');
+                const isDashboard = pageName.includes('dashboard');
+                const source = isBlog ? 'Blog' : isDashboard ? 'App' : 'Direct';
+                const sourceColor = source === 'Blog' ? 'bg-pink-500' : source === 'App' ? 'bg-blue-500' : 'bg-emerald-500';
+
+                return `
                 <tr class="hover:bg-white/[0.02] transition-colors group">
                     <td class="px-6 py-4 font-medium text-white flex items-center gap-3">
                         <div class="w-8 h-8 rounded bg-dark-800 flex items-center justify-center text-gray-400 group-hover:text-brand-cyan transition-colors">
-                            <i data-lucide="file" class="w-4 h-4"></i>
+                            <i data-lucide="${isBlog ? 'file-text' : 'file'}" class="w-4 h-4"></i>
                         </div>
-                        ${row.title}
+                        <span class="truncate max-w-[300px]" title="${page.page_url}">${pageName || 'Home'}</span>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-${row.status === 'Hot' || row.status === 'Trending' ? 'brand-purple/20 text-brand-purple' : 'gray-700/50 text-gray-400'}">
-                            ${row.status}
+                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-${statusClass}">
+                            ${status}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-right font-mono text-gray-300">${row.views}</td>
-                    <td class="px-6 py-4 text-right font-mono text-gray-400">${row.unique}</td>
+                    <td class="px-6 py-4 text-right font-mono text-gray-300">${page.views?.toLocaleString() || 0}</td>
+                    <td class="px-6 py-4 text-right font-mono text-gray-400">${page.unique_visitors?.toLocaleString() || 0}</td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-2 text-xs">
-                            <span class="w-1.5 h-1.5 rounded-full ${row.source === 'Google' ? 'bg-blue-500' : row.source === 'Social' ? 'bg-pink-500' : 'bg-emerald-500'}"></span>
-                            ${row.source}
+                            <span class="w-1.5 h-1.5 rounded-full ${sourceColor}"></span>
+                            ${source}
                         </div>
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <button class="text-gray-500 hover:text-white transition-colors"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+                        <a href="${page.page_url}" target="_blank" class="text-gray-500 hover:text-brand-cyan transition-colors">
+                            <i data-lucide="external-link" class="w-4 h-4"></i>
+                        </a>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
             lucide.createIcons();
-        });
+        }
+
+        // Toggle show all articles
+        function toggleAllArticles() {
+            window.showingAllPages = !window.showingAllPages;
+
+            const pages = window.allPagesData || [];
+            const textEl = document.getElementById('view-all-text');
+            const iconEl = document.getElementById('view-all-icon');
+
+            if (window.showingAllPages) {
+                displayPages(pages);
+                textEl.textContent = 'Show Less';
+                iconEl.setAttribute('data-lucide', 'chevron-up');
+            } else {
+                displayPages(pages.slice(0, 5));
+                textEl.textContent = `View All Articles (${pages.length})`;
+                iconEl.setAttribute('data-lucide', 'chevron-down');
+            }
+            lucide.createIcons();
+        }
 
 
         // --- 2. THREE.JS CYBERPUNK GLOBE ---
