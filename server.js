@@ -4247,21 +4247,90 @@ app.get('/api/admin/seo-stats', isAuthenticated, requireAdmin, (req, res) => {
         // Time range filter (default: last 7 days)
         const days = parseInt(req.query.days) || 7;
 
-        // Top Sources (grouped by referer_category)
-        const topSources = db.all(`
-            SELECT 
-                referer_category as source,
-                COUNT(*) as visits,
-                COUNT(DISTINCT visitor_ip_hash) as unique_visitors,
-                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM analytics_visits WHERE timestamp >= datetime('now', '-' || ? || ' days')), 2) as percentage
-            FROM analytics_visits
-            WHERE timestamp >= datetime('now', '-' || ? || ' days')
-            GROUP BY referer_category
-            ORDER BY visits DESC
-            LIMIT 20
-        `, [days, days]);
+        // Visits today
+        const visitsToday = db.get(`
+            SELECT COUNT(*) as count
+            FROM analytics_visits 
+            WHERE DATE(timestamp) = DATE('now')
+        `)?.count || 0;
 
-        // Top Pages (most visited)
+        // Visits yesterday
+        const visitsYesterday = db.get(`
+            SELECT COUNT(*) as count
+            FROM analytics_visits 
+            WHERE DATE(timestamp) = DATE('now', '-1 day')
+        `)?.count || 0;
+
+        // Unique visitors (last 7 days)
+        const uniqueVisitors = db.get(`
+            SELECT COUNT(DISTINCT visitor_ip_hash) as count
+            FROM analytics_visits 
+            WHERE timestamp >= datetime('now', '-7 days')
+        `)?.count || 0;
+
+        // Blog views (pages containing /blog/)
+        const blogViews = db.get(`
+            SELECT COUNT(*) as count
+            FROM analytics_visits 
+            WHERE page_url LIKE '%/blog/%' OR page_url LIKE '%blog.html%'
+            AND timestamp >= datetime('now', '-7 days')
+        `)?.count || 0;
+
+        // Total visits this week
+        const totalVisitsWeek = db.get(`
+            SELECT COUNT(*) as count
+            FROM analytics_visits 
+            WHERE timestamp >= datetime('now', '-7 days')
+        `)?.count || 0;
+
+        // Sources breakdown
+        const sourcesData = db.all(`
+            SELECT referer_category, COUNT(*) as count
+            FROM analytics_visits 
+            WHERE timestamp >= datetime('now', '-7 days')
+            GROUP BY referer_category
+        `) || [];
+
+        const sources = {
+            direct: 0,
+            google: 0,
+            social: 0,
+            other: 0
+        };
+        sourcesData.forEach(s => {
+            sources[s.referer_category] = s.count;
+        });
+
+        // Daily visits for chart (last 7 days)
+        const dailyData = db.all(`
+            SELECT 
+                DATE(timestamp) as date,
+                COUNT(*) as visits,
+                COUNT(DISTINCT visitor_ip_hash) as unique_visitors
+            FROM analytics_visits
+            WHERE timestamp >= datetime('now', '-7 days')
+            GROUP BY DATE(timestamp)
+            ORDER BY date ASC
+        `) || [];
+
+        const dailyLabels = [];
+        const dailyVisits = [];
+        const dailyUnique = [];
+
+        // Create labels for last 7 days
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            const dayName = i === 0 ? "Aujourd'hui" : i === 1 ? "Hier" : `J-${i}`;
+            dailyLabels.push(dayName);
+
+            const dayData = dailyData.find(d => d.date === dateStr);
+            dailyVisits.push(dayData?.visits || 0);
+            dailyUnique.push(dayData?.unique_visitors || 0);
+        }
+
+        // Top Pages
         const topPages = db.all(`
             SELECT 
                 page_url,
@@ -4271,62 +4340,23 @@ app.get('/api/admin/seo-stats', isAuthenticated, requireAdmin, (req, res) => {
             WHERE timestamp >= datetime('now', '-' || ? || ' days')
             GROUP BY page_url
             ORDER BY views DESC
-            LIMIT 20
-        `, [days]);
-
-        // Device breakdown
-        const deviceStats = db.all(`
-            SELECT 
-                device_type,
-                COUNT(*) as visits,
-                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM analytics_visits WHERE timestamp >= datetime('now', '-' || ? || ' days')), 2) as percentage
-            FROM analytics_visits
-            WHERE timestamp >= datetime('now', '-' || ? || ' days')
-            GROUP BY device_type
-            ORDER BY visits DESC
-        `, [days, days]);
-
-        // Daily trend (last N days)
-        const dailyTrend = db.all(`
-            SELECT 
-                DATE(timestamp) as date,
-                COUNT(*) as visits,
-                COUNT(DISTINCT visitor_ip_hash) as unique_visitors
-            FROM analytics_visits
-            WHERE timestamp >= datetime('now', '-' || ? || ' days')
-            GROUP BY DATE(timestamp)
-            ORDER BY date ASC
-        `, [days]);
-
-        // Channel breakdown (referer categories)
-        const channelBreakdown = db.all(`
-            SELECT 
-                referer_category as channel,
-                COUNT(*) as visits
-            FROM analytics_visits
-            WHERE timestamp >= datetime('now', '-' || ? || ' days')
-            GROUP BY referer_category
-        `, [days]);
-
-        // Total stats for the period
-        const totalStats = db.get(`
-            SELECT 
-                COUNT(*) as total_visits,
-                COUNT(DISTINCT visitor_ip_hash) as unique_visitors,
-                COUNT(DISTINCT page_url) as pages_viewed
-            FROM analytics_visits
-            WHERE timestamp >= datetime('now', '-' || ? || ' days')
-        `, [days]);
+            LIMIT 10
+        `, [days]) || [];
 
         res.json({
             success: true,
-            period: `${days} days`,
-            stats: totalStats || { total_visits: 0, unique_visitors: 0, pages_viewed: 0 },
-            topSources: topSources || [],
-            topPages: topPages || [],
-            deviceStats: deviceStats || [],
-            dailyTrend: dailyTrend || [],
-            channelBreakdown: channelBreakdown || []
+            stats: {
+                visitsToday,
+                visitsYesterday,
+                uniqueVisitors,
+                blogViews,
+                totalVisitsWeek,
+                sources,
+                dailyLabels,
+                dailyVisits,
+                dailyUnique
+            },
+            topPages
         });
 
     } catch (error) {
