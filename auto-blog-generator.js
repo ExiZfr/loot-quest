@@ -422,20 +422,27 @@ const htmlTemplate = (lang, title, metaDesc, category, h1, date, leadIntro, cont
                 ${leadIntro}
             </p>
 
+            <!-- A-ADS BANNER 1 (320x50) - After Intro -->
+            <div class="ad-banner-horizontal my-6 flex justify-center">
+                <iframe data-aa='2422858' src='//acceptable.a-ads.com/2422858?size=320x50' 
+                        style='border:0; padding:0; width:320px; height:50px; overflow:hidden;'>
+                </iframe>
+            </div>
+
 ${content}
 
-            <!-- HORIZONTAL AD BANNER (320x50) -->
+            <!-- A-ADS BANNER 2 (320x50) - Middle -->
             <div class="ad-banner-horizontal my-8 flex justify-center">
-                <script type="text/javascript">
-                    atOptions = {
-                        'key' : 'a40dcfff0399edf6a8cee9ced4923cde',
-                        'format' : 'iframe',
-                        'height' : 50,
-                        'width' : 320,
-                        'params' : {}
-                    };
-                </script>
-                <script type="text/javascript" src="https://www.highperformanceformat.com/a40dcfff0399edf6a8cee9ced4923cde/invoke.js"></script>
+                <iframe data-aa='2422858' src='//acceptable.a-ads.com/2422858?size=320x50' 
+                        style='border:0; padding:0; width:320px; height:50px; overflow:hidden;'>
+                </iframe>
+            </div>
+
+            <!-- A-ADS BANNER 3 (320x50) - Before CTA -->
+            <div class="ad-banner-horizontal my-6 flex justify-center">
+                <iframe data-aa='2422858' src='//acceptable.a-ads.com/2422858?size=320x50' 
+                        style='border:0; padding:0; width:320px; height:50px; overflow:hidden;'>
+                </iframe>
             </div>
 
             <div class="bg-indigo-600/20 border border-indigo-500 rounded-2xl p-8 text-center mt-12">
