@@ -210,6 +210,10 @@ class Database {
         try { this.db.run('ALTER TABLE withdrawals ADD COLUMN request_ip TEXT'); } catch (e) { }
         try { this.db.run('ALTER TABLE withdrawals ADD COLUMN request_user_agent TEXT'); } catch (e) { }
 
+        // External transaction ID for CPX and other offerwalls (duplicate prevention)
+        try { this.db.run('ALTER TABLE transactions ADD COLUMN external_id TEXT'); } catch (e) { }
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_transactions_external_id ON transactions(external_id)');
+
         // Support tickets table (for bug reports & contact forms)
         this.db.run(`
             CREATE TABLE IF NOT EXISTS support_tickets (
@@ -1642,6 +1646,114 @@ app.get('/api/user/cpx-config', isAuthenticated, (req, res) => {
             success: false,
             error: 'Failed to get CPX configuration'
         });
+    }
+});
+
+/**
+ * GET /api/cpx-postback
+ * 
+ * Postback endpoint for CPX Research.
+ * Called by CPX when a user completes a survey.
+ * Credits points to user account.
+ * 
+ * Economy: 1$ = 1000 points
+ * 
+ * CPX sends parameters:
+ * - trans_id: Transaction ID (unique)
+ * - user_id: ext_user_id we passed (our user ID)
+ * - amount_local: Amount in USD
+ * - status: 1 = completed, 2 = reversed
+ * - hash: MD5(trans_id + "-" + secure_key) for verification
+ */
+app.get('/api/cpx-postback', (req, res) => {
+    try {
+        const { trans_id, user_id, amount_local, status, hash } = req.query;
+
+        console.log('📊 CPX Postback received:', { trans_id, user_id, amount_local, status });
+
+        // Validate required parameters
+        if (!trans_id || !user_id || !amount_local || !hash) {
+            console.error('❌ CPX Postback: Missing required parameters');
+            return res.status(400).send('0'); // 0 = error
+        }
+
+        // Verify hash: MD5(trans_id + "-" + secure_key)
+        const CPX_SECURE_KEY = 'H0bveVeMM04s1HKFfejGr0pWDxYJUVhX';
+        const expectedHash = crypto.createHash('md5').update(`${trans_id}-${CPX_SECURE_KEY}`).digest('hex');
+
+        if (hash !== expectedHash) {
+            console.error('❌ CPX Postback: Invalid hash', { received: hash, expected: expectedHash });
+            return res.status(403).send('0'); // Invalid hash
+        }
+
+        // Check if transaction already processed (prevent duplicates)
+        const existingTx = db.get('SELECT id FROM transactions WHERE external_id = ? AND source = ?', [trans_id, 'cpx']);
+        if (existingTx) {
+            console.log('⚠️ CPX Postback: Transaction already processed', trans_id);
+            return res.send('1'); // Already processed, but return success
+        }
+
+        // Get user
+        const user = db.get('SELECT id, balance, total_earned, referred_by_user_id FROM users WHERE id = ?', [user_id]);
+        if (!user) {
+            console.error('❌ CPX Postback: User not found', user_id);
+            return res.status(404).send('0');
+        }
+
+        // Convert USD to points (1$ = 1000 points)
+        const amountUSD = parseFloat(amount_local) || 0;
+        const pointsEarned = Math.floor(amountUSD * 1000);
+
+        if (pointsEarned <= 0) {
+            console.log('⚠️ CPX Postback: Zero points, skipping', { amountUSD });
+            return res.send('1'); // No points to credit
+        }
+
+        // Handle reversal (status = 2)
+        if (status === '2') {
+            console.log('🔄 CPX Postback: Reversal for', trans_id);
+            // Deduct points if reversal
+            db.run('UPDATE users SET balance = balance - ?, total_earned = total_earned - ? WHERE id = ?',
+                [pointsEarned, pointsEarned, user_id]);
+
+            db.run(`INSERT INTO transactions (user_id, amount, type, description, source, external_id, created_at)
+                    VALUES (?, ?, 'debit', ?, 'cpx_reversal', ?, datetime('now'))`,
+                [user_id, -pointsEarned, `CPX Reversal: ${trans_id}`, trans_id]);
+
+            return res.send('1');
+        }
+
+        // Credit points to user
+        db.run('UPDATE users SET balance = balance + ?, total_earned = total_earned + ? WHERE id = ?',
+            [pointsEarned, pointsEarned, user_id]);
+
+        // Log transaction
+        db.run(`INSERT INTO transactions (user_id, amount, type, description, source, external_id, created_at)
+                VALUES (?, ?, 'credit', ?, 'cpx', ?, datetime('now'))`,
+            [user_id, pointsEarned, `CPX Survey: +${pointsEarned} pts ($${amountUSD})`, trans_id]);
+
+        console.log(`✅ CPX Postback: Credited ${pointsEarned} pts to user ${user_id} (tx: ${trans_id})`);
+
+        // Handle referral commission (5%)
+        if (user.referred_by_user_id) {
+            const referralBonus = Math.floor(pointsEarned * 0.05);
+            if (referralBonus > 0) {
+                db.run('UPDATE users SET balance = balance + ?, total_earned = total_earned + ? WHERE id = ?',
+                    [referralBonus, referralBonus, user.referred_by_user_id]);
+
+                db.run(`INSERT INTO transactions (user_id, amount, type, description, source, created_at)
+                        VALUES (?, ?, 'credit', ?, 'referral', datetime('now'))`,
+                    [user.referred_by_user_id, referralBonus, `Commission parrainage CPX: +${referralBonus} pts`]);
+
+                console.log(`💜 Referral bonus: +${referralBonus} pts to ${user.referred_by_user_id}`);
+            }
+        }
+
+        res.send('1'); // Success
+
+    } catch (error) {
+        console.error('❌ CPX Postback error:', error);
+        res.status(500).send('0');
     }
 });
 
