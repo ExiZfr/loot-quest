@@ -712,7 +712,7 @@ async function generateSingleBlog() {
                 lang
             };
 
-            updateBlogData(blogEntry);
+            await updateBlogData(blogEntry);
         }
 
         generatedCount += 2; // 2 blogs (FR + EN)
@@ -726,7 +726,7 @@ async function generateSingleBlog() {
     }
 }
 
-function updateBlogData(entry) {
+async function updateBlogData(entry) {
     const blogDataPath = path.join(__dirname, 'public', 'js', 'blog-data.js');
     let content = fs.readFileSync(blogDataPath, 'utf8');
 
@@ -758,6 +758,27 @@ function updateBlogData(entry) {
     content = content.slice(0, blogPostsArrayEnd) + newEntry + '\n' + content.slice(blogPostsArrayEnd);
     fs.writeFileSync(blogDataPath, content);
     console.log(`   📝 Updated blog-data.js (ID: ${entry.id})`);
+
+    // Auto-commit blog-data.js
+    await autoCommitBlogData();
+}
+
+async function autoCommitBlogData() {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+
+    try {
+        // Add and commit blog-data.js
+        await execPromise('git add public/js/blog-data.js');
+        await execPromise(`git commit -m "Auto-update: New blog entries generated at ${new Date().toISOString()}"`);
+        console.log('   ✅ Auto-committed blog-data.js');
+    } catch (error) {
+        // Ignore errors (e.g., no changes to commit)
+        if (!error.message.includes('nothing to commit')) {
+            console.warn('   ⚠️  Auto-commit warning:', error.message.split('\n')[0]);
+        }
+    }
 }
 
 async function startAutoGeneration() {
