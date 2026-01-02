@@ -71,6 +71,12 @@ const REFERRAL_COMMISSION_RATE = 0.05; // 5% lifetime commission on referred use
 // Discord Webhook for Support Notifications
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 
+// CPX Research API Configuration (for polling statistics when postback not available)
+const CPX_API_KEY = 'f241d3fde27d57ff8300d07cf04e206b';
+const CPX_APP_ID = 30761;
+const CPX_SECURE_KEY = 'H0bveVeMM04s1HKFfejGr0pWDxYJUVhX';
+const CPX_SYNC_INTERVAL_MS = 5 * 60 * 1000; // Sync every 5 minutes
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DATABASE WRAPPER CLASS
@@ -4565,6 +4571,125 @@ app.get('*', (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+// CPX RESEARCH SYNC SYSTEM (Poll Statistics API)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Sync CPX Research completed surveys.
+ * Polls the Statistics API and credits users for completed surveys.
+ * Runs every 5 minutes via setInterval.
+ */
+async function syncCPXCompletes() {
+    try {
+        // Get today's date and yesterday for the query range
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        const formatDate = (d) => d.toISOString().split('T')[0];
+        const startTime = formatDate(yesterday);
+        const endTime = formatDate(today);
+
+        console.log(`📊 [CPX Sync] Fetching completes from ${startTime} to ${endTime}...`);
+
+        // Call CPX Statistics API
+        const url = `https://publisher.cpx-research.com/index.php?page=api-statistics-completes&start_time=${startTime}&end_time=${endTime}&api_key=${CPX_API_KEY}`;
+
+        const response = await axios.get(url, { timeout: 30000 });
+
+        if (!response.data || !Array.isArray(response.data)) {
+            console.log('📊 [CPX Sync] No data or invalid response');
+            return;
+        }
+
+        const completes = response.data;
+        console.log(`📊 [CPX Sync] Found ${completes.length} completed surveys to process`);
+
+        let credited = 0;
+        let skipped = 0;
+        let errors = 0;
+
+        for (const complete of completes) {
+            try {
+                // Extract data from CPX response
+                // CPX usually returns: transaction_id, external_user_id, payout, status, created_at
+                const transId = complete.transaction_id || complete.trans_id;
+                const userId = complete.external_user_id || complete.user_id || complete.ext_user_id;
+                const payoutUSD = parseFloat(complete.payout || complete.amount_local || 0);
+
+                if (!transId || !userId) {
+                    console.log('📊 [CPX Sync] Skipping - missing trans_id or user_id');
+                    skipped++;
+                    continue;
+                }
+
+                // Check if already processed
+                const existingTx = db.get('SELECT id FROM transactions WHERE external_id = ? AND source = ?',
+                    [`cpx_${transId}`, 'cpx']);
+
+                if (existingTx) {
+                    skipped++;
+                    continue;
+                }
+
+                // Get user
+                const user = db.get('SELECT id, balance, total_earned, referred_by_user_id FROM users WHERE id = ?', [userId]);
+
+                if (!user) {
+                    console.log(`📊 [CPX Sync] User not found: ${userId}`);
+                    errors++;
+                    continue;
+                }
+
+                // Convert USD to points (1€ = 1000 points, CPX pays in USD)
+                // Using approximate rate: $1 USD ≈ €0.92 EUR = 920 points
+                const USD_TO_EUR = 0.92;
+                const pointsEarned = Math.floor(payoutUSD * USD_TO_EUR * 1000);
+
+                if (pointsEarned <= 0) {
+                    skipped++;
+                    continue;
+                }
+
+                // Credit points to user
+                db.run('UPDATE users SET balance = balance + ?, total_earned = total_earned + ? WHERE id = ?',
+                    [pointsEarned, pointsEarned, userId]);
+
+                // Log transaction with external_id to prevent duplicates
+                db.run(`INSERT INTO transactions (id, user_id, amount, type, description, source, external_id, created_at)
+                        VALUES (?, ?, ?, 'credit', ?, 'cpx', ?, datetime('now'))`,
+                    [uuidv4(), userId, pointsEarned, `CPX Survey: +${pointsEarned} pts ($${payoutUSD.toFixed(2)})`, `cpx_${transId}`]);
+
+                console.log(`✅ [CPX Sync] Credited ${pointsEarned} pts to user ${userId} (tx: ${transId})`);
+                credited++;
+
+                // Handle referral commission (5%)
+                if (user.referred_by_user_id) {
+                    const referralBonus = Math.floor(pointsEarned * 0.05);
+                    if (referralBonus > 0) {
+                        db.run('UPDATE users SET balance = balance + ?, total_earned = total_earned + ? WHERE id = ?',
+                            [referralBonus, referralBonus, user.referred_by_user_id]);
+
+                        db.run(`INSERT INTO transactions (id, user_id, amount, type, description, source, created_at)
+                                VALUES (?, ?, ?, 'credit', ?, 'referral', datetime('now'))`,
+                            [uuidv4(), user.referred_by_user_id, referralBonus, `Commission CPX: +${referralBonus} pts`]);
+                    }
+                }
+
+            } catch (err) {
+                console.error('📊 [CPX Sync] Error processing complete:', err.message);
+                errors++;
+            }
+        }
+
+        console.log(`📊 [CPX Sync] Done - Credited: ${credited}, Skipped: ${skipped}, Errors: ${errors}`);
+
+    } catch (error) {
+        console.error('📊 [CPX Sync] API Error:', error.message);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // START SERVER
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -4597,6 +4722,11 @@ async function startServer() {
         console.log('   Postback URL for Lootably:');
         console.log(`   https://yourdomain.com/api/postback/lootably?user_id={user_id}&payout={payout}&transaction_id={transaction_id}&secret=${LOOTABLY_SECRET}`);
         console.log('');
+
+        // Start CPX Research sync interval
+        console.log(`   📊 CPX Sync: Starting every ${CPX_SYNC_INTERVAL_MS / 60000} minutes...`);
+        syncCPXCompletes(); // Run once immediately
+        setInterval(syncCPXCompletes, CPX_SYNC_INTERVAL_MS);
 
         // Signal PM2 that the application is ready
         if (process.send) {
